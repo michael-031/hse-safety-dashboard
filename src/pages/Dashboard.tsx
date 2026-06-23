@@ -52,6 +52,14 @@ export const Dashboard: React.FC = () => {
     localStorage.setItem('hse_use_excel_formula', String(useExcelFormula))
   }, [useExcelFormula])
 
+  // Trigger ECharts resize when input visibility toggles to fit new percentage widths
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      window.dispatchEvent(new Event('resize'))
+    }, 420)
+    return () => clearTimeout(timer)
+  }, [isInputVisible])
+
   // Compute metrics
   const calculated = calculateSafetyMetrics(safetyData, useExcelFormula)
 
@@ -84,9 +92,8 @@ export const Dashboard: React.FC = () => {
     <div 
       style={{ 
         minHeight: '100vh', 
-        padding: '1.5rem', 
-        maxWidth: '1600px',
-        margin: '0 auto',
+        padding: '1.5%', 
+        width: '100%',
       }}
       className="dashboard-container"
     >
