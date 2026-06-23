@@ -1,0 +1,190 @@
+import React from 'react'
+import ReactECharts from 'echarts-for-react'
+
+interface TargetVsActualProps {
+  observations: number
+  hazardRate: number
+  auditRate: number
+}
+
+export const TargetVsActual: React.FC<TargetVsActualProps> = ({
+  observations,
+  hazardRate,
+  auditRate,
+}) => {
+  // Define targets
+  const targetObs = 400
+  const targetHazard = 90
+  const targetAudit = 95
+
+  // Calculate achievement percentages (normalized)
+  const obsAchieved = targetObs > 0 ? (observations / targetObs) * 100 : 0
+  const hazardAchieved = targetHazard > 0 ? (hazardRate / targetHazard) * 100 : 0
+  const auditAchieved = targetAudit > 0 ? (auditRate / targetAudit) * 100 : 0
+
+  // Colors mapping (Sage Green for achieved/exceeded, Muted Amber for warning)
+  const achievedColor = '#5e7c6b'
+  const warningColor = '#c4833c'
+
+  const data = [
+    {
+      name: 'Safety Observations',
+      achieved: Math.round(obsAchieved * 10) / 10,
+      actual: `${observations} Logged`,
+      target: `Target: > ${targetObs}`,
+      rawActual: observations,
+      rawTarget: targetObs,
+      color: observations >= targetObs ? achievedColor : warningColor,
+    },
+    {
+      name: 'Hazard SLA Close-Out',
+      achieved: Math.round(hazardAchieved * 10) / 10,
+      actual: `${Math.round(hazardRate * 10) / 10}%`,
+      target: `Target: Min ${targetHazard}%`,
+      rawActual: hazardRate,
+      rawTarget: targetHazard,
+      color: hazardRate >= targetHazard ? achievedColor : warningColor,
+    },
+    {
+      name: 'HSE Audit Execution',
+      achieved: Math.round(auditAchieved * 10) / 10,
+      actual: `${Math.round(auditRate * 10) / 10}%`,
+      target: `Target: Min ${targetAudit}%`,
+      rawActual: auditRate,
+      rawTarget: targetAudit,
+      color: auditRate >= targetAudit ? achievedColor : warningColor,
+    },
+  ]
+
+  const option = {
+    backgroundColor: 'transparent',
+    tooltip: {
+      trigger: 'axis',
+      axisPointer: {
+        type: 'shadow',
+      },
+      backgroundColor: '#ffffff',
+      borderColor: 'rgba(94, 124, 107, 0.12)',
+      borderWidth: 1,
+      textStyle: {
+        color: '#1c2821',
+        fontFamily: 'Plus Jakarta Sans',
+        fontSize: 12,
+        fontWeight: 500,
+      },
+      extraCssText: 'box-shadow: 0 4px 15px rgba(0,0,0,0.05); border-radius: 8px;',
+      formatter: (params: any) => {
+        const index = params[0].dataIndex
+        const item = data[index]
+        return `
+          <div style="font-weight: 700; margin-bottom: 4px; color: #1c2821;">${item.name}</div>
+          <div style="font-size: 11px; color: #5e6b62; line-height: 1.5;">
+            Actual: <span style="color: #1c2821; font-weight: 600;">${item.actual}</span><br/>
+            Target: <span style="color: #8b9990;">${item.target}</span><br/>
+            Achievement: <span style="color: ${item.color}; font-weight: 700;">${item.achieved}%</span>
+          </div>
+        `
+      },
+    },
+    grid: {
+      left: '3%',
+      right: '10%',
+      top: '5%',
+      bottom: '12%',
+      containLabel: true,
+    },
+    xAxis: {
+      type: 'value',
+      min: 0,
+      max: (value: any) => Math.max(120, Math.ceil(value.max / 10) * 10),
+      axisLabel: {
+        formatter: '{value}%',
+        color: '#8b9990',
+        fontFamily: 'Plus Jakarta Sans',
+        fontSize: 10,
+      },
+      splitLine: {
+        lineStyle: {
+          color: 'rgba(94, 124, 107, 0.05)',
+        },
+      },
+    },
+    yAxis: {
+      type: 'category',
+      data: data.map((d) => d.name),
+      axisLabel: {
+        color: '#1c2821',
+        fontFamily: 'Plus Jakarta Sans',
+        fontSize: 11,
+        fontWeight: 600,
+      },
+      axisLine: {
+        lineStyle: {
+          color: 'rgba(94, 124, 107, 0.1)',
+        },
+      },
+      axisTick: {
+        show: false,
+      },
+    },
+    series: [
+      {
+        name: 'Achievement',
+        type: 'bar',
+        barWidth: 14,
+        itemStyle: {
+          borderRadius: 8,
+          color: (params: any) => {
+            return data[params.dataIndex].color
+          },
+        },
+        label: {
+          show: true,
+          position: 'right',
+          formatter: (params: any) => {
+            return data[params.dataIndex].actual
+          },
+          color: '#1c2821',
+          fontFamily: 'Plus Jakarta Sans',
+          fontWeight: 700,
+          fontSize: 11,
+        },
+        data: data.map((d) => d.achieved),
+        markLine: {
+          symbol: 'none',
+          lineStyle: {
+            color: 'var(--color-primary)',
+            type: 'dashed',
+            width: 1.5,
+            opacity: 0.7,
+          },
+          label: {
+            show: true,
+            position: 'end',
+            formatter: 'Target (100%)',
+            color: 'var(--color-primary)',
+            fontSize: 9,
+            fontWeight: 700,
+            fontFamily: 'Plus Jakarta Sans',
+          },
+          data: [
+            {
+              xAxis: 100,
+            },
+          ],
+        },
+      },
+    ],
+  }
+
+  return (
+    <div style={{ height: '200px', width: '100%' }}>
+      <ReactECharts
+        option={option}
+        style={{ height: '100%', width: '100%' }}
+        opts={{ renderer: 'svg' }}
+      />
+    </div>
+  )
+}
+export default TargetVsActual
