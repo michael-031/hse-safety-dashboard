@@ -89,19 +89,19 @@ export const Dashboard: React.FC = () => {
   const riskPill = getRiskPill()
 
   return (
-    <div 
-      style={{ 
-        minHeight: '100vh', 
-        padding: '1.5%', 
+    <div
+      style={{
+        minHeight: '100vh',
+        padding: '1.5%',
         width: '100%',
       }}
       className="dashboard-container"
     >
-      
+
       {/* Main content area split */}
-      <div 
-        style={{ 
-          display: 'flex', 
+      <div
+        style={{
+          display: 'flex',
           gap: isInputVisible ? '1.5rem' : '0px',
           minWidth: 0,
           width: '100%',
@@ -109,10 +109,10 @@ export const Dashboard: React.FC = () => {
         }}
         className="layout-grid"
       >
-        
+
         {/* Left column: Input parameters card */}
-        <aside 
-          style={{ 
+        <aside
+          style={{
             width: isInputVisible ? '330px' : '0px',
             flexShrink: 0,
             opacity: isInputVisible ? 1 : 0,
@@ -137,16 +137,16 @@ export const Dashboard: React.FC = () => {
 
         {/* Right column: Analytics Dashboard */}
         <main style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '1.5rem', minWidth: 0 }}>
-          
+
           {/* Header Card */}
-          <div 
+          <div
             className="glass-panel"
-            style={{ 
-              padding: '1.25rem 1.75rem', 
-              display: 'flex', 
-              justifyContent: 'space-between', 
-              alignItems: 'center', 
-              flexWrap: 'wrap', 
+            style={{
+              padding: '1.25rem 1.75rem',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              flexWrap: 'wrap',
               gap: '1rem',
               boxShadow: 'var(--shadow-sm)'
             }}
@@ -175,41 +175,41 @@ export const Dashboard: React.FC = () => {
               >
                 {isInputVisible ? <PanelLeftClose size={18} /> : <PanelLeftOpen size={18} />}
               </button>
-              
+
               <div>
-              <h1 
-                style={{ 
-                  fontSize: '1.35rem', 
-                  fontWeight: 800, 
-                  letterSpacing: '-0.02em', 
-                  color: 'var(--text-primary)'
-                }}
-              >
-                Executive Health & Safety Dashboard
-              </h1>
-              <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginTop: '0.15rem' }}>
-                HSE Performance Calculator & Preventative Indicator Analysis
-              </p>
+                <h1
+                  style={{
+                    fontSize: '1.35rem',
+                    fontWeight: 800,
+                    letterSpacing: '-0.02em',
+                    color: 'var(--text-primary)'
+                  }}
+                >
+                  Executive Health & Safety Dashboard
+                </h1>
+                <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginTop: '0.15rem' }}>
+                  HSE Performance Calculator & Preventative Indicator Analysis
+                </p>
+              </div>
             </div>
-          </div>
-          
-          {/* Risk Badge (Modeled after 'Balance On track' pill tag) */}
-            <div 
-              style={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                gap: '0.45rem', 
-                background: riskPill.bg, 
-                padding: '0.35rem 0.75rem', 
-                borderRadius: '20px', 
+
+            {/* Risk Badge (Modeled after 'Balance On track' pill tag) */}
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.45rem',
+                background: riskPill.bg,
+                padding: '0.35rem 0.75rem',
+                borderRadius: '20px',
                 border: 'none',
               }}
             >
-              <span 
-                className="risk-dot" 
-                style={{ 
-                  backgroundColor: riskPill.text, 
-                  boxShadow: `0 0 8px ${riskPill.text}` 
+              <span
+                className="risk-dot"
+                style={{
+                  backgroundColor: riskPill.text,
+                  boxShadow: `0 0 8px ${riskPill.text}`
                 }}
               ></span>
               <span style={{ fontSize: '0.72rem', fontWeight: 700, color: riskPill.text }}>
@@ -219,11 +219,11 @@ export const Dashboard: React.FC = () => {
           </div>
 
           {/* Top KPI Cards Row */}
-          <div 
-            style={{ 
-              display: 'grid', 
-              gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', 
-              gap: '1rem' 
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+              gap: '1rem'
             }}
           >
             {/* TRIR Card: Bar sparkline variant */}
@@ -267,15 +267,15 @@ export const Dashboard: React.FC = () => {
           </div>
 
           {/* Bottom Indicators Panels */}
-          <div 
-            style={{ 
-              display: 'grid', 
-              gridTemplateColumns: 'repeat(auto-fit, minmax(420px, 1fr))', 
-              gap: '1.5rem' 
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(420px, 1fr))',
+              gap: '1.5rem'
             }}
             className="indicators-grid"
           >
-            
+
             {/* Lagging Indicators Panel */}
             <section className="glass-panel" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               <div>
@@ -398,13 +398,13 @@ export const Dashboard: React.FC = () => {
                 </div>
               </div>
             </section>
-            
+
           </div>
-          
+
         </main>
-        
+
       </div>
-      
+
       {/* Responsive adjustments helper styles */}
       <style>{`
         @media (max-width: 1024px) {
