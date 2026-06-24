@@ -197,7 +197,7 @@ export const Dashboard: React.FC = () => {
   return (
     <div
       style={{
-        minHeight: '100vh',
+        height: '100vh',
         padding: '1.5%',
         width: '100%',
         display: 'flex',
@@ -231,10 +231,11 @@ export const Dashboard: React.FC = () => {
             position: 'sticky',
             top: '1.5rem',
             height: '100%',
+            minHeight: 0,
           }}
         >
           {/* Prevent inner inputs from wrapping during transition */}
-          <div style={{ width: '330px', height: '100%' }}>
+          <div style={{ width: '330px', height: '100%', minHeight: 0 }}>
             <InputForm
               data={safetyData}
               onChange={setSafetyData}
@@ -245,7 +246,7 @@ export const Dashboard: React.FC = () => {
         </aside>
 
         {/* Right column: Analytics Dashboard */}
-        <main style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '1.5rem', minWidth: 0, height: '100%' }}>
+        <main style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '1.5rem', minWidth: 0, height: '100%', minHeight: 0 }}>
 
           {/* Header Card */}
           <div
@@ -599,16 +600,16 @@ export const Dashboard: React.FC = () => {
             height: 100%;
           }
           .donut-chart-container {
-            height: 260px;
+            height: 220px;
           }
           .target-chart-container {
-            height: 250px;
+            height: 210px;
           }
           .hse-table th {
-            padding: 1.1rem 0.85rem !important;
+            padding: 0.8rem 0.85rem !important;
           }
           .hse-table td {
-            padding: 1.25rem 0.85rem !important;
+            padding: 0.9rem 0.85rem !important;
           }
         }
         @media (max-width: 1024px) {

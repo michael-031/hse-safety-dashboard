@@ -73,6 +73,7 @@ export const InputForm: React.FC<InputFormProps> = ({
         flexDirection: 'column',
         gap: '1.25rem',
         height: '100%',
+        minHeight: 0,
         boxShadow: 'var(--shadow-md)',
       }}
     >
