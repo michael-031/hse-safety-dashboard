@@ -88,12 +88,120 @@ export const Dashboard: React.FC = () => {
 
   const riskPill = getRiskPill()
 
+  // Interactive Demo Tour States
+  const [demoActive, setDemoActive] = useState(false)
+  const [demoStep, setDemoStep] = useState(0)
+  const [cursorPos, setCursorPos] = useState({ x: 0, y: 0 })
+  const [donutHoverCategory, setDonutHoverCategory] = useState<string | null>(null)
+  const [barHoverCategory, setBarHoverCategory] = useState<string | null>(null)
+
+  // Layout Refs to calculate virtual cursor coordinates dynamically
+  const donutContainerRef = React.useRef<HTMLDivElement>(null)
+  const barContainerRef = React.useRef<HTMLDivElement>(null)
+
+  // Handle Demo tour activation
+  useEffect(() => {
+    if (!demoActive) {
+      setDonutHoverCategory(null)
+      setBarHoverCategory(null)
+      return
+    }
+    // Start cursor in the center of the screen
+    setCursorPos({ x: window.innerWidth / 2, y: window.innerHeight / 2 })
+    setDemoStep(0)
+  }, [demoActive])
+
+  // Process Tour steps
+  useEffect(() => {
+    if (!demoActive) return
+
+    const steps = [
+      // Step 0: Move to Donut Chart Center
+      () => {
+        if (donutContainerRef.current) {
+          const rect = donutContainerRef.current.getBoundingClientRect()
+          setCursorPos({ x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 })
+          setDonutHoverCategory(null)
+          setBarHoverCategory(null)
+        }
+      },
+      // Step 1: Hover Donut Item LTI
+      () => {
+        if (donutContainerRef.current) {
+          const rect = donutContainerRef.current.getBoundingClientRect()
+          setCursorPos({ x: rect.left + rect.width / 2 - 35, y: rect.top + rect.height / 2 - 35 })
+          setDonutHoverCategory('lti')
+          setBarHoverCategory(null)
+        }
+      },
+      // Step 2: Hover Donut Item RWC
+      () => {
+        if (donutContainerRef.current) {
+          const rect = donutContainerRef.current.getBoundingClientRect()
+          setCursorPos({ x: rect.left + rect.width / 2 + 35, y: rect.top + rect.height / 2 - 30 })
+          setDonutHoverCategory('rwc')
+        }
+      },
+      // Step 3: Hover Donut Item MTC
+      () => {
+        if (donutContainerRef.current) {
+          const rect = donutContainerRef.current.getBoundingClientRect()
+          setCursorPos({ x: rect.left + rect.width / 2 + 35, y: rect.top + rect.height / 2 + 30 })
+          setDonutHoverCategory('mtc')
+        }
+      },
+      // Step 4: Hover Donut Item FAC
+      () => {
+        if (donutContainerRef.current) {
+          const rect = donutContainerRef.current.getBoundingClientRect()
+          setCursorPos({ x: rect.left + rect.width / 2 - 35, y: rect.top + rect.height / 2 + 35 })
+          setDonutHoverCategory('fac')
+        }
+      },
+      // Step 5: Move to Bar Chart observations
+      () => {
+        if (barContainerRef.current) {
+          const rect = barContainerRef.current.getBoundingClientRect()
+          setCursorPos({ x: rect.left + rect.width / 2 + 20, y: rect.top + 45 })
+          setDonutHoverCategory(null)
+          setBarHoverCategory('observations')
+        }
+      },
+      // Step 6: Hover Bar Hazard SLA
+      () => {
+        if (barContainerRef.current) {
+          const rect = barContainerRef.current.getBoundingClientRect()
+          setCursorPos({ x: rect.left + rect.width / 2 + 40, y: rect.top + 100 })
+          setBarHoverCategory('hazard')
+        }
+      },
+      // Step 7: Hover Bar Audit Execution
+      () => {
+        if (barContainerRef.current) {
+          const rect = barContainerRef.current.getBoundingClientRect()
+          setCursorPos({ x: rect.left + rect.width / 2 + 30, y: rect.top + 155 })
+          setBarHoverCategory('audit')
+        }
+      },
+    ]
+
+    const timer = setTimeout(() => {
+      steps[demoStep]()
+      const nextStep = (demoStep + 1) % steps.length
+      setDemoStep(nextStep)
+    }, 2000)
+
+    return () => clearTimeout(timer)
+  }, [demoActive, demoStep])
+
   return (
     <div
       style={{
         minHeight: '100vh',
         padding: '1.5%',
         width: '100%',
+        display: 'flex',
+        flexDirection: 'column',
       }}
       className="dashboard-container"
     >
@@ -105,6 +213,7 @@ export const Dashboard: React.FC = () => {
           gap: isInputVisible ? '1.5rem' : '0px',
           minWidth: 0,
           width: '100%',
+          flex: 1,
           transition: 'gap 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
         }}
         className="layout-grid"
@@ -121,11 +230,11 @@ export const Dashboard: React.FC = () => {
             overflow: 'hidden',
             position: 'sticky',
             top: '1.5rem',
-            height: 'fit-content',
+            height: '100%',
           }}
         >
           {/* Prevent inner inputs from wrapping during transition */}
-          <div style={{ width: '330px' }}>
+          <div style={{ width: '330px', height: '100%' }}>
             <InputForm
               data={safetyData}
               onChange={setSafetyData}
@@ -136,7 +245,7 @@ export const Dashboard: React.FC = () => {
         </aside>
 
         {/* Right column: Analytics Dashboard */}
-        <main style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '1.5rem', minWidth: 0 }}>
+        <main style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '1.5rem', minWidth: 0, height: '100%' }}>
 
           {/* Header Card */}
           <div
@@ -193,28 +302,64 @@ export const Dashboard: React.FC = () => {
               </div>
             </div>
 
-            {/* Risk Badge (Modeled after 'Balance On track' pill tag) */}
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.45rem',
-                background: riskPill.bg,
-                padding: '0.35rem 0.75rem',
-                borderRadius: '20px',
-                border: 'none',
-              }}
-            >
-              <span
-                className="risk-dot"
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+              {/* Interactive Demo Tour Toggle */}
+              <button
+                id="btn-toggle-demo"
+                onClick={() => setDemoActive(!demoActive)}
                 style={{
-                  backgroundColor: riskPill.text,
-                  boxShadow: `0 0 8px ${riskPill.text}`
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.4rem',
+                  background: demoActive ? 'rgba(94, 124, 107, 0.15)' : 'var(--bg-input)',
+                  border: demoActive ? '1px solid var(--color-primary)' : '1px solid rgba(94, 124, 107, 0.08)',
+                  padding: '0.45rem 0.85rem',
+                  borderRadius: '20px',
+                  cursor: 'pointer',
+                  fontSize: '0.72rem',
+                  fontWeight: 700,
+                  color: demoActive ? 'var(--color-primary)' : 'var(--text-secondary)',
+                  transition: 'all var(--transition-normal)'
                 }}
-              ></span>
-              <span style={{ fontSize: '0.72rem', fontWeight: 700, color: riskPill.text }}>
-                {riskPill.label}
-              </span>
+              >
+                <span
+                  className="risk-dot"
+                  style={{
+                    width: '6px',
+                    height: '6px',
+                    borderRadius: '50%',
+                    backgroundColor: demoActive ? 'var(--color-primary)' : 'var(--text-muted)',
+                    animation: demoActive ? 'pulse-dot 1.5s infinite ease-in-out' : 'none',
+                    boxShadow: demoActive ? '0 0 6px var(--color-primary)' : 'none',
+                    display: 'inline-block'
+                  }}
+                ></span>
+                {demoActive ? 'Interactive Tour Active' : 'Start Interactive Tour'}
+              </button>
+
+              {/* Risk Badge (Modeled after 'Balance On track' pill tag) */}
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.45rem',
+                  background: riskPill.bg,
+                  padding: '0.35rem 0.75rem',
+                  borderRadius: '20px',
+                  border: 'none',
+                }}
+              >
+                <span
+                  className="risk-dot"
+                  style={{
+                    backgroundColor: riskPill.text,
+                    boxShadow: `0 0 8px ${riskPill.text}`
+                  }}
+                ></span>
+                <span style={{ fontSize: '0.72rem', fontWeight: 700, color: riskPill.text }}>
+                  {riskPill.label}
+                </span>
+              </div>
             </div>
           </div>
 
@@ -271,13 +416,15 @@ export const Dashboard: React.FC = () => {
             style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(auto-fit, minmax(420px, 1fr))',
-              gap: '1.5rem'
+              gap: '1.5rem',
+              flex: 1,
+              minHeight: 0,
             }}
             className="indicators-grid"
           >
 
             {/* Lagging Indicators Panel */}
-            <section className="glass-panel" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <section className="glass-panel" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem', height: '100%' }}>
               <div>
                 <h3 style={{ fontSize: '0.82rem', fontWeight: 800, letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--text-primary)' }}>
                   Lagging Indicators (Incident Breakdown)
@@ -286,7 +433,7 @@ export const Dashboard: React.FC = () => {
               </div>
 
               {/* Layout for Table & Donut */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '1rem', alignItems: 'center' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '1.5rem', alignItems: 'center', flex: 1, width: '100%' }}>
                 <table className="hse-table">
                   <thead>
                     <tr>
@@ -327,19 +474,20 @@ export const Dashboard: React.FC = () => {
                 </table>
 
                 {/* ECharts donut chart */}
-                <div>
+                <div ref={donutContainerRef}>
                   <IncidentDonut
                     lti={safetyData.lti}
                     rwc={safetyData.rwc}
                     mtc={safetyData.mtc}
                     fac={safetyData.fac}
+                    hoveredCategory={donutHoverCategory}
                   />
                 </div>
               </div>
             </section>
 
             {/* Leading Indicators Panel */}
-            <section className="glass-panel" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <section className="glass-panel" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem', height: '100%' }}>
               <div>
                 <h3 style={{ fontSize: '0.82rem', fontWeight: 800, letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--text-primary)' }}>
                   Leading Indicators (Preventative Targets)
@@ -348,7 +496,7 @@ export const Dashboard: React.FC = () => {
               </div>
 
               {/* Table and Comparison Chart */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', flex: 1, justifyContent: 'space-around' }}>
                 <table className="hse-table">
                   <thead>
                     <tr>
@@ -389,11 +537,12 @@ export const Dashboard: React.FC = () => {
                 </table>
 
                 {/* Normalized comparison bar chart */}
-                <div>
+                <div ref={barContainerRef}>
                   <TargetVsActual
                     observations={safetyData.observations}
                     hazardRate={calculated.hazardCloseOutRate}
                     auditRate={calculated.auditCompletionRate}
+                    hoveredCategory={barHoverCategory}
                   />
                 </div>
               </div>
@@ -405,18 +554,87 @@ export const Dashboard: React.FC = () => {
 
       </div>
 
+      {/* Virtual Cursor element for Tour Demo */}
+      {demoActive && (
+        <div
+          id="virtual-cursor"
+          style={{
+            position: 'fixed',
+            left: cursorPos.x,
+            top: cursorPos.y,
+            width: '20px',
+            height: '20px',
+            backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'24\' height=\'24\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%231c2821\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3E%3Cpath d=\'m4 4 7.07 17 2.51-7.39L21 11.07z\'/%3E%3C/svg%3E")',
+            backgroundSize: 'contain',
+            pointerEvents: 'none',
+            zIndex: 999999,
+            transition: 'left 1.2s cubic-bezier(0.25, 1, 0.5, 1), top 1.2s cubic-bezier(0.25, 1, 0.5, 1)',
+          }}
+        />
+      )}
+
       {/* Responsive adjustments helper styles */}
       <style>{`
+        @media (min-width: 1025px) {
+          .dashboard-container {
+            height: 100vh;
+            overflow: hidden;
+          }
+          .layout-grid {
+            min-height: 0;
+          }
+          aside {
+            height: 100% !important;
+            position: relative !important;
+            top: 0 !important;
+          }
+          main {
+            height: 100% !important;
+          }
+          .indicators-grid {
+            flex: 1;
+            min-height: 0;
+          }
+          .indicators-grid > .glass-panel {
+            height: 100%;
+          }
+          .donut-chart-container {
+            height: 260px;
+          }
+          .target-chart-container {
+            height: 250px;
+          }
+          .hse-table th {
+            padding: 1.1rem 0.85rem !important;
+          }
+          .hse-table td {
+            padding: 1.25rem 0.85rem !important;
+          }
+        }
         @media (max-width: 1024px) {
           .dashboard-container {
             padding: 1rem !important;
+            height: auto !important;
+            min-height: 100vh;
+            overflow: auto !important;
           }
           .layout-grid {
             grid-template-columns: 1fr !important;
+            height: auto !important;
           }
           aside {
             position: relative !important;
             top: 0 !important;
+            height: auto !important;
+          }
+          main {
+            height: auto !important;
+          }
+          .donut-chart-container {
+            height: 175px;
+          }
+          .target-chart-container {
+            height: 200px;
           }
         }
         @media (max-width: 768px) {

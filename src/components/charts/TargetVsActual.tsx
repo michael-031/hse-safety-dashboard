@@ -5,13 +5,50 @@ interface TargetVsActualProps {
   observations: number
   hazardRate: number
   auditRate: number
+  hoveredCategory?: string | null
 }
 
 export const TargetVsActual: React.FC<TargetVsActualProps> = ({
   observations,
   hazardRate,
   auditRate,
+  hoveredCategory,
 }) => {
+  const chartRef = React.useRef<any>(null)
+
+  React.useEffect(() => {
+    if (!chartRef.current) return
+    const chartInstance = chartRef.current.getEchartsInstance()
+
+    chartInstance.dispatchAction({
+      type: 'downplay',
+      seriesIndex: 0,
+    })
+    chartInstance.dispatchAction({
+      type: 'hideTip',
+    })
+
+    if (hoveredCategory) {
+      const nameMap: Record<string, number> = {
+        observations: 0,
+        hazard: 1,
+        audit: 2,
+      }
+      const idx = nameMap[hoveredCategory]
+      if (idx !== undefined) {
+        chartInstance.dispatchAction({
+          type: 'highlight',
+          seriesIndex: 0,
+          dataIndex: idx,
+        })
+        chartInstance.dispatchAction({
+          type: 'showTip',
+          seriesIndex: 0,
+          dataIndex: idx,
+        })
+      }
+    }
+  }, [hoveredCategory])
   // Define targets
   const targetObs = 400
   const targetHazard = 90
@@ -178,8 +215,9 @@ export const TargetVsActual: React.FC<TargetVsActualProps> = ({
   }
 
   return (
-    <div style={{ height: '200px', width: '100%' }}>
+    <div className="target-chart-container" style={{ width: '100%' }}>
       <ReactECharts
+        ref={chartRef}
         option={option}
         style={{ height: '100%', width: '100%' }}
         opts={{ renderer: 'svg' }}

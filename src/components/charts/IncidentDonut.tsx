@@ -6,6 +6,7 @@ interface IncidentDonutProps {
   rwc: number
   mtc: number
   fac: number
+  hoveredCategory?: string | null
 }
 
 export const IncidentDonut: React.FC<IncidentDonutProps> = ({
@@ -13,9 +14,62 @@ export const IncidentDonut: React.FC<IncidentDonutProps> = ({
   rwc,
   mtc,
   fac,
+  hoveredCategory,
 }) => {
   const total = lti + rwc + mtc + fac
   const isAllZero = total === 0
+
+  const chartRef = React.useRef<any>(null)
+
+  const filteredData = React.useMemo(() => {
+    return isAllZero
+      ? [
+          {
+            value: 1,
+            name: 'Safe Workplace',
+            tooltip: {
+              formatter: 'All indicators stable: 0 incidents',
+            },
+          },
+        ]
+      : [
+          { value: lti, name: 'LTI (Lost Time)' },
+          { value: rwc, name: 'RWC (Restricted Work)' },
+          { value: mtc, name: 'MTC (Medical Treatment)' },
+          { value: fac, name: 'FAC (First Aid)' },
+        ].filter((item) => item.value > 0)
+  }, [lti, rwc, mtc, fac, isAllZero])
+
+  React.useEffect(() => {
+    if (!chartRef.current) return
+    const chartInstance = chartRef.current.getEchartsInstance()
+
+    chartInstance.dispatchAction({
+      type: 'downplay',
+      seriesIndex: 0,
+    })
+    chartInstance.dispatchAction({
+      type: 'hideTip',
+    })
+
+    if (hoveredCategory) {
+      const idx = filteredData.findIndex((item) =>
+        item.name.toLowerCase().includes(hoveredCategory.toLowerCase())
+      )
+      if (idx !== -1) {
+        chartInstance.dispatchAction({
+          type: 'highlight',
+          seriesIndex: 0,
+          dataIndex: idx,
+        })
+        chartInstance.dispatchAction({
+          type: 'showTip',
+          seriesIndex: 0,
+          dataIndex: idx,
+        })
+      }
+    }
+  }, [hoveredCategory, filteredData])
 
   const option = {
     backgroundColor: 'transparent',
@@ -73,30 +127,16 @@ export const IncidentDonut: React.FC<IncidentDonutProps> = ({
               '#d1a336', // MTC - Muted Gold/Yellow
               '#4c7a80', // FAC - Muted Slate/Cyan
             ],
-        data: isAllZero
-          ? [
-              {
-                value: 1,
-                name: 'Safe Workplace',
-                tooltip: {
-                  formatter: 'All indicators stable: 0 incidents',
-                },
-              },
-            ]
-          : [
-              { value: lti, name: 'LTI (Lost Time)' },
-              { value: rwc, name: 'RWC (Restricted Work)' },
-              { value: mtc, name: 'MTC (Medical Treatment)' },
-              { value: fac, name: 'FAC (First Aid)' },
-            ].filter((item) => item.value > 0),
+        data: filteredData,
       },
     ],
   }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', width: '100%', alignItems: 'center' }}>
-      <div style={{ position: 'relative', height: '175px', width: '100%' }}>
+      <div className="donut-chart-container" style={{ position: 'relative', width: '100%' }}>
         <ReactECharts
+          ref={chartRef}
           option={option}
           style={{ height: '100%', width: '100%' }}
           opts={{ renderer: 'svg' }}
