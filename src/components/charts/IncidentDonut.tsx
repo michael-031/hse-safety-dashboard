@@ -19,6 +19,7 @@ export const IncidentDonut: React.FC<IncidentDonutProps> = ({
   const total = lti + rwc + mtc + fac
   const isAllZero = total === 0
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const chartRef = React.useRef<any>(null)
 
   const filteredData = React.useMemo(() => {

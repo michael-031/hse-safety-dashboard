@@ -2,18 +2,19 @@ import React from 'react'
 import ReactECharts from 'echarts-for-react'
 
 interface TargetVsActualProps {
-  observations: number
-  hazardRate: number
-  auditRate: number
+  ergoRate: number
+  cacrRate: number
+  trainingRate: number
   hoveredCategory?: string | null
 }
 
 export const TargetVsActual: React.FC<TargetVsActualProps> = ({
-  observations,
-  hazardRate,
-  auditRate,
+  ergoRate,
+  cacrRate,
+  trainingRate,
   hoveredCategory,
 }) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const chartRef = React.useRef<any>(null)
 
   React.useEffect(() => {
@@ -31,8 +32,11 @@ export const TargetVsActual: React.FC<TargetVsActualProps> = ({
     if (hoveredCategory) {
       const nameMap: Record<string, number> = {
         observations: 0,
+        ergo: 0,
         hazard: 1,
+        cacr: 1,
         audit: 2,
+        training: 2,
       }
       const idx = nameMap[hoveredCategory]
       if (idx !== undefined) {
@@ -49,47 +53,55 @@ export const TargetVsActual: React.FC<TargetVsActualProps> = ({
       }
     }
   }, [hoveredCategory])
-  // Define targets
-  const targetObs = 400
-  const targetHazard = 90
-  const targetAudit = 95
 
-  // Calculate achievement percentages (normalized)
-  const obsAchieved = targetObs > 0 ? (observations / targetObs) * 100 : 0
-  const hazardAchieved = targetHazard > 0 ? (hazardRate / targetHazard) * 100 : 0
-  const auditAchieved = targetAudit > 0 ? (auditRate / targetAudit) * 100 : 0
+  // Define targets from the PDF Metric Architecture Framework
+  const targetErgo = 95
+  const targetCacr = 95
+  const targetTraining = 100
 
-  // Colors mapping (Sage Green for achieved/exceeded, Muted Amber for warning)
-  const achievedColor = '#5e7c6b'
-  const warningColor = '#c4833c'
+  // Calculate achievement percentages (normalized relative to target, capped/scaled sensibly)
+  const ergoAchieved = targetErgo > 0 ? ergoRate : 0
+  const cacrAchieved = targetCacr > 0 ? cacrRate : 0
+  const trainingAchieved = targetTraining > 0 ? trainingRate : 0
+
+  // Colors mapping (Muted green for achieved/exceeded, Muted amber for action required/warning)
+  const safeColor = '#16a34a' // Green status marker
+  const warningColor = '#d97706' // Amber status marker
+  const alertColor = '#dc2626' // Red status marker
+
+  const getMetricColor = (val: number, target: number) => {
+    if (val >= target) return safeColor
+    if (val >= target * 0.9) return warningColor
+    return alertColor
+  }
 
   const data = [
     {
-      name: 'Safety Observations',
-      achieved: Math.round(obsAchieved * 10) / 10,
-      actual: `${observations} Logged`,
-      target: `Target: > ${targetObs}`,
-      rawActual: observations,
-      rawTarget: targetObs,
-      color: observations >= targetObs ? achievedColor : warningColor,
+      name: 'Ergonomic Assessments',
+      achieved: Math.round(ergoAchieved * 10) / 10,
+      actual: `${Math.round(ergoRate * 10) / 10}%`,
+      target: `Target: ≥ ${targetErgo}%`,
+      rawActual: ergoRate,
+      rawTarget: targetErgo,
+      color: getMetricColor(ergoRate, targetErgo),
     },
     {
-      name: 'Hazard SLA Close-Out',
-      achieved: Math.round(hazardAchieved * 10) / 10,
-      actual: `${Math.round(hazardRate * 10) / 10}%`,
-      target: `Target: Min ${targetHazard}%`,
-      rawActual: hazardRate,
-      rawTarget: targetHazard,
-      color: hazardRate >= targetHazard ? achievedColor : warningColor,
+      name: 'Corrective Actions (CACR)',
+      achieved: Math.round(cacrAchieved * 10) / 10,
+      actual: `${Math.round(cacrRate * 10) / 10}%`,
+      target: `Target: ≥ ${targetCacr}%`,
+      rawActual: cacrRate,
+      rawTarget: targetCacr,
+      color: getMetricColor(cacrRate, targetCacr),
     },
     {
-      name: 'HSE Audit Execution',
-      achieved: Math.round(auditAchieved * 10) / 10,
-      actual: `${Math.round(auditRate * 10) / 10}%`,
-      target: `Target: Min ${targetAudit}%`,
-      rawActual: auditRate,
-      rawTarget: targetAudit,
-      color: auditRate >= targetAudit ? achievedColor : warningColor,
+      name: 'HSE Training Completion',
+      achieved: Math.round(trainingAchieved * 10) / 10,
+      actual: `${Math.round(trainingRate * 10) / 10}%`,
+      target: `Target: ${targetTraining}%`,
+      rawActual: trainingRate,
+      rawTarget: targetTraining,
+      color: getMetricColor(trainingRate, targetTraining),
     },
   ]
 
@@ -110,22 +122,23 @@ export const TargetVsActual: React.FC<TargetVsActualProps> = ({
         fontWeight: 500,
       },
       extraCssText: 'box-shadow: 0 4px 15px rgba(0,0,0,0.05); border-radius: 8px;',
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       formatter: (params: any) => {
         const index = params[0].dataIndex
         const item = data[index]
         return `
           <div style="font-weight: 700; margin-bottom: 4px; color: #1c2821;">${item.name}</div>
           <div style="font-size: 11px; color: #5e6b62; line-height: 1.5;">
-            Actual: <span style="color: #1c2821; font-weight: 600;">${item.actual}</span><br/>
-            Target: <span style="color: #8b9990;">${item.target}</span><br/>
-            Achievement: <span style="color: ${item.color}; font-weight: 700;">${item.achieved}%</span>
+            Actual Compliance: <span style="color: #1c2821; font-weight: 600;">${item.actual}</span><br/>
+            Requirement: <span style="color: #8b9990;">${item.target}</span><br/>
+            Performance Level: <span style="color: ${item.color}; font-weight: 700;">${item.achieved >= item.rawTarget ? 'Compliant' : 'Needs Action'}</span>
           </div>
         `
       },
     },
     grid: {
       left: '3%',
-      right: '10%',
+      right: '12%',
       top: '5%',
       bottom: '12%',
       containLabel: true,
@@ -133,7 +146,7 @@ export const TargetVsActual: React.FC<TargetVsActualProps> = ({
     xAxis: {
       type: 'value',
       min: 0,
-      max: (value: any) => Math.max(120, Math.ceil(value.max / 10) * 10),
+      max: 100,
       axisLabel: {
         formatter: '{value}%',
         color: '#8b9990',
@@ -166,11 +179,12 @@ export const TargetVsActual: React.FC<TargetVsActualProps> = ({
     },
     series: [
       {
-        name: 'Achievement',
+        name: 'Actual Rate',
         type: 'bar',
         barWidth: 14,
         itemStyle: {
           borderRadius: 8,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           color: (params: any) => {
             return data[params.dataIndex].color
           },
@@ -178,6 +192,7 @@ export const TargetVsActual: React.FC<TargetVsActualProps> = ({
         label: {
           show: true,
           position: 'right',
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           formatter: (params: any) => {
             return data[params.dataIndex].actual
           },
@@ -190,23 +205,27 @@ export const TargetVsActual: React.FC<TargetVsActualProps> = ({
         markLine: {
           symbol: 'none',
           lineStyle: {
-            color: 'var(--color-primary)',
+            color: 'rgba(28, 40, 33, 0.25)',
             type: 'dashed',
             width: 1.5,
-            opacity: 0.7,
           },
           label: {
-            show: true,
-            position: 'end',
-            formatter: 'Target (100%)',
-            color: 'var(--color-primary)',
-            fontSize: 9,
-            fontWeight: 700,
-            fontFamily: 'Plus Jakarta Sans',
+            show: false,
           },
           data: [
             {
+              xAxis: 95,
+              name: '95% Threshold',
+              lineStyle: {
+                color: '#d97706',
+              },
+            },
+            {
               xAxis: 100,
+              name: '100% Target',
+              lineStyle: {
+                color: '#16a34a',
+              },
             },
           ],
         },
@@ -226,3 +245,4 @@ export const TargetVsActual: React.FC<TargetVsActualProps> = ({
   )
 }
 export default TargetVsActual
+
