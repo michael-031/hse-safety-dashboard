@@ -9,57 +9,68 @@ export function calculateSafetyMetrics(
     lti,
     rwc,
     mtc,
-    observations,
-    hazardsClosed,
-    auditsPlanned,
-    auditsCompleted,
+    ergoAssessed,
+    ergoTotal,
+    cacrResolved,
+    cacrTotal,
+    trainingCompleted,
+    trainingTotal,
+    daysLost,
   } = data
 
   // 1. Total Recordable Incidents (TRI) = LTI + RWC + MTC
   const tri = lti + rwc + mtc
 
-  // 2. Total Recordable Incident Rate (TRIR) = (TRI * 200,000) / Man-Hours
+  // 2. Total Recordable Incident Rate (TRIR) = (TRI * 200,000) / Exposure Hours
   const trir = totalManHours > 0 ? (tri * 200000) / totalManHours : 0
 
-  // 3. Lost Time Injury Frequency Rate (LTIFR) = (LTI * 1,000,000) / Man-Hours
+  // 3. Lost Time Injury Frequency Rate (LTIFR) = (LTI * 1,000,000) / Exposure Hours
   const ltifr = totalManHours > 0 ? (lti * 1000000) / totalManHours : 0
 
-  // 4. Hazard Close-Out Rate (%)
-  // Standard: (Closed / Observations) * 100
-  // Excel screenshot: (Observations / Closed) * 100
-  let hazardCloseOutRate = 0
+  // 4. Ergonomic Workstation Assessment Rate (%) = (Assessed / Total) * 100
+  const ergoRate = ergoTotal > 0 ? (ergoAssessed / ergoTotal) * 100 : 0
+
+  // 5. Corrective Action Closure Rate (CACR) (%)
+  // Standard: (Resolved Within Target / Total Identified Safety Actions) * 100
+  // Excel screenshot equivalent: (Total Identified Safety Actions / Resolved) * 100
+  let cacrRate: number
   if (useExcelFormula) {
-    hazardCloseOutRate = hazardsClosed > 0 ? (observations / hazardsClosed) * 100 : 0
+    cacrRate = cacrResolved > 0 ? (cacrTotal / cacrResolved) * 100 : 0
   } else {
-    hazardCloseOutRate = observations > 0 ? (hazardsClosed / observations) * 100 : 0
+    cacrRate = cacrTotal > 0 ? (cacrResolved / cacrTotal) * 100 : 0
   }
 
-  // 5. Audit Completion Rate (%) = (Completed / Planned) * 100
-  const auditCompletionRate =
-    auditsPlanned > 0 ? (auditsCompleted / auditsPlanned) * 100 : 0
+  // 6. HSE Induction & Refresher Training Completion Rate (%) = (Trained / Total) * 100
+  const trainingRate = trainingTotal > 0 ? (trainingCompleted / trainingTotal) * 100 : 0
 
-  // 6. Risk Status & Label based on TRIR
-  let riskStatus: 'low' | 'moderate' | 'high' = 'low'
-  let riskLabel = ''
+  // 7. Severity Index (SI) = Days Lost
+  const severityIndex = daysLost
 
-  if (trir < 1.00) {
-    riskStatus = 'low'
-    riskLabel = `STABLE / LOW RISK PERFORMANCE BOUNDS (TRIR < 1.00)`
-  } else if (trir >= 1.00 && trir < 2.00) {
-    riskStatus = 'moderate'
-    riskLabel = `MODERATE RISK PERFORMANCE BOUNDS (1.00 <= TRIR < 2.00)`
-  } else {
+  // 8. Risk Status & Label based on TRIR, LTI, and other thresholds
+  let riskStatus: 'low' | 'moderate' | 'high'
+  let riskLabel: string
+
+  if (lti > 0 || trir >= 0.50 || cacrRate < 85 || ergoRate < 90) {
     riskStatus = 'high'
-    riskLabel = `HIGH RISK PERFORMANCE BOUNDS (TRIR >= 2.00)`
+    riskLabel = `HIGH RISK BOUNDS (LTI: ${lti} | TRIR: ${trir.toFixed(2)} >= 0.50)`
+  } else if (trir > 0 || cacrRate < 95 || ergoRate < 95 || trainingRate < 100) {
+    riskStatus = 'moderate'
+    riskLabel = `MODERATE RISK BOUNDS (CACR: ${cacrRate.toFixed(1)}% | Ergo: ${ergoRate.toFixed(1)}%)`
+  } else {
+    riskStatus = 'low'
+    riskLabel = 'STABLE / ON TRACK (All indicators within safe operational bounds)'
   }
 
   return {
     tri,
     trir,
     ltifr,
-    hazardCloseOutRate,
-    auditCompletionRate,
+    ergoRate,
+    cacrRate,
+    trainingRate,
+    severityIndex,
     riskStatus,
     riskLabel,
   }
 }
+
