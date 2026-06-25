@@ -20,6 +20,80 @@ const DEFAULT_SAFETY_DATA: SafetyData = {
   auditsCompleted: 22,
 }
 
+// Preset quarterly and milestone safety scenarios for slideshow
+const SLIDESHOW_DATA = [
+  {
+    name: "Q1 - Baseline Performance",
+    data: {
+      totalManHours: 1200000,
+      lti: 1,
+      rwc: 2,
+      mtc: 3,
+      fac: 14,
+      observations: 420,
+      hazardsClosed: 385,
+      auditsPlanned: 24,
+      auditsCompleted: 22,
+    }
+  },
+  {
+    name: "Q2 - High Activity Period",
+    data: {
+      totalManHours: 1850000,
+      lti: 2,
+      rwc: 4,
+      mtc: 5,
+      fac: 22,
+      observations: 510,
+      hazardsClosed: 480,
+      auditsPlanned: 36,
+      auditsCompleted: 34,
+    }
+  },
+  {
+    name: "Q3 - Zero Harm Milestone",
+    data: {
+      totalManHours: 1400000,
+      lti: 0,
+      rwc: 0,
+      mtc: 0,
+      fac: 0,
+      observations: 480,
+      hazardsClosed: 460,
+      auditsPlanned: 28,
+      auditsCompleted: 28,
+    }
+  },
+  {
+    name: "Q4 - High Risk Alert",
+    data: {
+      totalManHours: 1100000,
+      lti: 3,
+      rwc: 5,
+      mtc: 6,
+      fac: 28,
+      observations: 310,
+      hazardsClosed: 220,
+      auditsPlanned: 20,
+      auditsCompleted: 15,
+    }
+  },
+  {
+    name: "Year-End Recovery",
+    data: {
+      totalManHours: 1500000,
+      lti: 0,
+      rwc: 1,
+      mtc: 2,
+      fac: 12,
+      observations: 600,
+      hazardsClosed: 580,
+      auditsPlanned: 30,
+      auditsCompleted: 29,
+    }
+  }
+]
+
 export const Dashboard: React.FC = () => {
   // Toggle input section visibility
   const [isInputVisible, setIsInputVisible] = useState(true)
@@ -37,6 +111,7 @@ export const Dashboard: React.FC = () => {
     return DEFAULT_SAFETY_DATA
   })
 
+  // Start with Excel formula active
   // Start with Excel formula active
   const [useExcelFormula, setUseExcelFormula] = useState<boolean>(() => {
     const saved = localStorage.getItem('hse_use_excel_formula')
@@ -63,7 +138,7 @@ export const Dashboard: React.FC = () => {
   // Compute metrics
   const calculated = calculateSafetyMetrics(safetyData, useExcelFormula)
 
-  // Risk Pill Styling (matching the Carlos Brown / Anna Jones status pills)
+  // Risk Pill Styling (matching the Carlos Brown / Joel Cannan badges)
   const getRiskPill = () => {
     if (calculated.riskStatus === 'low') {
       return {
@@ -98,6 +173,131 @@ export const Dashboard: React.FC = () => {
   // Layout Refs to calculate virtual cursor coordinates dynamically
   const donutContainerRef = React.useRef<HTMLDivElement>(null)
   const barContainerRef = React.useRef<HTMLDivElement>(null)
+
+  // Slideshow States
+  const [isSlideshowPlaying, setIsSlideshowPlaying] = useState(false)
+  const [currentSlideIndex, setCurrentSlideIndex] = useState(0)
+  const [isPresentationMode, setIsPresentationMode] = useState(false)
+  const [pptHoverCategory, setPptHoverCategory] = useState<string | null>(null)
+
+  // Get dynamic adaptive background gradient per slide scenario
+  const getSlideBackground = (index: number) => {
+    switch (index) {
+      case 0: // Q1 Baseline (Slate Navy)
+        return 'radial-gradient(circle at 50% 0%, #0d2547 0%, #020813 100%)'
+      case 1: // Q2 High Activity (Ocean Blue)
+        return 'radial-gradient(circle at 50% 0%, #0a355c 0%, #010f22 100%)'
+      case 2: // Q3 Zero Harm (Emerald Green)
+        return 'radial-gradient(circle at 50% 0%, #063c26 0%, #000c07 100%)'
+      case 3: // Q4 High Risk Alert (Critical Red)
+        return 'radial-gradient(circle at 50% 0%, #3a0e0e 0%, #0b0202 100%)'
+      case 4: // Year-End Recovery (Amber Gold)
+        return 'radial-gradient(circle at 50% 0%, #352506 0%, #0a0701 100%)'
+      default:
+        return 'radial-gradient(circle at 50% 0%, #0d2547 0%, #020813 100%)'
+    }
+  }
+
+  // Toggle Fullscreen PPT Presentation Mode
+  const enterPresentationMode = () => {
+    setIsPresentationMode(true)
+    setIsSlideshowPlaying(true) // Automatically start playing on entering presentation
+    
+    // Request fullscreen on documentElement
+    if (document.documentElement.requestFullscreen) {
+      document.documentElement.requestFullscreen().catch((err) => {
+        console.error("Error attempting to enable fullscreen:", err)
+      })
+    }
+  }
+
+  const exitPresentationMode = () => {
+    setIsPresentationMode(false)
+    setIsSlideshowPlaying(false)
+    
+    if (document.fullscreenElement) {
+      document.exitFullscreen().catch((err) => {
+        console.error("Error attempting to exit fullscreen:", err)
+      })
+    }
+  }
+
+  // Listen for fullscreen change event (e.g. if user presses ESC)
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      const isCurrentlyFullscreen = !!document.fullscreenElement
+      setIsPresentationMode(isCurrentlyFullscreen)
+      if (!isCurrentlyFullscreen) {
+        setIsSlideshowPlaying(false)
+        document.body.classList.remove('presentation-mode-active')
+      } else {
+        document.body.classList.add('presentation-mode-active')
+      }
+    }
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange)
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange)
+      document.body.classList.remove('presentation-mode-active')
+    }
+  }, [])
+
+  // Keyboard navigation for PPT Mode
+  useEffect(() => {
+    if (!isPresentationMode) return
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowRight' || e.key === ' ') {
+        e.preventDefault()
+        setCurrentSlideIndex((prevIdx) => {
+          const nextIdx = (prevIdx + 1) % SLIDESHOW_DATA.length
+          setSafetyData(SLIDESHOW_DATA[nextIdx].data)
+          return nextIdx
+        })
+      } else if (e.key === 'ArrowLeft') {
+        e.preventDefault()
+        setCurrentSlideIndex((prevIdx) => {
+          const nextIdx = (prevIdx - 1 + SLIDESHOW_DATA.length) % SLIDESHOW_DATA.length
+          setSafetyData(SLIDESHOW_DATA[nextIdx].data)
+          return nextIdx
+        })
+      } else if (e.key === 'Escape') {
+        exitPresentationMode()
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [isPresentationMode])
+
+  // Slideshow Autoplay Timer Effect
+  useEffect(() => {
+    if (!isSlideshowPlaying) return
+
+    const timer = setInterval(() => {
+      setCurrentSlideIndex((prevIdx) => {
+        const nextIdx = (prevIdx + 1) % SLIDESHOW_DATA.length
+        setSafetyData(SLIDESHOW_DATA[nextIdx].data)
+        return nextIdx
+      })
+    }, 3000)
+
+    return () => clearInterval(timer)
+  }, [isSlideshowPlaying])
+
+  // Pause slideshow if demo tour becomes active
+  useEffect(() => {
+    if (demoActive) {
+      setIsSlideshowPlaying(false)
+    }
+  }, [demoActive])
+
+  // Pause demo tour if slideshow becomes active
+  useEffect(() => {
+    if (isSlideshowPlaying) {
+      setDemoActive(false)
+    }
+  }, [isSlideshowPlaying])
 
   // Handle Demo tour activation
   useEffect(() => {
@@ -195,16 +395,341 @@ export const Dashboard: React.FC = () => {
   }, [demoActive, demoStep])
 
   return (
-    <div
-      style={{
-        height: '100vh',
-        padding: '1.5%',
-        width: '100%',
-        display: 'flex',
-        flexDirection: 'column',
-      }}
-      className="dashboard-container"
-    >
+    <>
+      {isPresentationMode && (
+        <div
+          id="presentation-overlay"
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: getSlideBackground(currentSlideIndex),
+            color: '#ffffff',
+            zIndex: 999999,
+            padding: '2rem 3rem',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+            height: '100vh',
+            width: '100vw',
+            overflow: 'hidden',
+            boxSizing: 'border-box',
+            transition: 'background 1s ease-in-out',
+          }}
+        >
+          {/* Top Progress bar */}
+          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '4px', background: 'rgba(255, 255, 255, 0.05)' }}>
+            <div 
+              style={{ 
+                height: '100%', 
+                width: `${((currentSlideIndex + 1) / SLIDESHOW_DATA.length) * 100}%`, 
+                background: 'linear-gradient(to right, #60a5fa, #2563eb)',
+                transition: 'width 0.4s cubic-bezier(0.16, 1, 0.3, 1)'
+              }} 
+            />
+          </div>
+
+          {/* Top Control Bar */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+            <div>
+              <span style={{ fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.15em', color: '#60a5fa', fontWeight: 800 }}>
+                HSE Executive Presentation Mode
+              </span>
+              <h2 
+                key={currentSlideIndex}
+                className="ppt-slide-animate"
+                style={{ fontSize: '1.85rem', fontWeight: 800, marginTop: '0.15rem', letterSpacing: '-0.02em', color: '#ffffff' }}
+              >
+                {SLIDESHOW_DATA[currentSlideIndex].name}
+              </h2>
+            </div>
+            
+            <div style={{ display: 'flex', gap: '0.8rem', alignItems: 'center' }}>
+              {/* Risk Badge */}
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.45rem',
+                  background: riskPill.bg,
+                  padding: '0.4rem 0.95rem',
+                  borderRadius: '24px',
+                  border: 'none',
+                }}
+              >
+                <span
+                  className="risk-dot"
+                  style={{
+                    backgroundColor: riskPill.text,
+                    boxShadow: `0 0 8px ${riskPill.text}`
+                  }}
+                ></span>
+                <span style={{ fontSize: '0.75rem', fontWeight: 800, color: riskPill.text }}>
+                  {riskPill.label}
+                </span>
+              </div>
+
+              <button
+                onClick={exitPresentationMode}
+                className="btn"
+                style={{
+                  background: 'rgba(255,255,255,0.08)',
+                  border: '1px solid rgba(255,255,255,0.12)',
+                  color: '#ffffff',
+                  fontSize: '0.75rem',
+                  padding: '0.45rem 0.9rem',
+                  borderRadius: '20px',
+                  cursor: 'pointer',
+                  fontWeight: 700,
+                  transition: 'all 0.25s'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.15)'}
+                onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}
+              >
+                Exit Presentation
+              </button>
+            </div>
+          </div>
+
+          {/* Presentation Body: Large cards + Large Charts */}
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '1.5rem', minHeight: 0 }}>
+            
+            {/* KPI Row (Large view) */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '1rem' }}>
+              {[
+                { title: "Total Recordable Incident Rate", value: calculated.trir.toFixed(2), target: "Target: < 1.00", color: calculated.trir < 1.00 ? '#10b981' : '#ef4444', hoverCat: null },
+                { title: "Lost Time Frequency Rate", value: calculated.ltifr.toFixed(2), target: "Target: < 1.00", color: calculated.ltifr < 1.00 ? '#10b981' : '#ef4444', hoverCat: 'lti' },
+                { title: "Hazard Close-Out Rate", value: `${calculated.hazardCloseOutRate.toFixed(1)}%`, target: "Target: > 90%", color: calculated.hazardCloseOutRate >= 90 ? '#fbbf24' : '#ef4444', hoverCat: 'hazard' },
+                { title: "Audit Completion Rate", value: `${calculated.auditCompletionRate.toFixed(1)}%`, target: "Target: > 95%", color: calculated.auditCompletionRate >= 95 ? '#10b981' : '#ef4444', hoverCat: 'audit' },
+                { title: "Total Recordable Cases", value: calculated.tri, target: `LTI: ${safetyData.lti} • RWC: ${safetyData.rwc} • MTC: ${safetyData.mtc}`, color: calculated.tri === 0 ? '#10b981' : '#fbbf24', hoverCat: 'mtc' },
+              ].map((kpi, idx) => (
+                <div 
+                  key={idx} 
+                  className="glass-panel" 
+                  onMouseEnter={() => kpi.hoverCat && setPptHoverCategory(kpi.hoverCat)}
+                  onMouseLeave={() => setPptHoverCategory(null)}
+                  style={{ 
+                    padding: '1rem 1.25rem', 
+                    display: 'flex', 
+                    flexDirection: 'column', 
+                    justifyContent: 'space-between',
+                    background: 'rgba(7, 19, 36, 0.65)',
+                    border: pptHoverCategory === kpi.hoverCat && kpi.hoverCat
+                      ? '1px solid var(--color-primary)'
+                      : '1px solid rgba(255, 255, 255, 0.08)',
+                    height: '95px',
+                    cursor: kpi.hoverCat ? 'pointer' : 'default',
+                    transition: 'all 0.25s',
+                    transform: pptHoverCategory === kpi.hoverCat && kpi.hoverCat ? 'translateY(-2px)' : 'none',
+                    boxShadow: pptHoverCategory === kpi.hoverCat && kpi.hoverCat 
+                      ? '0 6px 18px rgba(37, 99, 235, 0.25)' 
+                      : 'var(--shadow-sm)',
+                  }}
+                >
+                  <span style={{ fontSize: '0.7rem', color: '#94a3b8', fontWeight: 700 }}>{kpi.title}</span>
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.5rem', margin: '0.1rem 0' }}>
+                    <span 
+                      key={currentSlideIndex}
+                      className="ppt-slide-animate"
+                      style={{ fontSize: '1.95rem', fontWeight: 800, color: kpi.color, letterSpacing: '-0.02em', display: 'inline-block' }}
+                    >
+                      {kpi.value}
+                    </span>
+                  </div>
+                  <div style={{ fontSize: '0.65rem', color: '#64748b', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '0.25rem' }}>{kpi.target}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Charts Row */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.2fr', gap: '1.5rem', flex: 1, minHeight: 0 }}>
+              {/* Donut Chart Container */}
+              <div 
+                className="glass-panel" 
+                style={{ 
+                  padding: '1.25rem', 
+                  display: 'flex', 
+                  flexDirection: 'column', 
+                  background: 'rgba(7, 19, 36, 0.65)', 
+                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  height: '100%',
+                  minHeight: 0
+                }}
+              >
+                <h3 style={{ fontSize: '0.8rem', fontWeight: 800, letterSpacing: '0.04em', textTransform: 'uppercase', color: '#ffffff', marginBottom: '0.5rem' }}>
+                  Incident Breakdown (Lagging)
+                </h3>
+                <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 0, width: '100%' }}>
+                  <div style={{ height: '240px', width: '100%' }}>
+                    <IncidentDonut
+                      lti={safetyData.lti}
+                      rwc={safetyData.rwc}
+                      mtc={safetyData.mtc}
+                      fac={safetyData.fac}
+                      hoveredCategory={pptHoverCategory}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Target vs Actual Bar Chart Container */}
+              <div 
+                className="glass-panel" 
+                style={{ 
+                  padding: '1.25rem', 
+                  display: 'flex', 
+                  flexDirection: 'column', 
+                  background: 'rgba(7, 19, 36, 0.65)', 
+                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  height: '100%',
+                  minHeight: 0
+                }}
+              >
+                <h3 style={{ fontSize: '0.8rem', fontWeight: 800, letterSpacing: '0.04em', textTransform: 'uppercase', color: '#ffffff', marginBottom: '0.5rem' }}>
+                  Preventative Targets vs Performance (Leading)
+                </h3>
+                <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 0, width: '100%' }}>
+                  <div style={{ height: '240px', width: '100%' }}>
+                    <TargetVsActual
+                      observations={safetyData.observations}
+                      hazardRate={calculated.hazardCloseOutRate}
+                      auditRate={calculated.auditCompletionRate}
+                      hoveredCategory={pptHoverCategory}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          {/* Footer controls and direct navigation dots */}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem', marginTop: '1rem' }}>
+            
+            {/* Action Row */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+              <button
+                onClick={() => {
+                  setCurrentSlideIndex((prev) => {
+                    const nextIdx = (prev - 1 + SLIDESHOW_DATA.length) % SLIDESHOW_DATA.length
+                    setSafetyData(SLIDESHOW_DATA[nextIdx].data)
+                    return nextIdx
+                  })
+                }}
+                style={{
+                  background: 'rgba(255,255,255,0.06)',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  color: '#ffffff',
+                  width: '32px',
+                  height: '32px',
+                  borderRadius: '50%',
+                  cursor: 'pointer',
+                  fontSize: '0.9rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  transition: 'all 0.2s',
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.12)'}
+                onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.06)'}
+              >
+                ←
+              </button>
+
+              <button
+                onClick={() => setIsSlideshowPlaying(!isSlideshowPlaying)}
+                className="btn"
+                style={{
+                  background: isSlideshowPlaying 
+                    ? 'linear-gradient(to bottom, #2563eb, #1d4ed8)' 
+                    : 'rgba(255,255,255,0.08)',
+                  border: isSlideshowPlaying 
+                    ? '1px solid rgba(255,255,255,0.2)' 
+                    : '1px solid rgba(255,255,255,0.12)',
+                  color: '#ffffff',
+                  fontSize: '0.75rem',
+                  padding: '0.45rem 1.25rem',
+                  borderRadius: '30px',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  boxShadow: isSlideshowPlaying ? '0 4px 16px rgba(37, 99, 235, 0.4)' : 'none',
+                  transition: 'all 0.25s'
+                }}
+              >
+                {isSlideshowPlaying ? '❚❚ Pause Auto' : '▶ Play Auto'}
+              </button>
+
+              <button
+                onClick={() => {
+                  setCurrentSlideIndex((prev) => {
+                    const nextIdx = (prev + 1) % SLIDESHOW_DATA.length
+                    setSafetyData(SLIDESHOW_DATA[nextIdx].data)
+                    return nextIdx
+                  })
+                }}
+                style={{
+                  background: 'rgba(255,255,255,0.06)',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  color: '#ffffff',
+                  width: '32px',
+                  height: '32px',
+                  borderRadius: '50%',
+                  cursor: 'pointer',
+                  fontSize: '0.9rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  transition: 'all 0.2s',
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.12)'}
+                onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.06)'}
+              >
+                →
+              </button>
+            </div>
+
+            {/* Dots Indicator */}
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              {SLIDESHOW_DATA.map((slide, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => {
+                    setCurrentSlideIndex(idx)
+                    setSafetyData(slide.data)
+                    setIsSlideshowPlaying(false) // Pause autoplay on manual click
+                  }}
+                  style={{
+                    width: '6px',
+                    height: '6px',
+                    borderRadius: '50%',
+                    border: 'none',
+                    backgroundColor: idx === currentSlideIndex ? '#60a5fa' : 'rgba(255, 255, 255, 0.25)',
+                    cursor: 'pointer',
+                    padding: 0,
+                    transition: 'all 0.2s'
+                  }}
+                  title={slide.name}
+                />
+              ))}
+            </div>
+
+            <div style={{ fontSize: '0.62rem', color: '#64748b', marginTop: '0.1rem' }}>
+              Tip: Use Left/Right Arrow keys or Spacebar to navigate. Press ESC to exit.
+            </div>
+          </div>
+
+        </div>
+      )}
+
+      <div
+        style={{
+          height: '100vh',
+          padding: '1.5%',
+          width: '100%',
+          display: 'flex',
+          flexDirection: 'column',
+        }}
+        className="dashboard-container"
+      >
 
       {/* Main content area split */}
       <div
@@ -268,7 +793,7 @@ export const Dashboard: React.FC = () => {
                 onClick={() => setIsInputVisible(!isInputVisible)}
                 style={{
                   background: 'var(--bg-input)',
-                  border: '1px solid rgba(94, 124, 107, 0.1)',
+                  border: '1px solid rgba(96, 165, 250, 0.15)',
                   borderRadius: '50%',
                   width: '2.5rem',
                   height: '2.5rem',
@@ -279,7 +804,7 @@ export const Dashboard: React.FC = () => {
                   color: 'var(--text-secondary)',
                   transition: 'all var(--transition-normal)'
                 }}
-                onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(94, 124, 107, 0.08)'}
+                onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(96, 165, 250, 0.1)'}
                 onMouseLeave={(e) => e.currentTarget.style.background = 'var(--bg-input)'}
                 title={isInputVisible ? "Hide Inputs" : "Show Inputs"}
               >
@@ -312,8 +837,8 @@ export const Dashboard: React.FC = () => {
                   display: 'flex',
                   alignItems: 'center',
                   gap: '0.4rem',
-                  background: demoActive ? 'rgba(94, 124, 107, 0.15)' : 'var(--bg-input)',
-                  border: demoActive ? '1px solid var(--color-primary)' : '1px solid rgba(94, 124, 107, 0.08)',
+                  background: demoActive ? 'rgba(37, 99, 235, 0.15)' : 'var(--bg-input)',
+                  border: demoActive ? '1px solid var(--color-primary)' : '1px solid rgba(96, 165, 250, 0.15)',
                   padding: '0.45rem 0.85rem',
                   borderRadius: '20px',
                   cursor: 'pointer',
@@ -336,6 +861,110 @@ export const Dashboard: React.FC = () => {
                   }}
                 ></span>
                 {demoActive ? 'Interactive Tour Active' : 'Start Interactive Tour'}
+              </button>
+
+              {/* Autoplay Slideshow Toggle */}
+              <button
+                id="btn-toggle-slideshow"
+                onClick={() => setIsSlideshowPlaying(!isSlideshowPlaying)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.4rem',
+                  background: isSlideshowPlaying 
+                    ? 'linear-gradient(to bottom, #2563eb, #1d4ed8)' 
+                    : 'var(--bg-input)',
+                  border: isSlideshowPlaying 
+                    ? '1px solid rgba(255, 255, 255, 0.2)' 
+                    : '1px solid rgba(96, 165, 250, 0.15)',
+                  padding: '0.45rem 0.85rem',
+                  borderRadius: '20px',
+                  cursor: 'pointer',
+                  fontSize: '0.72rem',
+                  fontWeight: 700,
+                  color: isSlideshowPlaying ? '#ffffff' : 'var(--text-secondary)',
+                  boxShadow: isSlideshowPlaying ? '0 4px 12px rgba(37, 99, 235, 0.3)' : 'none',
+                  transition: 'all var(--transition-normal)'
+                }}
+              >
+                <span
+                  className="risk-dot"
+                  style={{
+                    width: '6px',
+                    height: '6px',
+                    borderRadius: '50%',
+                    backgroundColor: isSlideshowPlaying ? '#ffffff' : 'var(--text-muted)',
+                    animation: isSlideshowPlaying ? 'pulse-dot 1.5s infinite ease-in-out' : 'none',
+                    boxShadow: isSlideshowPlaying ? '0 0 6px #ffffff' : 'none',
+                    display: 'inline-block'
+                  }}
+                ></span>
+                {isSlideshowPlaying ? 'Pause Slideshow' : 'Play Slideshow'}
+              </button>
+
+              {/* Manual Scenario Select Dropdown */}
+              <select
+                id="select-slideshow-scenario"
+                value={currentSlideIndex}
+                onChange={(e) => {
+                  const idx = parseInt(e.target.value, 10)
+                  setCurrentSlideIndex(idx)
+                  setSafetyData(SLIDESHOW_DATA[idx].data)
+                  setIsSlideshowPlaying(false) // Pause autoplay on manual change
+                }}
+                style={{
+                  background: 'var(--bg-input)',
+                  border: '1px solid rgba(96, 165, 250, 0.15)',
+                  color: 'var(--text-primary)',
+                  fontSize: '0.72rem',
+                  fontWeight: 700,
+                  padding: '0.42rem 0.75rem',
+                  borderRadius: '20px',
+                  outline: 'none',
+                  cursor: 'pointer',
+                  fontFamily: 'inherit',
+                  transition: 'all var(--transition-normal)'
+                }}
+              >
+                {SLIDESHOW_DATA.map((slide, idx) => (
+                  <option key={idx} value={idx} style={{ background: 'var(--bg-panel)', color: 'var(--text-primary)' }}>
+                    {slide.name}
+                  </option>
+                ))}
+              </select>
+
+              {/* Fullscreen PPT Mode Button */}
+              <button
+                id="btn-present-ppt"
+                onClick={enterPresentationMode}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.4rem',
+                  background: 'linear-gradient(to bottom, #2563eb, #1d4ed8)',
+                  border: '1px solid rgba(255, 255, 255, 0.15)',
+                  padding: '0.45rem 0.85rem',
+                  borderRadius: '20px',
+                  cursor: 'pointer',
+                  fontSize: '0.72rem',
+                  fontWeight: 700,
+                  color: '#ffffff',
+                  boxShadow: '0 4px 12px rgba(37, 99, 235, 0.3)',
+                  transition: 'all var(--transition-normal)'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-1px)'
+                  e.currentTarget.style.boxShadow = '0 6px 16px rgba(37, 99, 235, 0.45)'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'none'
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(37, 99, 235, 0.3)'
+                }}
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
+                </svg>
+                Present Fullscreen
               </button>
 
               {/* Risk Badge (Modeled after 'Balance On track' pill tag) */}
@@ -430,7 +1059,7 @@ export const Dashboard: React.FC = () => {
                 <h3 style={{ fontSize: '0.82rem', fontWeight: 800, letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--text-primary)' }}>
                   Lagging Indicators (Incident Breakdown)
                 </h3>
-                <div style={{ height: '1px', background: 'rgba(94, 124, 107, 0.05)', marginTop: '0.4rem' }}></div>
+                <div style={{ height: '1px', background: 'rgba(255, 255, 255, 0.08)', marginTop: '0.4rem' }}></div>
               </div>
 
               {/* Layout for Table & Donut */}
@@ -445,28 +1074,28 @@ export const Dashboard: React.FC = () => {
                   <tbody>
                     <tr>
                       <td style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#cf4b4b' }}></span>
+                        <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#ef4444' }}></span>
                         Lost Time Injuries (LTI)
                       </td>
                       <td style={{ textAlign: 'right', fontWeight: 700, color: 'var(--text-primary)' }}>{safetyData.lti}</td>
                     </tr>
                     <tr>
                       <td style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#e08c48' }}></span>
+                        <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#fbbf24' }}></span>
                         Restricted Work Cases (RWC)
                       </td>
                       <td style={{ textAlign: 'right', fontWeight: 700, color: 'var(--text-primary)' }}>{safetyData.rwc}</td>
                     </tr>
                     <tr>
                       <td style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#d1a336' }}></span>
+                        <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#3b82f6' }}></span>
                         Medical Treatment Cases (MTC)
                       </td>
                       <td style={{ textAlign: 'right', fontWeight: 700, color: 'var(--text-primary)' }}>{safetyData.mtc}</td>
                     </tr>
                     <tr>
                       <td style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#4c7a80' }}></span>
+                        <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#10b981' }}></span>
                         First Aid Cases (FAC)
                       </td>
                       <td style={{ textAlign: 'right', fontWeight: 700, color: 'var(--text-primary)' }}>{safetyData.fac}</td>
@@ -493,7 +1122,7 @@ export const Dashboard: React.FC = () => {
                 <h3 style={{ fontSize: '0.82rem', fontWeight: 800, letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--text-primary)' }}>
                   Leading Indicators (Preventative Targets)
                 </h3>
-                <div style={{ height: '1px', background: 'rgba(94, 124, 107, 0.05)', marginTop: '0.4rem' }}></div>
+                <div style={{ height: '1px', background: 'rgba(255, 255, 255, 0.08)', marginTop: '0.4rem' }}></div>
               </div>
 
               {/* Table and Comparison Chart */}
@@ -648,6 +1277,7 @@ export const Dashboard: React.FC = () => {
         }
       `}</style>
     </div>
+    </>
   )
 }
 export default Dashboard

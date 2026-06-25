@@ -59,9 +59,11 @@ export const TargetVsActual: React.FC<TargetVsActualProps> = ({
   const hazardAchieved = targetHazard > 0 ? (hazardRate / targetHazard) * 100 : 0
   const auditAchieved = targetAudit > 0 ? (auditRate / targetAudit) * 100 : 0
 
-  // Colors mapping (Sage Green for achieved/exceeded, Muted Amber for warning)
-  const achievedColor = '#5e7c6b'
-  const warningColor = '#c4833c'
+  // Colors mapping: Blue (Observations), Yellow (Hazard Closeout), Green (Audit Execution), Red (Failing metrics / Target boundaries)
+  const blueColor = '#3b82f6'
+  const yellowColor = '#fbbf24'
+  const greenColor = '#10b981'
+  const redColor = '#ef4444'
 
   const data = [
     {
@@ -71,7 +73,7 @@ export const TargetVsActual: React.FC<TargetVsActualProps> = ({
       target: `Target: > ${targetObs}`,
       rawActual: observations,
       rawTarget: targetObs,
-      color: observations >= targetObs ? achievedColor : warningColor,
+      color: observations >= targetObs ? blueColor : redColor,
     },
     {
       name: 'Hazard SLA Close-Out',
@@ -80,7 +82,7 @@ export const TargetVsActual: React.FC<TargetVsActualProps> = ({
       target: `Target: Min ${targetHazard}%`,
       rawActual: hazardRate,
       rawTarget: targetHazard,
-      color: hazardRate >= targetHazard ? achievedColor : warningColor,
+      color: hazardRate >= targetHazard ? yellowColor : redColor,
     },
     {
       name: 'HSE Audit Execution',
@@ -89,7 +91,7 @@ export const TargetVsActual: React.FC<TargetVsActualProps> = ({
       target: `Target: Min ${targetAudit}%`,
       rawActual: auditRate,
       rawTarget: targetAudit,
-      color: auditRate >= targetAudit ? achievedColor : warningColor,
+      color: auditRate >= targetAudit ? greenColor : redColor,
     },
   ]
 
@@ -100,24 +102,24 @@ export const TargetVsActual: React.FC<TargetVsActualProps> = ({
       axisPointer: {
         type: 'shadow',
       },
-      backgroundColor: '#ffffff',
-      borderColor: 'rgba(94, 124, 107, 0.12)',
+      backgroundColor: '#071324',
+      borderColor: 'rgba(96, 165, 250, 0.2)',
       borderWidth: 1,
       textStyle: {
-        color: '#1c2821',
+        color: '#ffffff',
         fontFamily: 'Plus Jakarta Sans',
         fontSize: 12,
         fontWeight: 500,
       },
-      extraCssText: 'box-shadow: 0 4px 15px rgba(0,0,0,0.05); border-radius: 8px;',
+      extraCssText: 'box-shadow: 0 8px 24px rgba(0,0,0,0.3); border-radius: 8px;',
       formatter: (params: any) => {
         const index = params[0].dataIndex
         const item = data[index]
         return `
-          <div style="font-weight: 700; margin-bottom: 4px; color: #1c2821;">${item.name}</div>
-          <div style="font-size: 11px; color: #5e6b62; line-height: 1.5;">
-            Actual: <span style="color: #1c2821; font-weight: 600;">${item.actual}</span><br/>
-            Target: <span style="color: #8b9990;">${item.target}</span><br/>
+          <div style="font-weight: 700; margin-bottom: 4px; color: #ffffff;">${item.name}</div>
+          <div style="font-size: 11px; color: #94a3b8; line-height: 1.5;">
+            Actual: <span style="color: #ffffff; font-weight: 600;">${item.actual}</span><br/>
+            Target: <span style="color: #64748b;">${item.target}</span><br/>
             Achievement: <span style="color: ${item.color}; font-weight: 700;">${item.achieved}%</span>
           </div>
         `
@@ -136,13 +138,13 @@ export const TargetVsActual: React.FC<TargetVsActualProps> = ({
       max: (value: any) => Math.max(120, Math.ceil(value.max / 10) * 10),
       axisLabel: {
         formatter: '{value}%',
-        color: '#8b9990',
+        color: '#94a3b8',
         fontFamily: 'Plus Jakarta Sans',
         fontSize: 10,
       },
       splitLine: {
         lineStyle: {
-          color: 'rgba(94, 124, 107, 0.05)',
+          color: 'rgba(96, 165, 250, 0.06)',
         },
       },
     },
@@ -150,14 +152,14 @@ export const TargetVsActual: React.FC<TargetVsActualProps> = ({
       type: 'category',
       data: data.map((d) => d.name),
       axisLabel: {
-        color: '#1c2821',
+        color: '#ffffff',
         fontFamily: 'Plus Jakarta Sans',
         fontSize: 11,
         fontWeight: 600,
       },
       axisLine: {
         lineStyle: {
-          color: 'rgba(94, 124, 107, 0.1)',
+          color: 'rgba(255, 255, 255, 0.1)',
         },
       },
       axisTick: {
@@ -181,7 +183,7 @@ export const TargetVsActual: React.FC<TargetVsActualProps> = ({
           formatter: (params: any) => {
             return data[params.dataIndex].actual
           },
-          color: '#1c2821',
+          color: '#ffffff',
           fontFamily: 'Plus Jakarta Sans',
           fontWeight: 700,
           fontSize: 11,
@@ -190,7 +192,7 @@ export const TargetVsActual: React.FC<TargetVsActualProps> = ({
         markLine: {
           symbol: 'none',
           lineStyle: {
-            color: 'var(--color-primary)',
+            color: '#ef4444',
             type: 'dashed',
             width: 1.5,
             opacity: 0.7,
@@ -199,7 +201,7 @@ export const TargetVsActual: React.FC<TargetVsActualProps> = ({
             show: true,
             position: 'end',
             formatter: 'Target (100%)',
-            color: 'var(--color-primary)',
+            color: '#ef4444',
             fontSize: 9,
             fontWeight: 700,
             fontFamily: 'Plus Jakarta Sans',
