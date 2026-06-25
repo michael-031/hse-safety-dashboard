@@ -1,6 +1,6 @@
 import React from 'react'
 import type { SafetyData } from '../../types/dashboard'
-import { RotateCcw, AlertTriangle, ShieldCheck, HelpCircle } from 'lucide-react'
+import { RotateCcw, HelpCircle } from 'lucide-react'
 
 interface InputFormProps {
   data: SafetyData
@@ -24,44 +24,18 @@ export const InputForm: React.FC<InputFormProps> = ({
     })
   }
 
-  const loadPreset = (presetName: 'sample' | 'perfect' | 'high_risk') => {
-    if (presetName === 'sample') {
-      onChange({
-        totalManHours: 1200000,
-        lti: 1,
-        rwc: 2,
-        mtc: 3,
-        fac: 14,
-        observations: 420,
-        hazardsClosed: 385,
-        auditsPlanned: 24,
-        auditsCompleted: 22,
-      })
-    } else if (presetName === 'perfect') {
-      onChange({
-        totalManHours: 1500000,
-        lti: 0,
-        rwc: 0,
-        mtc: 0,
-        fac: 3,
-        observations: 450,
-        hazardsClosed: 450,
-        auditsPlanned: 30,
-        auditsCompleted: 30,
-      })
-    } else if (presetName === 'high_risk') {
-      onChange({
-        totalManHours: 800000,
-        lti: 4,
-        rwc: 3,
-        mtc: 5,
-        fac: 22,
-        observations: 310,
-        hazardsClosed: 180,
-        auditsPlanned: 15,
-        auditsCompleted: 8,
-      })
-    }
+  const loadPreset = () => {
+    onChange({
+      totalManHours: 1200000,
+      lti: 1,
+      rwc: 2,
+      mtc: 3,
+      fac: 14,
+      observations: 420,
+      hazardsClosed: 385,
+      auditsPlanned: 24,
+      auditsCompleted: 22,
+    })
   }
 
   return (
@@ -105,29 +79,11 @@ export const InputForm: React.FC<InputFormProps> = ({
         <button
           id="btn-preset-sample"
           className="btn btn-secondary"
-          onClick={() => loadPreset('sample')}
+          onClick={loadPreset}
           title="Load metrics directly from the Excel sheet sample"
           style={{ fontSize: '0.72rem', padding: '0.45rem 0.65rem', flex: 1, whiteSpace: 'nowrap' }}
         >
-          <RotateCcw size={11} /> Sample
-        </button>
-        <button
-          id="btn-preset-perfect"
-          className="btn btn-secondary"
-          onClick={() => loadPreset('perfect')}
-          title="Load a high-performing zero-accident month"
-          style={{ fontSize: '0.72rem', padding: '0.45rem 0.65rem', flex: 1, whiteSpace: 'nowrap' }}
-        >
-          <ShieldCheck size={11} style={{ color: 'var(--color-success)' }} /> Perfect
-        </button>
-        <button
-          id="btn-preset-high-risk"
-          className="btn btn-secondary"
-          onClick={() => loadPreset('high_risk')}
-          title="Load safety alert warning metrics"
-          style={{ fontSize: '0.72rem', padding: '0.45rem 0.65rem', flex: 1, whiteSpace: 'nowrap' }}
-        >
-          <AlertTriangle size={11} style={{ color: 'var(--color-danger)' }} /> Alerts
+          <RotateCcw size={11} /> Reset to Sample Data
         </button>
       </div>
 
