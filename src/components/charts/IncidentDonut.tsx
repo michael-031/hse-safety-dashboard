@@ -75,16 +75,16 @@ export const IncidentDonut: React.FC<IncidentDonutProps> = ({
     backgroundColor: 'transparent',
     tooltip: {
       trigger: 'item',
-      backgroundColor: '#ffffff',
-      borderColor: 'rgba(94, 124, 107, 0.12)',
+      backgroundColor: '#071324',
+      borderColor: 'rgba(96, 165, 250, 0.2)',
       borderWidth: 1,
       textStyle: {
-        color: '#1c2821',
+        color: '#ffffff',
         fontFamily: 'Plus Jakarta Sans',
         fontSize: 12,
         fontWeight: 500,
       },
-      extraCssText: 'box-shadow: 0 4px 15px rgba(0,0,0,0.05); border-radius: 8px;',
+      extraCssText: 'box-shadow: 0 8px 24px rgba(0,0,0,0.3); border-radius: 8px;',
       formatter: '{b}: <b>{c}</b> ({d}%)',
     },
     legend: {
@@ -99,7 +99,7 @@ export const IncidentDonut: React.FC<IncidentDonutProps> = ({
         avoidLabelOverlap: false,
         itemStyle: {
           borderRadius: 6,
-          borderColor: '#ffffff',
+          borderColor: '#071324',
           borderWidth: 2,
         },
         label: {
@@ -111,7 +111,7 @@ export const IncidentDonut: React.FC<IncidentDonutProps> = ({
             show: true,
             fontSize: 14,
             fontWeight: 'bold',
-            color: '#1c2821',
+            color: '#ffffff',
             formatter: '{b}\n{c}',
             fontFamily: 'Plus Jakarta Sans',
           },
@@ -120,12 +120,12 @@ export const IncidentDonut: React.FC<IncidentDonutProps> = ({
           show: false,
         },
         color: isAllZero
-          ? ['rgba(94, 124, 107, 0.25)']
+          ? ['rgba(255, 255, 255, 0.15)']
           : [
-              '#cf4b4b', // LTI - Crimson Red
-              '#e08c48', // RWC - Muted Orange
-              '#d1a336', // MTC - Muted Gold/Yellow
-              '#4c7a80', // FAC - Muted Slate/Cyan
+              '#ef4444', // LTI - Red
+              '#fbbf24', // RWC - Yellow
+              '#3b82f6', // MTC - Blue
+              '#10b981', // FAC - Green
             ],
         data: filteredData,
       },
@@ -157,7 +157,7 @@ export const IncidentDonut: React.FC<IncidentDonutProps> = ({
               display: 'block',
               fontSize: '1.65rem',
               fontWeight: 800,
-              color: isAllZero ? '#3b624a' : '#1c2821',
+              color: isAllZero ? '#10b981' : '#ffffff',
               lineHeight: 1,
               letterSpacing: '-0.02em',
             }}
@@ -207,7 +207,7 @@ export const IncidentDonut: React.FC<IncidentDonutProps> = ({
                 width: '8px',
                 height: '8px',
                 borderRadius: '50%',
-                backgroundColor: 'rgba(94, 124, 107, 0.25)',
+                backgroundColor: 'rgba(255, 255, 255, 0.15)',
                 display: 'inline-block',
               }}
             />
@@ -215,10 +215,10 @@ export const IncidentDonut: React.FC<IncidentDonutProps> = ({
           </div>
         ) : (
           [
-            { name: 'LTI (Lost Time)', color: '#cf4b4b', value: lti },
-            { name: 'RWC (Restricted Work)', color: '#e08c48', value: rwc },
-            { name: 'MTC (Medical Treatment)', color: '#d1a336', value: mtc },
-            { name: 'FAC (First Aid)', color: '#4c7a80', value: fac },
+            { name: 'LTI (Lost Time)', color: '#ef4444', value: lti },
+            { name: 'RWC (Restricted Work)', color: '#fbbf24', value: rwc },
+            { name: 'MTC (Medical Treatment)', color: '#3b82f6', value: mtc },
+            { name: 'FAC (First Aid)', color: '#10b981', value: fac },
           ]
             .filter((item) => item.value > 0)
             .map((item) => (
