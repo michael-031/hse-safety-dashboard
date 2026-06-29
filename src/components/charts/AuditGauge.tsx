@@ -3,9 +3,10 @@ import ReactECharts from 'echarts-for-react'
 
 interface AuditGaugeProps {
   rate: number
+  theme?: 'light' | 'dark'
 }
 
-export const AuditGauge: React.FC<AuditGaugeProps> = ({ rate }) => {
+export const AuditGauge: React.FC<AuditGaugeProps> = ({ rate, theme = 'dark' }) => {
   // Determine color based on safety performance targets (Compliance Target: 95%)
   let ringColor = '#ef4444' // red
   if (rate >= 95) {
@@ -19,6 +20,10 @@ export const AuditGauge: React.FC<AuditGaugeProps> = ({ rate }) => {
 
   // Clamped rate for the progress arc (max 100%)
   const clampedRate = Math.min(100, displayRate)
+
+  const isDark = theme !== 'light'
+  const centerTextColor = isDark ? '#f8fafc' : '#0f172a'
+  const axisLineColor = isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.06)'
 
   const option = {
     backgroundColor: 'transparent',
@@ -45,7 +50,7 @@ export const AuditGauge: React.FC<AuditGaugeProps> = ({ rate }) => {
         axisLine: {
           lineStyle: {
             width: 10,
-            color: [[1, 'rgba(255, 255, 255, 0.05)']],
+            color: [[1, axisLineColor]],
           },
         },
         splitLine: {
@@ -92,7 +97,7 @@ export const AuditGauge: React.FC<AuditGaugeProps> = ({ rate }) => {
             display: 'block',
             fontSize: '1.45rem',
             fontWeight: 800,
-            color: '#f8fafc',
+            color: centerTextColor,
             lineHeight: 1,
             letterSpacing: '-0.02em',
           }}

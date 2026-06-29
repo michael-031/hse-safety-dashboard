@@ -7,6 +7,7 @@ interface IncidentDonutProps {
   mtc: number
   fac: number
   hoveredCategory?: string | null
+  theme?: 'light' | 'dark'
 }
 
 export const IncidentDonut: React.FC<IncidentDonutProps> = ({
@@ -15,6 +16,7 @@ export const IncidentDonut: React.FC<IncidentDonutProps> = ({
   mtc,
   fac,
   hoveredCategory,
+  theme = 'dark',
 }) => {
   const total = lti + rwc + mtc + fac
   const isAllZero = total === 0
@@ -71,20 +73,28 @@ export const IncidentDonut: React.FC<IncidentDonutProps> = ({
     }
   }, [hoveredCategory, filteredData])
 
+  const isDark = theme !== 'light'
+  const textColor = isDark ? '#ffffff' : '#0f172a'
+  const tooltipBg = isDark ? '#071324' : '#ffffff'
+  const tooltipBorder = isDark ? 'rgba(96, 165, 250, 0.2)' : 'rgba(37, 99, 235, 0.15)'
+  const chartBorderColor = isDark ? '#071324' : '#ffffff'
+  const emphasisColor = isDark ? '#ffffff' : '#0f172a'
+  const centerValueColor = isAllZero ? '#10b981' : (isDark ? '#ffffff' : '#0f172a')
+
   const option = {
     backgroundColor: 'transparent',
     tooltip: {
       trigger: 'item',
-      backgroundColor: '#071324',
-      borderColor: 'rgba(96, 165, 250, 0.2)',
+      backgroundColor: tooltipBg,
+      borderColor: tooltipBorder,
       borderWidth: 1,
       textStyle: {
-        color: '#ffffff',
+        color: textColor,
         fontFamily: 'Plus Jakarta Sans',
         fontSize: 12,
         fontWeight: 500,
       },
-      extraCssText: 'box-shadow: 0 8px 24px rgba(0,0,0,0.3); border-radius: 8px;',
+      extraCssText: `box-shadow: ${isDark ? '0 8px 24px rgba(0,0,0,0.3)' : '0 4px 12px rgba(0,0,0,0.1)'}; border-radius: 8px;`,
       formatter: '{b}: <b>{c}</b> ({d}%)',
     },
     legend: {
@@ -99,7 +109,7 @@ export const IncidentDonut: React.FC<IncidentDonutProps> = ({
         avoidLabelOverlap: false,
         itemStyle: {
           borderRadius: 6,
-          borderColor: '#071324',
+          borderColor: chartBorderColor,
           borderWidth: 2,
         },
         label: {
@@ -111,7 +121,7 @@ export const IncidentDonut: React.FC<IncidentDonutProps> = ({
             show: true,
             fontSize: 14,
             fontWeight: 'bold',
-            color: '#ffffff',
+            color: emphasisColor,
             formatter: '{b}\n{c}',
             fontFamily: 'Plus Jakarta Sans',
           },
@@ -120,7 +130,7 @@ export const IncidentDonut: React.FC<IncidentDonutProps> = ({
           show: false,
         },
         color: isAllZero
-          ? ['rgba(255, 255, 255, 0.15)']
+          ? [isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.08)']
           : [
               '#ef4444', // LTI - Red
               '#fbbf24', // RWC - Yellow
@@ -157,7 +167,7 @@ export const IncidentDonut: React.FC<IncidentDonutProps> = ({
               display: 'block',
               fontSize: '1.65rem',
               fontWeight: 800,
-              color: isAllZero ? '#10b981' : '#ffffff',
+              color: centerValueColor,
               lineHeight: 1,
               letterSpacing: '-0.02em',
             }}
