@@ -6,6 +6,7 @@ import KPICard from '../components/cards/KPICard'
 import IncidentDonut from '../components/charts/IncidentDonut'
 import TargetVsActual from '../components/charts/TargetVsActual'
 import { PanelLeftClose, PanelLeftOpen } from 'lucide-react'
+import { supabase, hasSupabaseConfig } from '../utils/supabase'
 
 // Default values seeded from the Excel sheet screenshot
 const DEFAULT_SAFETY_DATA: SafetyData = {
@@ -128,6 +129,34 @@ export const Dashboard: React.FC = () => {
     const saved = localStorage.getItem('hse_use_excel_formula')
     return saved ? saved === 'true' : true
   })
+
+  // Helper to handle local changes and optionally broadcast to other screens
+  const updateSafetyData = (newData: SafetyData, broadcast = true) => {
+    setSafetyData(newData)
+    if (broadcast && hasSupabaseConfig) {
+      supabase.channel('dashboard-sync').send({
+        type: 'broadcast',
+        event: 'metrics-sync',
+        payload: newData,
+      })
+    }
+  }
+
+  // Subscribe to real-time synchronization updates if Supabase is configured
+  useEffect(() => {
+    if (!hasSupabaseConfig) return
+
+    const channel = supabase.channel('dashboard-sync')
+      .on('broadcast', { event: 'metrics-sync' }, ({ payload }) => {
+        // Update state directly without broadcasting back
+        setSafetyData(payload)
+      })
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [])
 
   // Cache state changes
   useEffect(() => {
@@ -637,7 +666,7 @@ export const Dashboard: React.FC = () => {
                 onClick={() => {
                   setCurrentSlideIndex((prev) => {
                     const nextIdx = (prev - 1 + SLIDESHOW_DATA.length) % SLIDESHOW_DATA.length
-                    setSafetyData(SLIDESHOW_DATA[nextIdx].data)
+                    updateSafetyData(SLIDESHOW_DATA[nextIdx].data, true)
                     return nextIdx
                   })
                 }}
@@ -688,7 +717,7 @@ export const Dashboard: React.FC = () => {
                 onClick={() => {
                   setCurrentSlideIndex((prev) => {
                     const nextIdx = (prev + 1) % SLIDESHOW_DATA.length
-                    setSafetyData(SLIDESHOW_DATA[nextIdx].data)
+                    updateSafetyData(SLIDESHOW_DATA[nextIdx].data, true)
                     return nextIdx
                   })
                 }}
@@ -720,7 +749,7 @@ export const Dashboard: React.FC = () => {
                   key={idx}
                   onClick={() => {
                     setCurrentSlideIndex(idx)
-                    setSafetyData(slide.data)
+                    updateSafetyData(slide.data, true)
                     setIsSlideshowPlaying(false) // Pause autoplay on manual click
                   }}
                   style={{
@@ -789,7 +818,7 @@ export const Dashboard: React.FC = () => {
           <div style={{ width: '330px', height: '100%', minHeight: 0 }}>
             <InputForm
               data={safetyData}
-              onChange={setSafetyData}
+              onChange={(newData) => updateSafetyData(newData, true)}
               useExcelFormula={useExcelFormula}
               onFormulaToggle={setUseExcelFormula}
               theme={theme}
@@ -937,7 +966,7 @@ export const Dashboard: React.FC = () => {
                 onChange={(e) => {
                   const idx = parseInt(e.target.value, 10)
                   setCurrentSlideIndex(idx)
-                  setSafetyData(SLIDESHOW_DATA[idx].data)
+                  updateSafetyData(SLIDESHOW_DATA[idx].data, true)
                   setIsSlideshowPlaying(false) // Pause autoplay on manual change
                 }}
                 style={{
