@@ -736,7 +736,7 @@ export const Dashboard: React.FC = () => {
       <div
         style={{
           height: '100vh',
-          padding: '1.5%',
+          padding: '1rem 1.5%',
           width: '100%',
           display: 'flex',
           flexDirection: 'column',
@@ -786,7 +786,7 @@ export const Dashboard: React.FC = () => {
         </aside>
 
         {/* Right column: Analytics Dashboard */}
-        <main style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '1.5rem', minWidth: 0, height: '100%', minHeight: 0 }}>
+        <main style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '1rem', minWidth: 0, height: '100%', minHeight: 0 }}>
 
           {/* Header Card */}
           <div
@@ -1069,7 +1069,7 @@ export const Dashboard: React.FC = () => {
           >
 
             {/* Lagging Indicators Panel */}
-            <section className="glass-panel" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem', height: '100%' }}>
+            <section className="glass-panel" style={{ padding: '1.15rem 1.25rem', display: 'flex', flexDirection: 'column', gap: '0.75rem', height: '100%' }}>
               <div>
                 <h3 style={{ fontSize: '0.82rem', fontWeight: 800, letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--text-primary)' }}>
                   Lagging Indicators (Incident Breakdown)
@@ -1133,7 +1133,7 @@ export const Dashboard: React.FC = () => {
             </section>
 
             {/* Leading Indicators Panel */}
-            <section className="glass-panel" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem', height: '100%' }}>
+            <section className="glass-panel" style={{ padding: '1.15rem 1.25rem', display: 'flex', flexDirection: 'column', gap: '0.75rem', height: '100%' }}>
               <div>
                 <h3 style={{ fontSize: '0.82rem', fontWeight: 800, letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--text-primary)' }}>
                   Leading Indicators (Preventative Targets)
@@ -1142,7 +1142,7 @@ export const Dashboard: React.FC = () => {
               </div>
 
               {/* Table and Comparison Chart */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', flex: 1, justifyContent: 'space-around' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', flex: 1, justifyContent: 'space-around' }}>
                 <table className="hse-table">
                   <thead>
                     <tr>
@@ -1252,16 +1252,16 @@ export const Dashboard: React.FC = () => {
             height: 100%;
           }
           .donut-chart-container {
-            height: 220px;
+            height: 180px;
           }
           .target-chart-container {
-            height: 210px;
+            height: 165px;
           }
           .hse-table th {
-            padding: 0.8rem 0.85rem !important;
+            padding: 0.5rem 0.75rem !important;
           }
           .hse-table td {
-            padding: 0.9rem 0.85rem !important;
+            padding: 0.55rem 0.75rem !important;
           }
         }
         @media (max-width: 1024px) {
