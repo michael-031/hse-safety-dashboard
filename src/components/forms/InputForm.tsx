@@ -81,6 +81,7 @@ export const InputForm: React.FC<InputFormProps> = ({
 
         {onThemeToggle && (
           <button
+            id="btn-toggle-theme"
             onClick={onThemeToggle}
             style={{
               background: 'var(--bg-input)',

@@ -193,19 +193,32 @@ export const Dashboard: React.FC = () => {
 
   // Get dynamic adaptive background gradient per slide scenario
   const getSlideBackground = (index: number) => {
+    const isLight = theme === 'light'
     switch (index) {
       case 0: // Q1 Baseline (Slate Navy)
-        return 'radial-gradient(circle at 50% 0%, #0d2547 0%, #020813 100%)'
+        return isLight 
+          ? 'radial-gradient(circle at 50% 0%, #cbd5e1 0%, #f8fafc 100%)' // Soft Gray Glow
+          : 'radial-gradient(circle at 50% 0%, #0d2547 0%, #020813 100%)'
       case 1: // Q2 High Activity (Ocean Blue)
-        return 'radial-gradient(circle at 50% 0%, #0a355c 0%, #010f22 100%)'
+        return isLight 
+          ? 'radial-gradient(circle at 50% 0%, #d0e7fc 0%, #f8fafc 100%)' // Soft Blue Glow
+          : 'radial-gradient(circle at 50% 0%, #0a355c 0%, #010f22 100%)'
       case 2: // Q3 Zero Harm (Emerald Green)
-        return 'radial-gradient(circle at 50% 0%, #063c26 0%, #000c07 100%)'
+        return isLight 
+          ? 'radial-gradient(circle at 50% 0%, #d1f7e5 0%, #f8fafc 100%)' // Soft Green Glow
+          : 'radial-gradient(circle at 50% 0%, #063c26 0%, #000c07 100%)'
       case 3: // Q4 High Risk Alert (Critical Red)
-        return 'radial-gradient(circle at 50% 0%, #3a0e0e 0%, #0b0202 100%)'
+        return isLight 
+          ? 'radial-gradient(circle at 50% 0%, #ffd8d8 0%, #f8fafc 100%)' // Soft Red Glow
+          : 'radial-gradient(circle at 50% 0%, #3a0e0e 0%, #0b0202 100%)'
       case 4: // Year-End Recovery (Amber Gold)
-        return 'radial-gradient(circle at 50% 0%, #352506 0%, #0a0701 100%)'
+        return isLight 
+          ? 'radial-gradient(circle at 50% 0%, #fef0c7 0%, #f8fafc 100%)' // Soft Gold Glow
+          : 'radial-gradient(circle at 50% 0%, #352506 0%, #0a0701 100%)'
       default:
-        return 'radial-gradient(circle at 50% 0%, #0d2547 0%, #020813 100%)'
+        return isLight 
+          ? 'radial-gradient(circle at 50% 0%, #cbd5e1 0%, #f8fafc 100%)'
+          : 'radial-gradient(circle at 50% 0%, #0d2547 0%, #020813 100%)'
     }
   }
 
@@ -414,7 +427,7 @@ export const Dashboard: React.FC = () => {
             position: 'fixed',
             inset: 0,
             background: getSlideBackground(currentSlideIndex),
-            color: '#ffffff',
+            color: theme === 'light' ? '#0f172a' : '#ffffff',
             zIndex: 999999,
             padding: '2rem 3rem',
             display: 'flex',
@@ -428,7 +441,7 @@ export const Dashboard: React.FC = () => {
           }}
         >
           {/* Top Progress bar */}
-          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '4px', background: 'rgba(255, 255, 255, 0.05)' }}>
+          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '4px', background: theme === 'light' ? 'rgba(0, 0, 0, 0.05)' : 'rgba(255, 255, 255, 0.05)' }}>
             <div 
               style={{ 
                 height: '100%', 
@@ -442,13 +455,13 @@ export const Dashboard: React.FC = () => {
           {/* Top Control Bar */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
             <div>
-              <span style={{ fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.15em', color: '#60a5fa', fontWeight: 800 }}>
+              <span style={{ fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.15em', color: theme === 'light' ? '#2563eb' : '#60a5fa', fontWeight: 800 }}>
                 HSE Executive Presentation Mode
               </span>
               <h2 
                 key={currentSlideIndex}
                 className="ppt-slide-animate"
-                style={{ fontSize: '1.85rem', fontWeight: 800, marginTop: '0.15rem', letterSpacing: '-0.02em', color: '#ffffff' }}
+                style={{ fontSize: '1.85rem', fontWeight: 800, marginTop: '0.15rem', letterSpacing: '-0.02em', color: theme === 'light' ? '#0f172a' : '#ffffff' }}
               >
                 {SLIDESHOW_DATA[currentSlideIndex].name}
               </h2>
@@ -483,9 +496,9 @@ export const Dashboard: React.FC = () => {
                 onClick={exitPresentationMode}
                 className="btn"
                 style={{
-                  background: 'rgba(255,255,255,0.08)',
-                  border: '1px solid rgba(255,255,255,0.12)',
-                  color: '#ffffff',
+                  background: theme === 'light' ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.08)',
+                  border: theme === 'light' ? '1px solid rgba(0,0,0,0.1)' : '1px solid rgba(255,255,255,0.12)',
+                  color: theme === 'light' ? '#0f172a' : '#ffffff',
                   fontSize: '0.75rem',
                   padding: '0.45rem 0.9rem',
                   borderRadius: '20px',
@@ -493,8 +506,8 @@ export const Dashboard: React.FC = () => {
                   fontWeight: 700,
                   transition: 'all 0.25s'
                 }}
-                onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.15)'}
-                onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}
+                onMouseEnter={(e) => e.currentTarget.style.background = theme === 'light' ? 'rgba(0,0,0,0.12)' : 'rgba(255,255,255,0.15)'}
+                onMouseLeave={(e) => e.currentTarget.style.background = theme === 'light' ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.08)'}
               >
                 Exit Presentation
               </button>
@@ -523,10 +536,10 @@ export const Dashboard: React.FC = () => {
                     display: 'flex', 
                     flexDirection: 'column', 
                     justifyContent: 'space-between',
-                    background: 'rgba(7, 19, 36, 0.65)',
+                    background: theme === 'light' ? 'rgba(255, 255, 255, 0.65)' : 'rgba(7, 19, 36, 0.65)',
                     border: pptHoverCategory === kpi.hoverCat && kpi.hoverCat
                       ? '1px solid var(--color-primary)'
-                      : '1px solid rgba(255, 255, 255, 0.08)',
+                      : (theme === 'light' ? '1px solid rgba(0, 0, 0, 0.08)' : '1px solid rgba(255, 255, 255, 0.08)'),
                     height: '135px',
                     cursor: kpi.hoverCat ? 'pointer' : 'default',
                     transition: 'all 0.25s',
@@ -536,7 +549,7 @@ export const Dashboard: React.FC = () => {
                       : 'var(--shadow-sm)',
                   }}
                 >
-                  <span style={{ fontSize: '0.85rem', color: '#94a3b8', fontWeight: 700 }}>{kpi.title}</span>
+                  <span style={{ fontSize: '0.85rem', color: theme === 'light' ? '#475569' : '#94a3b8', fontWeight: 700 }}>{kpi.title}</span>
                   <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.5rem', margin: '0.25rem 0' }}>
                     <span 
                       key={currentSlideIndex}
@@ -546,7 +559,7 @@ export const Dashboard: React.FC = () => {
                       {kpi.value}
                     </span>
                   </div>
-                  <div style={{ fontSize: '0.75rem', color: '#64748b', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '0.4rem' }}>{kpi.target}</div>
+                  <div style={{ fontSize: '0.75rem', color: theme === 'light' ? '#475569' : '#64748b', borderTop: theme === 'light' ? '1px solid rgba(0,0,0,0.06)' : '1px solid rgba(255,255,255,0.05)', paddingTop: '0.4rem' }}>{kpi.target}</div>
                 </div>
               ))}
             </div>
@@ -560,13 +573,13 @@ export const Dashboard: React.FC = () => {
                   padding: '1rem 1.25rem', 
                   display: 'flex', 
                   flexDirection: 'column', 
-                  background: 'rgba(7, 19, 36, 0.65)', 
-                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  background: theme === 'light' ? 'rgba(255, 255, 255, 0.65)' : 'rgba(7, 19, 36, 0.65)', 
+                  border: theme === 'light' ? '1px solid rgba(0, 0, 0, 0.08)' : '1px solid rgba(255, 255, 255, 0.08)',
                   height: '100%',
                   minHeight: 0
                 }}
               >
-                <h3 style={{ fontSize: '0.75rem', fontWeight: 800, letterSpacing: '0.04em', textTransform: 'uppercase', color: '#ffffff', marginBottom: '0.35rem' }}>
+                <h3 style={{ fontSize: '0.75rem', fontWeight: 800, letterSpacing: '0.04em', textTransform: 'uppercase', color: theme === 'light' ? '#0f172a' : '#ffffff', marginBottom: '0.35rem' }}>
                   Incident Breakdown (Lagging)
                 </h3>
                 <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 0, width: '100%' }}>
@@ -577,7 +590,7 @@ export const Dashboard: React.FC = () => {
                       mtc={safetyData.mtc}
                       fac={safetyData.fac}
                       hoveredCategory={pptHoverCategory}
-                      theme="dark"
+                      theme={theme}
                     />
                   </div>
                 </div>
@@ -590,13 +603,13 @@ export const Dashboard: React.FC = () => {
                   padding: '1rem 1.25rem', 
                   display: 'flex', 
                   flexDirection: 'column', 
-                  background: 'rgba(7, 19, 36, 0.65)', 
-                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  background: theme === 'light' ? 'rgba(255, 255, 255, 0.65)' : 'rgba(7, 19, 36, 0.65)', 
+                  border: theme === 'light' ? '1px solid rgba(0, 0, 0, 0.08)' : '1px solid rgba(255, 255, 255, 0.08)',
                   height: '100%',
                   minHeight: 0
                 }}
               >
-                <h3 style={{ fontSize: '0.75rem', fontWeight: 800, letterSpacing: '0.04em', textTransform: 'uppercase', color: '#ffffff', marginBottom: '0.35rem' }}>
+                <h3 style={{ fontSize: '0.75rem', fontWeight: 800, letterSpacing: '0.04em', textTransform: 'uppercase', color: theme === 'light' ? '#0f172a' : '#ffffff', marginBottom: '0.35rem' }}>
                   Preventative Targets vs Performance (Leading)
                 </h3>
                 <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 0, width: '100%' }}>
@@ -606,7 +619,7 @@ export const Dashboard: React.FC = () => {
                       hazardRate={calculated.hazardCloseOutRate}
                       auditRate={calculated.auditCompletionRate}
                       hoveredCategory={pptHoverCategory}
-                      theme="dark"
+                      theme={theme}
                     />
                   </div>
                 </div>
@@ -629,9 +642,9 @@ export const Dashboard: React.FC = () => {
                   })
                 }}
                 style={{
-                  background: 'rgba(255,255,255,0.06)',
-                  border: '1px solid rgba(255,255,255,0.1)',
-                  color: '#ffffff',
+                  background: theme === 'light' ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.06)',
+                  border: theme === 'light' ? '1px solid rgba(0,0,0,0.1)' : '1px solid rgba(255,255,255,0.1)',
+                  color: theme === 'light' ? '#0f172a' : '#ffffff',
                   width: '32px',
                   height: '32px',
                   borderRadius: '50%',
@@ -642,8 +655,8 @@ export const Dashboard: React.FC = () => {
                   justifyContent: 'center',
                   transition: 'all 0.2s',
                 }}
-                onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.12)'}
-                onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.06)'}
+                onMouseEnter={(e) => e.currentTarget.style.background = theme === 'light' ? 'rgba(0,0,0,0.12)' : 'rgba(255,255,255,0.12)'}
+                onMouseLeave={(e) => e.currentTarget.style.background = theme === 'light' ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.06)'}
               >
                 ←
               </button>
@@ -654,11 +667,11 @@ export const Dashboard: React.FC = () => {
                 style={{
                   background: isSlideshowPlaying 
                     ? 'linear-gradient(to bottom, #2563eb, #1d4ed8)' 
-                    : 'rgba(255,255,255,0.08)',
+                    : (theme === 'light' ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.08)'),
                   border: isSlideshowPlaying 
-                    ? '1px solid rgba(255,255,255,0.2)' 
-                    : '1px solid rgba(255,255,255,0.12)',
-                  color: '#ffffff',
+                    ? '1px solid rgba(255, 255, 255, 0.2)' 
+                    : (theme === 'light' ? '1px solid rgba(0,0,0,0.1)' : '1px solid rgba(255,255,255,0.12)'),
+                  color: isSlideshowPlaying ? '#ffffff' : (theme === 'light' ? '#0f172a' : '#ffffff'),
                   fontSize: '0.75rem',
                   padding: '0.45rem 1.25rem',
                   borderRadius: '30px',
@@ -680,9 +693,9 @@ export const Dashboard: React.FC = () => {
                   })
                 }}
                 style={{
-                  background: 'rgba(255,255,255,0.06)',
-                  border: '1px solid rgba(255,255,255,0.1)',
-                  color: '#ffffff',
+                  background: theme === 'light' ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.06)',
+                  border: theme === 'light' ? '1px solid rgba(0,0,0,0.1)' : '1px solid rgba(255,255,255,0.1)',
+                  color: theme === 'light' ? '#0f172a' : '#ffffff',
                   width: '32px',
                   height: '32px',
                   borderRadius: '50%',
@@ -691,10 +704,10 @@ export const Dashboard: React.FC = () => {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  transition: 'all 0.2s',
+                  transition: 'all 0.25s',
                 }}
-                onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.12)'}
-                onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.06)'}
+                onMouseEnter={(e) => e.currentTarget.style.background = theme === 'light' ? 'rgba(0,0,0,0.12)' : 'rgba(255,255,255,0.12)'}
+                onMouseLeave={(e) => e.currentTarget.style.background = theme === 'light' ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.06)'}
               >
                 →
               </button>
@@ -715,7 +728,7 @@ export const Dashboard: React.FC = () => {
                     height: '6px',
                     borderRadius: '50%',
                     border: 'none',
-                    backgroundColor: idx === currentSlideIndex ? '#60a5fa' : 'rgba(255, 255, 255, 0.25)',
+                    backgroundColor: idx === currentSlideIndex ? '#2563eb' : (theme === 'light' ? 'rgba(0,0,0,0.2)' : 'rgba(255, 255, 255, 0.25)'),
                     cursor: 'pointer',
                     padding: 0,
                     transition: 'all 0.2s'
@@ -725,7 +738,7 @@ export const Dashboard: React.FC = () => {
               ))}
             </div>
 
-            <div style={{ fontSize: '0.62rem', color: '#64748b', marginTop: '0.1rem' }}>
+            <div style={{ fontSize: '0.62rem', color: theme === 'light' ? '#475569' : '#64748b', marginTop: '0.1rem' }}>
               Tip: Use Left/Right Arrow keys or Spacebar to navigate. Press ESC to exit.
             </div>
           </div>
