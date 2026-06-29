@@ -382,13 +382,13 @@ export const Dashboard: React.FC = () => {
           setDonutHoverCategory('fac')
         }
       },
-      // Step 5: Move to Bar Chart observations
+      // Step 5: Move to Bar Chart Audit Execution
       () => {
         if (barContainerRef.current) {
           const rect = barContainerRef.current.getBoundingClientRect()
-          setCursorPos({ x: rect.left + rect.width / 2 + 20, y: rect.top + 45 })
+          setCursorPos({ x: rect.left + rect.width / 2 + 30, y: rect.top + 45 })
           setDonutHoverCategory(null)
-          setBarHoverCategory('observations')
+          setBarHoverCategory('audit')
         }
       },
       // Step 6: Hover Bar Hazard SLA
@@ -399,12 +399,12 @@ export const Dashboard: React.FC = () => {
           setBarHoverCategory('hazard')
         }
       },
-      // Step 7: Hover Bar Audit Execution
+      // Step 7: Hover Bar Safety Observations
       () => {
         if (barContainerRef.current) {
           const rect = barContainerRef.current.getBoundingClientRect()
-          setCursorPos({ x: rect.left + rect.width / 2 + 30, y: rect.top + 155 })
-          setBarHoverCategory('audit')
+          setCursorPos({ x: rect.left + rect.width / 2 + 20, y: rect.top + 155 })
+          setBarHoverCategory('observations')
         }
       },
     ]
