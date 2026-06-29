@@ -20,12 +20,32 @@ export const InputForm: React.FC<InputFormProps> = ({
   onThemeToggle,
 }) => {
   const handleInputChange = (field: keyof SafetyData, value: string) => {
-    // Parse to positive number, default to 0 if invalid
-    const numValue = Math.max(0, parseInt(value, 10) || 0)
+    // Strip any non-digit characters, parse strictly, clamp to >= 0
+    const stripped = value.replace(/[^0-9]/g, '')
+    const numValue = stripped === '' ? 0 : Math.max(0, parseInt(stripped, 10))
     onChange({
       ...data,
       [field]: numValue,
     })
+  }
+
+  // Block non-numeric key presses (allow: digits, Backspace, Delete, Tab, arrows, Home, End)
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    const allowed = [
+      'Backspace', 'Delete', 'Tab', 'ArrowLeft', 'ArrowRight',
+      'ArrowUp', 'ArrowDown', 'Home', 'End',
+    ]
+    if (!allowed.includes(e.key) && !/^\d$/.test(e.key)) {
+      e.preventDefault()
+    }
+  }
+
+  // Block paste of non-numeric content
+  const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    const pasted = e.clipboardData.getData('text')
+    if (!/^\d+$/.test(pasted)) {
+      e.preventDefault()
+    }
   }
 
   const zeroAllInputs = () => {
@@ -150,9 +170,12 @@ export const InputForm: React.FC<InputFormProps> = ({
           <input
             id="totalManHours"
             type="number"
+            min="0"
             className="form-input"
             value={data.totalManHours || ''}
             onChange={(e) => handleInputChange('totalManHours', e.target.value)}
+            onKeyDown={handleKeyDown}
+            onPaste={handlePaste}
             placeholder="e.g. 1200000"
           />
         </div>
@@ -166,9 +189,12 @@ export const InputForm: React.FC<InputFormProps> = ({
           <input
             id="lti"
             type="number"
+            min="0"
             className="form-input"
             value={data.lti || ''}
             onChange={(e) => handleInputChange('lti', e.target.value)}
+            onKeyDown={handleKeyDown}
+            onPaste={handlePaste}
             placeholder="e.g. 1"
           />
         </div>
@@ -182,9 +208,12 @@ export const InputForm: React.FC<InputFormProps> = ({
           <input
             id="rwc"
             type="number"
+            min="0"
             className="form-input"
             value={data.rwc || ''}
             onChange={(e) => handleInputChange('rwc', e.target.value)}
+            onKeyDown={handleKeyDown}
+            onPaste={handlePaste}
             placeholder="e.g. 2"
           />
         </div>
@@ -198,9 +227,12 @@ export const InputForm: React.FC<InputFormProps> = ({
           <input
             id="mtc"
             type="number"
+            min="0"
             className="form-input"
             value={data.mtc || ''}
             onChange={(e) => handleInputChange('mtc', e.target.value)}
+            onKeyDown={handleKeyDown}
+            onPaste={handlePaste}
             placeholder="e.g. 3"
           />
         </div>
@@ -214,9 +246,12 @@ export const InputForm: React.FC<InputFormProps> = ({
           <input
             id="fac"
             type="number"
+            min="0"
             className="form-input"
             value={data.fac || ''}
             onChange={(e) => handleInputChange('fac', e.target.value)}
+            onKeyDown={handleKeyDown}
+            onPaste={handlePaste}
             placeholder="e.g. 14"
           />
         </div>
@@ -230,9 +265,12 @@ export const InputForm: React.FC<InputFormProps> = ({
           <input
             id="observations"
             type="number"
+            min="0"
             className="form-input"
             value={data.observations || ''}
             onChange={(e) => handleInputChange('observations', e.target.value)}
+            onKeyDown={handleKeyDown}
+            onPaste={handlePaste}
             placeholder="e.g. 420"
           />
         </div>
@@ -246,9 +284,12 @@ export const InputForm: React.FC<InputFormProps> = ({
           <input
             id="hazardsClosed"
             type="number"
+            min="0"
             className="form-input"
             value={data.hazardsClosed || ''}
             onChange={(e) => handleInputChange('hazardsClosed', e.target.value)}
+            onKeyDown={handleKeyDown}
+            onPaste={handlePaste}
             placeholder="e.g. 385"
           />
         </div>
@@ -262,9 +303,12 @@ export const InputForm: React.FC<InputFormProps> = ({
           <input
             id="auditsPlanned"
             type="number"
+            min="0"
             className="form-input"
             value={data.auditsPlanned || ''}
             onChange={(e) => handleInputChange('auditsPlanned', e.target.value)}
+            onKeyDown={handleKeyDown}
+            onPaste={handlePaste}
             placeholder="e.g. 24"
           />
         </div>
@@ -278,9 +322,12 @@ export const InputForm: React.FC<InputFormProps> = ({
           <input
             id="auditsCompleted"
             type="number"
+            min="0"
             className="form-input"
             value={data.auditsCompleted || ''}
             onChange={(e) => handleInputChange('auditsCompleted', e.target.value)}
+            onKeyDown={handleKeyDown}
+            onPaste={handlePaste}
             placeholder="e.g. 22"
           />
         </div>
