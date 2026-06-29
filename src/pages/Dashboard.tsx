@@ -519,7 +519,7 @@ export const Dashboard: React.FC = () => {
                   onMouseEnter={() => kpi.hoverCat && setPptHoverCategory(kpi.hoverCat)}
                   onMouseLeave={() => setPptHoverCategory(null)}
                   style={{ 
-                    padding: '1rem 1.25rem', 
+                    padding: '1.25rem 1.5rem', 
                     display: 'flex', 
                     flexDirection: 'column', 
                     justifyContent: 'space-between',
@@ -527,7 +527,7 @@ export const Dashboard: React.FC = () => {
                     border: pptHoverCategory === kpi.hoverCat && kpi.hoverCat
                       ? '1px solid var(--color-primary)'
                       : '1px solid rgba(255, 255, 255, 0.08)',
-                    height: '95px',
+                    height: '135px',
                     cursor: kpi.hoverCat ? 'pointer' : 'default',
                     transition: 'all 0.25s',
                     transform: pptHoverCategory === kpi.hoverCat && kpi.hoverCat ? 'translateY(-2px)' : 'none',
@@ -536,28 +536,28 @@ export const Dashboard: React.FC = () => {
                       : 'var(--shadow-sm)',
                   }}
                 >
-                  <span style={{ fontSize: '0.7rem', color: '#94a3b8', fontWeight: 700 }}>{kpi.title}</span>
-                  <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.5rem', margin: '0.1rem 0' }}>
+                  <span style={{ fontSize: '0.85rem', color: '#94a3b8', fontWeight: 700 }}>{kpi.title}</span>
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.5rem', margin: '0.25rem 0' }}>
                     <span 
                       key={currentSlideIndex}
                       className="ppt-slide-animate"
-                      style={{ fontSize: '1.95rem', fontWeight: 800, color: kpi.color, letterSpacing: '-0.02em', display: 'inline-block' }}
+                      style={{ fontSize: '2.5rem', fontWeight: 800, color: kpi.color, letterSpacing: '-0.02em', display: 'inline-block' }}
                     >
                       {kpi.value}
                     </span>
                   </div>
-                  <div style={{ fontSize: '0.65rem', color: '#64748b', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '0.25rem' }}>{kpi.target}</div>
+                  <div style={{ fontSize: '0.75rem', color: '#64748b', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '0.4rem' }}>{kpi.target}</div>
                 </div>
               ))}
             </div>
 
             {/* Charts Row */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.2fr', gap: '1.5rem', flex: 1, minHeight: 0 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', flex: 1, minHeight: 0 }}>
               {/* Donut Chart Container */}
               <div 
                 className="glass-panel" 
                 style={{ 
-                  padding: '1.25rem', 
+                  padding: '1rem 1.25rem', 
                   display: 'flex', 
                   flexDirection: 'column', 
                   background: 'rgba(7, 19, 36, 0.65)', 
@@ -566,11 +566,11 @@ export const Dashboard: React.FC = () => {
                   minHeight: 0
                 }}
               >
-                <h3 style={{ fontSize: '0.8rem', fontWeight: 800, letterSpacing: '0.04em', textTransform: 'uppercase', color: '#ffffff', marginBottom: '0.5rem' }}>
+                <h3 style={{ fontSize: '0.75rem', fontWeight: 800, letterSpacing: '0.04em', textTransform: 'uppercase', color: '#ffffff', marginBottom: '0.35rem' }}>
                   Incident Breakdown (Lagging)
                 </h3>
                 <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 0, width: '100%' }}>
-                  <div style={{ height: '240px', width: '100%' }}>
+                  <div style={{ height: '260px', width: '100%' }}>
                     <IncidentDonut
                       lti={safetyData.lti}
                       rwc={safetyData.rwc}
@@ -587,7 +587,7 @@ export const Dashboard: React.FC = () => {
               <div 
                 className="glass-panel" 
                 style={{ 
-                  padding: '1.25rem', 
+                  padding: '1rem 1.25rem', 
                   display: 'flex', 
                   flexDirection: 'column', 
                   background: 'rgba(7, 19, 36, 0.65)', 
@@ -596,11 +596,11 @@ export const Dashboard: React.FC = () => {
                   minHeight: 0
                 }}
               >
-                <h3 style={{ fontSize: '0.8rem', fontWeight: 800, letterSpacing: '0.04em', textTransform: 'uppercase', color: '#ffffff', marginBottom: '0.5rem' }}>
+                <h3 style={{ fontSize: '0.75rem', fontWeight: 800, letterSpacing: '0.04em', textTransform: 'uppercase', color: '#ffffff', marginBottom: '0.35rem' }}>
                   Preventative Targets vs Performance (Leading)
                 </h3>
                 <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 0, width: '100%' }}>
-                  <div style={{ height: '240px', width: '100%' }}>
+                  <div style={{ height: '260px', width: '100%' }}>
                     <TargetVsActual
                       observations={safetyData.observations}
                       hazardRate={calculated.hazardCloseOutRate}
@@ -1222,6 +1222,12 @@ export const Dashboard: React.FC = () => {
 
       {/* Responsive adjustments helper styles */}
       <style>{`
+        #presentation-overlay .donut-chart-container {
+          height: 220px !important;
+        }
+        #presentation-overlay .target-chart-container {
+          height: 230px !important;
+        }
         @media (min-width: 1025px) {
           .dashboard-container {
             height: 100vh;
