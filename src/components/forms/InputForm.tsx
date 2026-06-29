@@ -28,17 +28,17 @@ export const InputForm: React.FC<InputFormProps> = ({
     })
   }
 
-  const loadPreset = () => {
+  const zeroAllInputs = () => {
     onChange({
-      totalManHours: 1200000,
-      lti: 1,
-      rwc: 2,
-      mtc: 3,
-      fac: 14,
-      observations: 420,
-      hazardsClosed: 385,
-      auditsPlanned: 24,
-      auditsCompleted: 22,
+      totalManHours: 0,
+      lti: 0,
+      rwc: 0,
+      mtc: 0,
+      fac: 0,
+      observations: 0,
+      hazardsClosed: 0,
+      auditsPlanned: 0,
+      auditsCompleted: 0,
     })
   }
 
@@ -120,11 +120,11 @@ export const InputForm: React.FC<InputFormProps> = ({
         <button
           id="btn-preset-sample"
           className="btn btn-secondary"
-          onClick={loadPreset}
-          title="Load metrics directly from the Excel sheet sample"
+          onClick={zeroAllInputs}
+          title="Set all safety metrics inputs to zero"
           style={{ fontSize: '0.72rem', padding: '0.45rem 0.65rem', flex: 1, whiteSpace: 'nowrap' }}
         >
-          <RotateCcw size={11} /> Reset to Sample Data
+          <RotateCcw size={11} /> Reset
         </button>
       </div>
 
