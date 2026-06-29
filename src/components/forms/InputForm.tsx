@@ -1,6 +1,6 @@
 import React from 'react'
 import type { SafetyData } from '../../types/dashboard'
-import { RotateCcw, HelpCircle, Sun, Moon } from 'lucide-react'
+import { RotateCcw, HelpCircle, Sun, Moon, Save, CheckCircle, AlertCircle, Loader } from 'lucide-react'
 
 interface InputFormProps {
   data: SafetyData
@@ -9,6 +9,9 @@ interface InputFormProps {
   onFormulaToggle: (val: boolean) => void
   theme?: 'light' | 'dark'
   onThemeToggle?: () => void
+  onSave?: () => void
+  isSaving?: boolean
+  saveStatus?: 'idle' | 'saved' | 'error'
 }
 
 export const InputForm: React.FC<InputFormProps> = ({
@@ -18,6 +21,9 @@ export const InputForm: React.FC<InputFormProps> = ({
   onFormulaToggle,
   theme = 'dark',
   onThemeToggle,
+  onSave,
+  isSaving = false,
+  saveStatus = 'idle',
 }) => {
   const handleInputChange = (field: keyof SafetyData, value: string) => {
     // Strip any non-digit characters, parse strictly, clamp to >= 0
@@ -135,7 +141,7 @@ export const InputForm: React.FC<InputFormProps> = ({
         )}
       </div>
 
-      {/* Preset Buttons */}
+      {/* Action Buttons: Reset + Save */}
       <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
         <button
           id="btn-preset-sample"
@@ -146,6 +152,46 @@ export const InputForm: React.FC<InputFormProps> = ({
         >
           <RotateCcw size={11} /> Reset
         </button>
+
+        {onSave && (
+          <button
+            id="btn-save-metrics"
+            onClick={onSave}
+            disabled={isSaving}
+            title="Save metrics to database — all connected devices will update"
+            style={{
+              fontSize: '0.72rem',
+              padding: '0.45rem 0.75rem',
+              flex: 2,
+              whiteSpace: 'nowrap',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '0.35rem',
+              fontWeight: 700,
+              borderRadius: 'var(--radius-sm)',
+              border: 'none',
+              cursor: isSaving ? 'not-allowed' : 'pointer',
+              transition: 'all 0.2s',
+              background:
+                saveStatus === 'saved' ? 'rgba(16,185,129,0.15)' :
+                saveStatus === 'error'  ? 'rgba(239,68,68,0.15)'  :
+                'linear-gradient(135deg, var(--color-primary), #6366f1)',
+              color:
+                saveStatus === 'saved' ? '#10b981' :
+                saveStatus === 'error'  ? '#ef4444'  :
+                '#ffffff',
+              opacity: isSaving ? 0.7 : 1,
+              boxShadow: saveStatus === 'idle' ? '0 2px 8px rgba(99,102,241,0.35)' : 'none',
+            }}
+          >
+            {isSaving && <Loader size={12} style={{ animation: 'spin 1s linear infinite' }} />}
+            {saveStatus === 'saved' && <CheckCircle size={12} />}
+            {saveStatus === 'error'  && <AlertCircle size={12} />}
+            {!isSaving && saveStatus === 'idle' && <Save size={12} />}
+            {isSaving ? 'Saving…' : saveStatus === 'saved' ? 'Saved!' : saveStatus === 'error' ? 'Failed' : 'Save & Sync'}
+          </button>
+        )}
       </div>
 
       <hr style={{ border: 'none', borderBottom: '1px solid var(--border-divider)' }} />

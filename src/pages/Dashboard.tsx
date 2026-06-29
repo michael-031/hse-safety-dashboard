@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import type { SafetyData } from '../types/dashboard'
 import { calculateSafetyMetrics } from '../utils/calculations'
 import InputForm from '../components/forms/InputForm'
@@ -6,7 +6,7 @@ import KPICard from '../components/cards/KPICard'
 import IncidentDonut from '../components/charts/IncidentDonut'
 import TargetVsActual from '../components/charts/TargetVsActual'
 import { PanelLeftClose, PanelLeftOpen } from 'lucide-react'
-import { supabase, hasSupabaseConfig } from '../utils/supabase'
+import { supabase, hasSupabaseConfig, fetchMetrics, saveMetrics, rowToSafetyData } from '../utils/supabase'
 
 // Default values seeded from the Excel sheet screenshot
 const DEFAULT_SAFETY_DATA: SafetyData = {
@@ -130,33 +130,52 @@ export const Dashboard: React.FC = () => {
     return saved ? saved === 'true' : true
   })
 
-  // Helper to handle local changes and optionally broadcast to other screens
-  const updateSafetyData = (newData: SafetyData, broadcast = true) => {
+  // Save button state
+  const [isSaving, setIsSaving] = useState(false)
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saved' | 'error'>('idle')
+
+  // Plain state updater (no broadcast)
+  const updateSafetyData = (newData: SafetyData) => {
     setSafetyData(newData)
-    if (broadcast && hasSupabaseConfig) {
-      supabase.channel('dashboard-sync').send({
-        type: 'broadcast',
-        event: 'metrics-sync',
-        payload: newData,
-      })
-    }
   }
 
-  // Subscribe to real-time synchronization updates if Supabase is configured
+  // ── Supabase DB: load on mount + subscribe to realtime changes ──────────────
   useEffect(() => {
     if (!hasSupabaseConfig) return
 
-    const channel = supabase.channel('dashboard-sync')
-      .on('broadcast', { event: 'metrics-sync' }, ({ payload }) => {
-        // Update state directly without broadcasting back
-        setSafetyData(payload)
-      })
+    // Load current row from DB on mount
+    fetchMetrics().then((row) => {
+      if (row) setSafetyData(row)
+    })
+
+    // Subscribe to row-level changes so all devices auto-update on save
+    const channel = supabase
+      .channel('hse-metrics-changes')
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'hse_metrics', filter: 'id=eq.1' },
+        (payload) => {
+          setSafetyData(rowToSafetyData(payload.new))
+        }
+      )
       .subscribe()
 
     return () => {
       supabase.removeChannel(channel)
     }
   }, [])
+
+  // ── Save handler: write to DB ────────────────────────────────────────────────
+  const handleSave = useCallback(async () => {
+    if (!hasSupabaseConfig || isSaving) return
+    setIsSaving(true)
+    setSaveStatus('idle')
+    const ok = await saveMetrics(safetyData)
+    setIsSaving(false)
+    setSaveStatus(ok ? 'saved' : 'error')
+    // Clear status badge after 3 s
+    setTimeout(() => setSaveStatus('idle'), 3000)
+  }, [safetyData, isSaving])
 
   // Cache state changes
   useEffect(() => {
@@ -666,7 +685,7 @@ export const Dashboard: React.FC = () => {
                 onClick={() => {
                   setCurrentSlideIndex((prev) => {
                     const nextIdx = (prev - 1 + SLIDESHOW_DATA.length) % SLIDESHOW_DATA.length
-                    updateSafetyData(SLIDESHOW_DATA[nextIdx].data, true)
+                    updateSafetyData(SLIDESHOW_DATA[nextIdx].data)
                     return nextIdx
                   })
                 }}
@@ -717,7 +736,7 @@ export const Dashboard: React.FC = () => {
                 onClick={() => {
                   setCurrentSlideIndex((prev) => {
                     const nextIdx = (prev + 1) % SLIDESHOW_DATA.length
-                    updateSafetyData(SLIDESHOW_DATA[nextIdx].data, true)
+                    updateSafetyData(SLIDESHOW_DATA[nextIdx].data)
                     return nextIdx
                   })
                 }}
@@ -749,7 +768,7 @@ export const Dashboard: React.FC = () => {
                   key={idx}
                   onClick={() => {
                     setCurrentSlideIndex(idx)
-                    updateSafetyData(slide.data, true)
+                    updateSafetyData(slide.data)
                     setIsSlideshowPlaying(false) // Pause autoplay on manual click
                   }}
                   style={{
@@ -818,11 +837,14 @@ export const Dashboard: React.FC = () => {
           <div style={{ width: '330px', height: '100%', minHeight: 0 }}>
             <InputForm
               data={safetyData}
-              onChange={(newData) => updateSafetyData(newData, true)}
+              onChange={(newData) => updateSafetyData(newData)}
               useExcelFormula={useExcelFormula}
               onFormulaToggle={setUseExcelFormula}
               theme={theme}
               onThemeToggle={() => setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'))}
+              onSave={hasSupabaseConfig ? handleSave : undefined}
+              isSaving={isSaving}
+              saveStatus={saveStatus}
             />
           </div>
         </aside>
@@ -966,7 +988,7 @@ export const Dashboard: React.FC = () => {
                 onChange={(e) => {
                   const idx = parseInt(e.target.value, 10)
                   setCurrentSlideIndex(idx)
-                  updateSafetyData(SLIDESHOW_DATA[idx].data, true)
+                  updateSafetyData(SLIDESHOW_DATA[idx].data)
                   setIsSlideshowPlaying(false) // Pause autoplay on manual change
                 }}
                 style={{
