@@ -6,7 +6,7 @@ import KPICard from '../components/cards/KPICard'
 import IncidentDonut from '../components/charts/IncidentDonut'
 import TargetVsActual from '../components/charts/TargetVsActual'
 import { PanelLeftClose, PanelLeftOpen } from 'lucide-react'
-import { supabase, hasSupabaseConfig, fetchMetrics, saveMetrics, rowToSafetyData } from '../utils/supabase'
+import { supabase, fetchMetrics, saveMetrics, rowToSafetyData } from '../utils/supabase'
 
 // Default values seeded from the Excel sheet screenshot
 const DEFAULT_SAFETY_DATA: SafetyData = {
@@ -141,8 +141,6 @@ export const Dashboard: React.FC = () => {
 
   // ── Supabase DB: load on mount + subscribe to realtime changes ──────────────
   useEffect(() => {
-    if (!hasSupabaseConfig) return
-
     // Load current row from DB on mount
     fetchMetrics().then((row) => {
       if (row) setSafetyData(row)
@@ -167,7 +165,7 @@ export const Dashboard: React.FC = () => {
 
   // ── Save handler: write to DB ────────────────────────────────────────────────
   const handleSave = useCallback(async () => {
-    if (!hasSupabaseConfig || isSaving) return
+    if (isSaving) return
     setIsSaving(true)
     setSaveStatus('idle')
     const ok = await saveMetrics(safetyData)
@@ -842,7 +840,7 @@ export const Dashboard: React.FC = () => {
               onFormulaToggle={setUseExcelFormula}
               theme={theme}
               onThemeToggle={() => setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'))}
-              onSave={hasSupabaseConfig ? handleSave : undefined}
+              onSave={handleSave}
               isSaving={isSaving}
               saveStatus={saveStatus}
             />
