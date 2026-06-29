@@ -7,6 +7,7 @@
   
   --border-color: rgba(96, 165, 250, 0.12);
   --border-hover: rgba(96, 165, 250, 0.25);
+  --border-divider: rgba(255, 255, 255, 0.08);
   
   --text-primary: #ffffff;
   --text-secondary: #94a3b8;
@@ -46,6 +47,53 @@
   --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.3);
   --shadow-md: 0 12px 36px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(37, 99, 235, 0.08);
   --shadow-lg: 0 24px 60px rgba(0, 0, 0, 0.65), 0 4px 16px rgba(37, 99, 235, 0.15);
+
+  --bg-gradient: radial-gradient(circle at 50% 0%, #0d2547 0%, #020813 100%);
+  --bg-glass: rgba(7, 19, 36, 0.75);
+}
+
+:root[data-theme="light"] {
+  /* Colors - Clean Premium Light Theme */
+  --bg-base: #f1f5f9;
+  --bg-panel: #ffffff;
+  --bg-input: #f8fafc;
+  --bg-input-focus: #e2e8f0;
+  
+  --border-color: rgba(37, 99, 235, 0.12);
+  --border-hover: rgba(37, 99, 235, 0.25);
+  --border-divider: rgba(0, 0, 0, 0.08);
+  
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #64748b;
+  
+  /* Lively Blue Accents in Light Mode */
+  --color-primary: #2563eb;
+  --color-primary-glow: rgba(37, 99, 235, 0.1);
+  --color-primary-hover: #1d4ed8;
+  
+  --color-success: #059669;
+  --color-success-bg: rgba(5, 150, 105, 0.15);
+  --color-success-glow: rgba(5, 150, 105, 0.2);
+  
+  --color-warning: #d97706;
+  --color-warning-bg: rgba(217, 119, 6, 0.12);
+  --color-warning-glow: rgba(217, 119, 6, 0.2);
+  
+  --color-danger: #dc2626;
+  --color-danger-bg: rgba(220, 38, 38, 0.12);
+  --color-danger-glow: rgba(220, 38, 38, 0.2);
+  
+  --color-info: #0891b2;
+  --color-info-bg: rgba(8, 145, 178, 0.1);
+
+  --bg-gradient: radial-gradient(circle at 50% 0%, #f8fafc 0%, #cbd5e1 100%);
+  --bg-glass: rgba(255, 255, 255, 0.85);
+
+  /* Light Theme Shadows */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 10px 30px rgba(0, 0, 0, 0.06), 0 2px 8px rgba(37, 99, 235, 0.04);
+  --shadow-lg: 0 20px 40px rgba(0, 0, 0, 0.1), 0 4px 12px rgba(37, 99, 235, 0.06);
 }
 
 /* Base Styles */
@@ -57,13 +105,14 @@
 
 body {
   font-family: var(--font-family);
-  background: radial-gradient(circle at 50% 0%, #0d2547 0%, #020813 100%) no-repeat;
+  background: var(--bg-gradient) no-repeat;
   background-attachment: fixed;
   color: var(--text-primary);
   min-height: 100vh;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  transition: background 0.3s ease, color 0.3s ease;
 }
 
 /* Custom Scrollbars */
@@ -73,7 +122,7 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: #020813;
+  background: var(--bg-base);
 }
 
 ::-webkit-scrollbar-thumb {
@@ -87,19 +136,19 @@ body {
 
 /* Translucent Rounded Panel Styling */
 .glass-panel {
-  background: rgba(7, 19, 36, 0.75);
+  background: var(--bg-glass);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-md);
-  transition: transform var(--transition-slow), box-shadow var(--transition-slow), border-color var(--transition-slow);
+  transition: transform var(--transition-slow), box-shadow var(--transition-slow), border-color var(--transition-slow), background-color 0.3s ease;
 }
 
 .glass-panel:hover {
   transform: translateY(-2px);
   box-shadow: var(--shadow-lg);
-  border-color: rgba(96, 165, 250, 0.25);
+  border-color: var(--border-hover);
 }
 
 /* Form Controls */
@@ -134,7 +183,7 @@ body {
   font-weight: 600;
   color: var(--text-primary);
   background: var(--bg-input);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
   outline: none;
   transition: border-color var(--transition-normal), background-color var(--transition-normal), box-shadow var(--transition-normal);
@@ -186,13 +235,13 @@ body {
 .btn-secondary {
   background: var(--bg-input);
   color: var(--text-secondary);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-color);
 }
 
 .btn-secondary:hover {
   background: rgba(96, 165, 250, 0.1);
-  color: #ffffff;
-  border-color: rgba(96, 165, 250, 0.2);
+  color: var(--text-primary);
+  border-color: var(--border-hover);
 }
 
 /* Custom Table */
@@ -207,7 +256,7 @@ body {
   padding: 0.65rem 0.85rem;
   font-weight: 700;
   color: var(--text-secondary);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid var(--border-divider);
   text-transform: uppercase;
   font-size: 0.72rem;
   letter-spacing: 0.04em;
@@ -217,7 +266,7 @@ body {
   padding: 0.75rem 0.85rem;
   color: var(--text-primary);
   font-weight: 500;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  border-bottom: 1px solid var(--border-divider);
 }
 
 .hse-table tr:last-child td {

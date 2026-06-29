@@ -6,6 +6,7 @@ interface TargetVsActualProps {
   hazardRate: number
   auditRate: number
   hoveredCategory?: string | null
+  theme?: 'light' | 'dark'
 }
 
 export const TargetVsActual: React.FC<TargetVsActualProps> = ({
@@ -13,6 +14,7 @@ export const TargetVsActual: React.FC<TargetVsActualProps> = ({
   hazardRate,
   auditRate,
   hoveredCategory,
+  theme = 'dark',
 }) => {
   const chartRef = React.useRef<any>(null)
 
@@ -21,8 +23,7 @@ export const TargetVsActual: React.FC<TargetVsActualProps> = ({
     const chartInstance = chartRef.current.getEchartsInstance()
 
     chartInstance.dispatchAction({
-      type: 'downplay',
-      seriesIndex: 0,
+      type: 'downplay', seriesIndex: 0,
     })
     chartInstance.dispatchAction({
       type: 'hideTip',
@@ -95,6 +96,15 @@ export const TargetVsActual: React.FC<TargetVsActualProps> = ({
     },
   ]
 
+  const isDark = theme !== 'light'
+  const textColor = isDark ? '#ffffff' : '#0f172a'
+  const textMuted = isDark ? '#94a3b8' : '#475569'
+  const textSecondaryColor = isDark ? '#64748b' : '#64748b'
+  const tooltipBg = isDark ? '#071324' : '#ffffff'
+  const tooltipBorder = isDark ? 'rgba(96, 165, 250, 0.2)' : 'rgba(37, 99, 235, 0.15)'
+  const axisLineColor = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'
+  const splitLineColor = isDark ? 'rgba(96, 165, 250, 0.06)' : 'rgba(37, 99, 235, 0.06)'
+
   const option = {
     backgroundColor: 'transparent',
     tooltip: {
@@ -102,24 +112,24 @@ export const TargetVsActual: React.FC<TargetVsActualProps> = ({
       axisPointer: {
         type: 'shadow',
       },
-      backgroundColor: '#071324',
-      borderColor: 'rgba(96, 165, 250, 0.2)',
+      backgroundColor: tooltipBg,
+      borderColor: tooltipBorder,
       borderWidth: 1,
       textStyle: {
-        color: '#ffffff',
+        color: textColor,
         fontFamily: 'Plus Jakarta Sans',
         fontSize: 12,
         fontWeight: 500,
       },
-      extraCssText: 'box-shadow: 0 8px 24px rgba(0,0,0,0.3); border-radius: 8px;',
+      extraCssText: `box-shadow: ${isDark ? '0 8px 24px rgba(0,0,0,0.3)' : '0 4px 12px rgba(0,0,0,0.1)'}; border-radius: 8px;`,
       formatter: (params: any) => {
         const index = params[0].dataIndex
         const item = data[index]
         return `
-          <div style="font-weight: 700; margin-bottom: 4px; color: #ffffff;">${item.name}</div>
-          <div style="font-size: 11px; color: #94a3b8; line-height: 1.5;">
-            Actual: <span style="color: #ffffff; font-weight: 600;">${item.actual}</span><br/>
-            Target: <span style="color: #64748b;">${item.target}</span><br/>
+          <div style="font-weight: 700; margin-bottom: 4px; color: ${textColor};">${item.name}</div>
+          <div style="font-size: 11px; color: ${textMuted}; line-height: 1.5;">
+            Actual: <span style="color: ${textColor}; font-weight: 600;">${item.actual}</span><br/>
+            Target: <span style="color: ${textSecondaryColor};">${item.target}</span><br/>
             Achievement: <span style="color: ${item.color}; font-weight: 700;">${item.achieved}%</span>
           </div>
         `
@@ -138,13 +148,13 @@ export const TargetVsActual: React.FC<TargetVsActualProps> = ({
       max: (value: any) => Math.max(120, Math.ceil(value.max / 10) * 10),
       axisLabel: {
         formatter: '{value}%',
-        color: '#94a3b8',
+        color: textMuted,
         fontFamily: 'Plus Jakarta Sans',
         fontSize: 10,
       },
       splitLine: {
         lineStyle: {
-          color: 'rgba(96, 165, 250, 0.06)',
+          color: splitLineColor,
         },
       },
     },
@@ -152,14 +162,14 @@ export const TargetVsActual: React.FC<TargetVsActualProps> = ({
       type: 'category',
       data: data.map((d) => d.name),
       axisLabel: {
-        color: '#ffffff',
+        color: textColor,
         fontFamily: 'Plus Jakarta Sans',
         fontSize: 11,
         fontWeight: 600,
       },
       axisLine: {
         lineStyle: {
-          color: 'rgba(255, 255, 255, 0.1)',
+          color: axisLineColor,
         },
       },
       axisTick: {
@@ -183,7 +193,7 @@ export const TargetVsActual: React.FC<TargetVsActualProps> = ({
           formatter: (params: any) => {
             return data[params.dataIndex].actual
           },
-          color: '#ffffff',
+          color: textColor,
           fontFamily: 'Plus Jakarta Sans',
           fontWeight: 700,
           fontSize: 11,

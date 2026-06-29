@@ -98,6 +98,17 @@ export const Dashboard: React.FC = () => {
   // Toggle input section visibility
   const [isInputVisible, setIsInputVisible] = useState(true)
 
+  // Theme state: dark mode is default
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+    const saved = localStorage.getItem('hse_dashboard_theme')
+    return (saved === 'light' || saved === 'dark') ? saved : 'dark'
+  })
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme)
+    localStorage.setItem('hse_dashboard_theme', theme)
+  }, [theme])
+
   // Safety Data state
   const [safetyData, setSafetyData] = useState<SafetyData>(() => {
     const saved = localStorage.getItem('hse_safety_data')
@@ -566,6 +577,7 @@ export const Dashboard: React.FC = () => {
                       mtc={safetyData.mtc}
                       fac={safetyData.fac}
                       hoveredCategory={pptHoverCategory}
+                      theme="dark"
                     />
                   </div>
                 </div>
@@ -594,6 +606,7 @@ export const Dashboard: React.FC = () => {
                       hazardRate={calculated.hazardCloseOutRate}
                       auditRate={calculated.auditCompletionRate}
                       hoveredCategory={pptHoverCategory}
+                      theme="dark"
                     />
                   </div>
                 </div>
@@ -766,6 +779,8 @@ export const Dashboard: React.FC = () => {
               onChange={setSafetyData}
               useExcelFormula={useExcelFormula}
               onFormulaToggle={setUseExcelFormula}
+              theme={theme}
+              onThemeToggle={() => setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'))}
             />
           </div>
         </aside>
@@ -1059,7 +1074,7 @@ export const Dashboard: React.FC = () => {
                 <h3 style={{ fontSize: '0.82rem', fontWeight: 800, letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--text-primary)' }}>
                   Lagging Indicators (Incident Breakdown)
                 </h3>
-                <div style={{ height: '1px', background: 'rgba(255, 255, 255, 0.08)', marginTop: '0.4rem' }}></div>
+                <div style={{ height: '1px', background: 'var(--border-divider)', marginTop: '0.4rem' }}></div>
               </div>
 
               {/* Layout for Table & Donut */}
@@ -1111,6 +1126,7 @@ export const Dashboard: React.FC = () => {
                     mtc={safetyData.mtc}
                     fac={safetyData.fac}
                     hoveredCategory={donutHoverCategory}
+                    theme={theme}
                   />
                 </div>
               </div>
@@ -1122,7 +1138,7 @@ export const Dashboard: React.FC = () => {
                 <h3 style={{ fontSize: '0.82rem', fontWeight: 800, letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--text-primary)' }}>
                   Leading Indicators (Preventative Targets)
                 </h3>
-                <div style={{ height: '1px', background: 'rgba(255, 255, 255, 0.08)', marginTop: '0.4rem' }}></div>
+                <div style={{ height: '1px', background: 'var(--border-divider)', marginTop: '0.4rem' }}></div>
               </div>
 
               {/* Table and Comparison Chart */}
@@ -1173,6 +1189,7 @@ export const Dashboard: React.FC = () => {
                     hazardRate={calculated.hazardCloseOutRate}
                     auditRate={calculated.auditCompletionRate}
                     hoveredCategory={barHoverCategory}
+                    theme={theme}
                   />
                 </div>
               </div>

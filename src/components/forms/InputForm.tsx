@@ -1,12 +1,14 @@
 import React from 'react'
 import type { SafetyData } from '../../types/dashboard'
-import { RotateCcw, HelpCircle } from 'lucide-react'
+import { RotateCcw, HelpCircle, Sun, Moon } from 'lucide-react'
 
 interface InputFormProps {
   data: SafetyData
   onChange: (newData: SafetyData) => void
   useExcelFormula: boolean
   onFormulaToggle: (val: boolean) => void
+  theme?: 'light' | 'dark'
+  onThemeToggle?: () => void
 }
 
 export const InputForm: React.FC<InputFormProps> = ({
@@ -14,6 +16,8 @@ export const InputForm: React.FC<InputFormProps> = ({
   onChange,
   useExcelFormula,
   onFormulaToggle,
+  theme = 'dark',
+  onThemeToggle,
 }) => {
   const handleInputChange = (field: keyof SafetyData, value: string) => {
     // Parse to positive number, default to 0 if invalid
@@ -51,27 +55,63 @@ export const InputForm: React.FC<InputFormProps> = ({
         boxShadow: 'var(--shadow-md)',
       }}
     >
-      <div>
-        <h3
-          style={{
-            fontSize: '1.05rem',
-            fontWeight: 800,
-            letterSpacing: '-0.02em',
-            color: 'var(--text-primary)',
-          }}
-        >
-          HSE Data Input Section
-        </h3>
-        <p
-          style={{
-            fontSize: '0.75rem',
-            color: 'var(--text-secondary)',
-            marginTop: '0.15rem',
-            lineHeight: 1.4,
-          }}
-        >
-          Adjust parameters to update the executive dashboard in real-time.
-        </p>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.5rem' }}>
+        <div style={{ flex: 1 }}>
+          <h3
+            style={{
+              fontSize: '1.05rem',
+              fontWeight: 800,
+              letterSpacing: '-0.02em',
+              color: 'var(--text-primary)',
+            }}
+          >
+            HSE Data Input Section
+          </h3>
+          <p
+            style={{
+              fontSize: '0.75rem',
+              color: 'var(--text-secondary)',
+              marginTop: '0.15rem',
+              lineHeight: 1.4,
+            }}
+          >
+            Adjust parameters to update the executive dashboard in real-time.
+          </p>
+        </div>
+
+        {onThemeToggle && (
+          <button
+            onClick={onThemeToggle}
+            style={{
+              background: 'var(--bg-input)',
+              border: '1px solid var(--border-color)',
+              borderRadius: '50%',
+              width: '2.2rem',
+              height: '2.2rem',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              color: 'var(--text-secondary)',
+              transition: 'all var(--transition-normal)',
+              flexShrink: 0,
+              boxShadow: 'var(--shadow-sm)',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.borderColor = 'var(--border-hover)'
+              e.currentTarget.style.color = 'var(--text-primary)'
+              e.currentTarget.style.transform = 'scale(1.05)'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = 'var(--border-color)'
+              e.currentTarget.style.color = 'var(--text-secondary)'
+              e.currentTarget.style.transform = 'scale(1)'
+            }}
+            title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+          >
+            {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
+          </button>
+        )}
       </div>
 
       {/* Preset Buttons */}
@@ -87,7 +127,7 @@ export const InputForm: React.FC<InputFormProps> = ({
         </button>
       </div>
 
-      <hr style={{ border: 'none', borderBottom: '1px solid rgba(94, 124, 107, 0.08)' }} />
+      <hr style={{ border: 'none', borderBottom: '1px solid var(--border-divider)' }} />
 
       {/* Fields Wrapper */}
       <div
@@ -245,7 +285,7 @@ export const InputForm: React.FC<InputFormProps> = ({
         </div>
       </div>
 
-      <hr style={{ border: 'none', borderBottom: '1px solid rgba(94, 124, 107, 0.08)' }} />
+      <hr style={{ border: 'none', borderBottom: '1px solid var(--border-divider)' }} />
 
       {/* Formula Settings Panel */}
       <div
