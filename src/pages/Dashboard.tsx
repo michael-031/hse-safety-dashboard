@@ -171,8 +171,17 @@ export const Dashboard: React.FC = () => {
   // Sync metricsList with safetyData (e.g. on mount or DB subscription update)
   useEffect(() => {
     setMetricsList(prev => {
-      if (safetyData.customMetrics && Array.isArray(safetyData.customMetrics)) {
-        const syncedList = safetyData.customMetrics as MetricItem[]
+      let syncedList: MetricItem[] | null = null
+
+      if (safetyData.customMetrics) {
+        if (Array.isArray(safetyData.customMetrics)) {
+          syncedList = safetyData.customMetrics
+        } else if (typeof safetyData.customMetrics === 'object') {
+          syncedList = safetyData.customMetrics.metrics || null
+        }
+      }
+
+      if (syncedList && Array.isArray(syncedList)) {
         return syncedList.map(item => {
           if (!item.isCustom && item.id in safetyData) {
             return { ...item, value: safetyData[item.id as keyof SafetyData] }
@@ -203,10 +212,17 @@ export const Dashboard: React.FC = () => {
   const handleMetricsChange = (newMetrics: MetricItem[]) => {
     setMetricsList(newMetrics)
 
+    const currentHash = (safetyData.customMetrics && typeof safetyData.customMetrics === 'object' && !Array.isArray(safetyData.customMetrics))
+      ? (safetyData.customMetrics.admin_passcode_hash || null)
+      : null
+
     // Extract standard metrics to update safetyData (which triggers DB updates)
     const updatedSafetyData: SafetyData = {
       ...safetyData,
-      customMetrics: newMetrics
+      customMetrics: {
+        metrics: newMetrics,
+        admin_passcode_hash: currentHash
+      }
     }
     newMetrics.forEach(item => {
       if (!item.isCustom && item.id in updatedSafetyData) {
@@ -237,6 +253,22 @@ export const Dashboard: React.FC = () => {
     localStorage.setItem('hse_metrics_active_status', JSON.stringify(activeMap))
     localStorage.setItem('hse_metrics_labels', JSON.stringify(labelsMap))
     localStorage.setItem('hse_metrics_targets', JSON.stringify(targetsMap))
+  }
+
+  const adminPasscodeHash = (safetyData.customMetrics && typeof safetyData.customMetrics === 'object' && !Array.isArray(safetyData.customMetrics))
+    ? (safetyData.customMetrics.admin_passcode_hash || null)
+    : null
+
+  const handleSavePasscodeHash = (newHash: string) => {
+    const updatedSafetyData: SafetyData = {
+      ...safetyData,
+      customMetrics: {
+        metrics: metricsList,
+        admin_passcode_hash: newHash
+      }
+    }
+    setSafetyData(updatedSafetyData)
+    saveMetrics(updatedSafetyData, hasCustomMetricsColumn.current)
   }
 
   // Plain state updater (no broadcast) - maps scenario data to dynamic metrics
@@ -1628,6 +1660,8 @@ export const Dashboard: React.FC = () => {
               onSave={handleSave}
               isSaving={isSaving}
               saveStatus={saveStatus}
+              adminPasscodeHash={adminPasscodeHash}
+              onSavePasscodeHash={handleSavePasscodeHash}
             />
           </div>
         </aside>
