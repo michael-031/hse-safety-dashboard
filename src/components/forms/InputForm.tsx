@@ -25,6 +25,57 @@ export const InputForm: React.FC<InputFormProps> = ({
   isSaving = false,
   saveStatus = 'idle',
 }) => {
+  const badgeStyle = (type: 'exposure' | 'lagging' | 'leading') => {
+    const isDark = theme === 'dark'
+    const colors = {
+      exposure: {
+        bg: isDark ? 'rgba(96, 165, 250, 0.1)' : 'rgba(37, 99, 235, 0.08)',
+        color: isDark ? '#60a5fa' : '#2563eb',
+        border: isDark ? 'rgba(96, 165, 250, 0.2)' : 'rgba(37, 99, 235, 0.15)',
+      },
+      lagging: {
+        bg: isDark ? 'rgba(239, 68, 68, 0.1)' : 'rgba(220, 38, 38, 0.08)',
+        color: isDark ? '#ef4444' : '#dc2626',
+        border: isDark ? 'rgba(239, 68, 68, 0.2)' : 'rgba(220, 38, 38, 0.15)',
+      },
+      leading: {
+        bg: isDark ? 'rgba(16, 185, 129, 0.1)' : 'rgba(5, 150, 105, 0.08)',
+        color: isDark ? '#10b981' : '#059669',
+        border: isDark ? 'rgba(16, 185, 129, 0.2)' : 'rgba(5, 150, 105, 0.15)',
+      },
+    }[type]
+
+    return {
+      fontSize: '0.62rem',
+      fontWeight: 800 as const,
+      padding: '0.12rem 0.35rem',
+      borderRadius: '4px',
+      textTransform: 'uppercase' as const,
+      letterSpacing: '0.03em',
+      lineHeight: 1,
+      display: 'inline-flex',
+      alignItems: 'center',
+      backgroundColor: colors.bg,
+      color: colors.color,
+      border: `1px solid ${colors.border}`,
+    }
+  }
+
+  const sectionHeaderStyle = (color: string, borderColor: string) => ({
+    fontSize: '0.72rem',
+    fontWeight: 800,
+    textTransform: 'uppercase' as const,
+    letterSpacing: '0.06em',
+    color,
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.4rem',
+    marginTop: '0.6rem',
+    marginBottom: '0.2rem',
+    borderBottom: `1px solid ${borderColor}`,
+    paddingBottom: '0.35rem',
+  })
+
   const handleInputChange = (field: keyof SafetyData, value: string) => {
     // Strip any non-digit characters, parse strictly, clamp to >= 0
     const stripped = value.replace(/[^0-9]/g, '')
@@ -207,10 +258,19 @@ export const InputForm: React.FC<InputFormProps> = ({
           paddingRight: '2px',
         }}
       >
+        {/* SECTION 1: BASELINE & EXPOSURE */}
+        <div style={sectionHeaderStyle('var(--text-secondary)', 'var(--border-divider)')}>
+          <span>Baseline & Exposure</span>
+          <span style={{ fontSize: '0.65rem', fontWeight: 600, textTransform: 'none', letterSpacing: 'normal', color: 'var(--text-muted)' }}>— Normalizing factors</span>
+        </div>
+
         {/* Total Man-Hours */}
         <div className="form-group">
-          <label className="form-label" htmlFor="totalManHours">
-            Total Man-Hours Worked
+          <label className="form-label" htmlFor="totalManHours" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
+            <span style={{ flexGrow: 1, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              Total Man-Hours Worked
+              <span style={badgeStyle('exposure')}>Exposure</span>
+            </span>
             <span className="form-label-info">Staff & Contractors</span>
           </label>
           <input
@@ -226,10 +286,22 @@ export const InputForm: React.FC<InputFormProps> = ({
           />
         </div>
 
+        {/* SECTION 2: LAGGING INDICATORS */}
+        <div style={sectionHeaderStyle(
+          theme === 'dark' ? '#ef4444' : '#dc2626',
+          theme === 'dark' ? 'rgba(239, 68, 68, 0.15)' : 'rgba(220, 38, 38, 0.15)'
+        )}>
+          <span>Lagging Indicators</span>
+          <span style={{ fontSize: '0.65rem', fontWeight: 600, textTransform: 'none', letterSpacing: 'normal', color: 'var(--text-muted)' }}>— Incident outcomes</span>
+        </div>
+
         {/* LTI */}
         <div className="form-group">
-          <label className="form-label" htmlFor="lti">
-            Lost Time Injuries (LTI)
+          <label className="form-label" htmlFor="lti" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
+            <span style={{ flexGrow: 1, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              Lost Time Injuries (LTI)
+              <span style={badgeStyle('lagging')}>Lagging</span>
+            </span>
             <span className="form-label-info">Lost workdays</span>
           </label>
           <input
@@ -247,8 +319,11 @@ export const InputForm: React.FC<InputFormProps> = ({
 
         {/* RWC */}
         <div className="form-group">
-          <label className="form-label" htmlFor="rwc">
-            Restricted Work Cases (RWC)
+          <label className="form-label" htmlFor="rwc" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
+            <span style={{ flexGrow: 1, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              Restricted Work Cases (RWC)
+              <span style={badgeStyle('lagging')}>Lagging</span>
+            </span>
             <span className="form-label-info">Restricted duties</span>
           </label>
           <input
@@ -266,8 +341,11 @@ export const InputForm: React.FC<InputFormProps> = ({
 
         {/* MTC */}
         <div className="form-group">
-          <label className="form-label" htmlFor="mtc">
-            Medical Treatment Cases (MTC)
+          <label className="form-label" htmlFor="mtc" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
+            <span style={{ flexGrow: 1, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              Medical Treatment Cases (MTC)
+              <span style={badgeStyle('lagging')}>Lagging</span>
+            </span>
             <span className="form-label-info">Beyond first aid</span>
           </label>
           <input
@@ -285,8 +363,11 @@ export const InputForm: React.FC<InputFormProps> = ({
 
         {/* FAC */}
         <div className="form-group">
-          <label className="form-label" htmlFor="fac">
-            First Aid Cases (FAC)
+          <label className="form-label" htmlFor="fac" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
+            <span style={{ flexGrow: 1, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              First Aid Cases (FAC)
+              <span style={badgeStyle('lagging')}>Lagging</span>
+            </span>
             <span className="form-label-info">Minor site treatment</span>
           </label>
           <input
@@ -302,10 +383,22 @@ export const InputForm: React.FC<InputFormProps> = ({
           />
         </div>
 
+        {/* SECTION 3: LEADING INDICATORS */}
+        <div style={sectionHeaderStyle(
+          theme === 'dark' ? '#10b981' : '#059669',
+          theme === 'dark' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(5, 150, 105, 0.15)'
+        )}>
+          <span>Leading Indicators</span>
+          <span style={{ fontSize: '0.65rem', fontWeight: 600, textTransform: 'none', letterSpacing: 'normal', color: 'var(--text-muted)' }}>— Preventative actions</span>
+        </div>
+
         {/* Safety Observations */}
         <div className="form-group">
-          <label className="form-label" htmlFor="observations">
-            Safety Observations Logged
+          <label className="form-label" htmlFor="observations" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
+            <span style={{ flexGrow: 1, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              Safety Observations Logged
+              <span style={badgeStyle('leading')}>Leading</span>
+            </span>
             <span className="form-label-info">Hazard cards logged</span>
           </label>
           <input
@@ -323,8 +416,11 @@ export const InputForm: React.FC<InputFormProps> = ({
 
         {/* Hazards Closed Within SLA */}
         <div className="form-group">
-          <label className="form-label" htmlFor="hazardsClosed">
-            Hazards Closed Within SLA
+          <label className="form-label" htmlFor="hazardsClosed" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
+            <span style={{ flexGrow: 1, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              Hazards Closed Within SLA
+              <span style={badgeStyle('leading')}>Leading</span>
+            </span>
             <span className="form-label-info">Closed inside SLA window</span>
           </label>
           <input
@@ -342,8 +438,11 @@ export const InputForm: React.FC<InputFormProps> = ({
 
         {/* Safety Audits Planned */}
         <div className="form-group">
-          <label className="form-label" htmlFor="auditsPlanned">
-            Total Safety Audits Planned
+          <label className="form-label" htmlFor="auditsPlanned" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
+            <span style={{ flexGrow: 1, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              Total Safety Audits Planned
+              <span style={badgeStyle('leading')}>Leading</span>
+            </span>
             <span className="form-label-info">Scheduled audits</span>
           </label>
           <input
@@ -361,8 +460,11 @@ export const InputForm: React.FC<InputFormProps> = ({
 
         {/* Safety Audits Completed */}
         <div className="form-group">
-          <label className="form-label" htmlFor="auditsCompleted">
-            Total Safety Audits Completed
+          <label className="form-label" htmlFor="auditsCompleted" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
+            <span style={{ flexGrow: 1, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              Total Safety Audits Completed
+              <span style={badgeStyle('leading')}>Leading</span>
+            </span>
             <span className="form-label-info">Completed & signed off</span>
           </label>
           <input
