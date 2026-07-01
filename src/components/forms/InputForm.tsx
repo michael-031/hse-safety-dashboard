@@ -1,6 +1,6 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import type { MetricItem } from '../../types/dashboard'
-import { RotateCcw, HelpCircle, Sun, Moon, Save, CheckCircle, AlertCircle, Loader, Edit2, Trash2, Plus, X } from 'lucide-react'
+import { RotateCcw, HelpCircle, Sun, Moon, Save, CheckCircle, AlertCircle, Loader, Edit2, Trash2, Plus, X, Lock, Unlock } from 'lucide-react'
 
 interface InputFormProps {
   metrics: MetricItem[]
@@ -12,6 +12,8 @@ interface InputFormProps {
   onSave?: () => void
   isSaving?: boolean
   saveStatus?: 'idle' | 'saved' | 'error'
+  adminPasscodeHash: string | null
+  onSavePasscodeHash: (newHash: string) => void
 }
 
 export const InputForm: React.FC<InputFormProps> = ({
@@ -24,7 +26,25 @@ export const InputForm: React.FC<InputFormProps> = ({
   onSave,
   isSaving = false,
   saveStatus = 'idle',
+  adminPasscodeHash = null,
+  onSavePasscodeHash,
 }) => {
+  // Lock state: starts locked if an admin passcode hash exists in the database
+  const [isLocked, setIsLocked] = useState(() => !!adminPasscodeHash)
+
+  // Passcode modal states
+  const [passcodeModalOpen, setPasscodeModalOpen] = useState(false)
+  const [passcodeVal, setPasscodeVal] = useState('')
+  const [passcodeConfirmVal, setPasscodeConfirmVal] = useState('')
+  const [passcodeError, setPasscodeError] = useState('')
+
+  // Change passcode states
+  const [changePasscodeModalOpen, setChangePasscodeModalOpen] = useState(false)
+  const [currentPasscodeVal, setCurrentPasscodeVal] = useState('')
+  const [newPasscodeVal, setNewPasscodeVal] = useState('')
+  const [newPasscodeConfirmVal, setNewPasscodeConfirmVal] = useState('')
+  const [changeError, setChangeError] = useState('')
+
   // Adding indicator state
   const [addingType, setAddingType] = useState<'lagging' | 'leading' | null>(null)
   const [newLabel, setNewLabel] = useState('')
@@ -42,8 +62,110 @@ export const InputForm: React.FC<InputFormProps> = ({
   // Deleting confirmation state
   const [deletingMetric, setDeletingMetric] = useState<MetricItem | null>(null)
 
+  // SHA-256 Hashing helper using native Web Crypto API
+  const sha256 = async (message: string): Promise<string> => {
+    const msgBuffer = new TextEncoder().encode(message)
+    const hashBuffer = await window.crypto.subtle.digest('SHA-256', msgBuffer)
+    const hashArray = Array.from(new Uint8Array(hashBuffer))
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
+  }
+
+  // Sync locked state if database passcode updates remotely
+  useEffect(() => {
+    if (!adminPasscodeHash) {
+      setIsLocked(false)
+    }
+  }, [adminPasscodeHash])
+
+  // 15-Minute inactivity auto-lock timer
+  useEffect(() => {
+    if (isLocked) return
+
+    let timeoutId: ReturnType<typeof setTimeout>
+
+    const resetTimer = () => {
+      clearTimeout(timeoutId)
+      timeoutId = setTimeout(() => {
+        setIsLocked(true)
+      }, 900000) // 15 minutes in ms
+    }
+
+    resetTimer()
+
+    const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart']
+    events.forEach(e => document.addEventListener(e, resetTimer))
+
+    return () => {
+      clearTimeout(timeoutId)
+      events.forEach(e => document.removeEventListener(e, resetTimer))
+    }
+  }, [isLocked])
+
+  const handleLockClick = () => {
+    if (isLocked) {
+      setPasscodeVal('')
+      setPasscodeConfirmVal('')
+      setPasscodeError('')
+      setPasscodeModalOpen(true)
+    } else {
+      setIsLocked(true)
+    }
+  }
+
+  const handleVerifyOrSetPasscode = async () => {
+    setPasscodeError('')
+    if (!adminPasscodeHash) {
+      if (!passcodeVal) {
+        setPasscodeError('Passcode cannot be empty')
+        return
+      }
+      if (passcodeVal !== passcodeConfirmVal) {
+        setPasscodeError('Passcodes do not match')
+        return
+      }
+      const hash = await sha256(passcodeVal)
+      onSavePasscodeHash(hash)
+      setIsLocked(false)
+      setPasscodeModalOpen(false)
+    } else {
+      const enteredHash = await sha256(passcodeVal)
+      if (enteredHash === adminPasscodeHash) {
+        setIsLocked(false)
+        setPasscodeModalOpen(false)
+      } else {
+        setPasscodeError('Incorrect passcode')
+      }
+    }
+  }
+
+  const handleChangePasscode = async () => {
+    setChangeError('')
+    if (!newPasscodeVal) {
+      setChangeError('New passcode cannot be empty')
+      return
+    }
+    if (newPasscodeVal !== newPasscodeConfirmVal) {
+      setChangeError('New passcodes do not match')
+      return
+    }
+
+    if (adminPasscodeHash) {
+      const currentHash = await sha256(currentPasscodeVal)
+      if (currentHash !== adminPasscodeHash) {
+        setChangeError('Current passcode is incorrect')
+        return
+      }
+    }
+
+    const newHash = await sha256(newPasscodeVal)
+    onSavePasscodeHash(newHash)
+    setChangePasscodeModalOpen(false)
+    setCurrentPasscodeVal('')
+    setNewPasscodeVal('')
+    setNewPasscodeConfirmVal('')
+  }
+
   const handleInputChange = (id: string, value: string) => {
-    // Strip any non-digit characters, parse strictly, clamp to >= 0
     const stripped = value.replace(/[^0-9]/g, '')
     const numValue = stripped === '' ? 0 : Math.max(0, parseInt(stripped, 10))
     onChange(metrics.map(m => {
@@ -54,7 +176,6 @@ export const InputForm: React.FC<InputFormProps> = ({
     }))
   }
 
-  // Block non-numeric key presses (allow: digits, Backspace, Delete, Tab, arrows, Home, End)
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     const allowed = [
       'Backspace', 'Delete', 'Tab', 'ArrowLeft', 'ArrowRight',
@@ -65,7 +186,6 @@ export const InputForm: React.FC<InputFormProps> = ({
     }
   }
 
-  // Block paste of non-numeric content
   const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
     const pasted = e.clipboardData.getData('text')
     if (!/^\d+$/.test(pasted)) {
@@ -133,7 +253,6 @@ export const InputForm: React.FC<InputFormProps> = ({
       isActive: true
     }
     onChange([...metrics, newItem])
-    // Reset inputs
     setAddingType(null)
     setNewLabel('')
     setNewInfo('')
@@ -221,9 +340,10 @@ export const InputForm: React.FC<InputFormProps> = ({
           onPaste={handlePaste}
           placeholder={m.type === 'exposure' ? 'e.g. 1200000' : '0'}
           style={{ flex: 1 }}
+          disabled={isLocked}
         />
         {/* Metric Settings Actions */}
-        {m.id !== 'totalManHours' && (
+        {m.id !== 'totalManHours' && !isLocked && (
           <div style={{ display: 'flex', gap: '0.2rem' }}>
             <button
               onClick={() => startEditing(m)}
@@ -327,10 +447,10 @@ export const InputForm: React.FC<InputFormProps> = ({
           </p>
         </div>
 
-        {onThemeToggle && (
+        <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
+          {/* Lock/Unlock Toggle Button */}
           <button
-            id="btn-toggle-theme"
-            onClick={onThemeToggle}
+            onClick={handleLockClick}
             style={{
               background: 'var(--bg-input)',
               border: '1px solid var(--border-color)',
@@ -341,26 +461,51 @@ export const InputForm: React.FC<InputFormProps> = ({
               alignItems: 'center',
               justifyContent: 'center',
               cursor: 'pointer',
-              color: 'var(--text-secondary)',
+              color: isLocked ? '#ef4444' : '#10b981',
               transition: 'all var(--transition-normal)',
               flexShrink: 0,
               boxShadow: 'var(--shadow-sm)',
             }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.borderColor = 'var(--border-hover)'
-              e.currentTarget.style.color = 'var(--text-primary)'
-              e.currentTarget.style.transform = 'scale(1.05)'
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.borderColor = 'var(--border-color)'
-              e.currentTarget.style.color = 'var(--text-secondary)'
-              e.currentTarget.style.transform = 'scale(1)'
-            }}
-            title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+            title={isLocked ? 'Unlock editing controls' : 'Lock editing controls'}
           >
-            {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
+            {isLocked ? <Lock size={14} /> : <Unlock size={14} />}
           </button>
-        )}
+
+          {onThemeToggle && (
+            <button
+              id="btn-toggle-theme"
+              onClick={onThemeToggle}
+              style={{
+                background: 'var(--bg-input)',
+                border: '1px solid var(--border-color)',
+                borderRadius: '50%',
+                width: '2.2rem',
+                height: '2.2rem',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                color: 'var(--text-secondary)',
+                transition: 'all var(--transition-normal)',
+                flexShrink: 0,
+                boxShadow: 'var(--shadow-sm)',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = 'var(--border-hover)'
+                e.currentTarget.style.color = 'var(--text-primary)'
+                e.currentTarget.style.transform = 'scale(1.05)'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = 'var(--border-color)'
+                e.currentTarget.style.color = 'var(--text-secondary)'
+                e.currentTarget.style.transform = 'scale(1)'
+              }}
+              title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+            >
+              {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Action Buttons: Reset + Save */}
@@ -369,8 +514,16 @@ export const InputForm: React.FC<InputFormProps> = ({
           id="btn-preset-sample"
           className="btn btn-secondary"
           onClick={zeroAllInputs}
+          disabled={isLocked}
           title="Set all safety metrics inputs to zero"
-          style={{ fontSize: '0.72rem', padding: '0.45rem 0.65rem', flex: 1, whiteSpace: 'nowrap' }}
+          style={{
+            fontSize: '0.72rem',
+            padding: '0.45rem 0.65rem',
+            flex: 1,
+            whiteSpace: 'nowrap',
+            opacity: isLocked ? 0.5 : 1,
+            cursor: isLocked ? 'not-allowed' : 'pointer',
+          }}
         >
           <RotateCcw size={11} /> Reset
         </button>
@@ -378,9 +531,12 @@ export const InputForm: React.FC<InputFormProps> = ({
         {onSave && (
           <button
             id="btn-save-metrics"
-            onClick={onSave}
-            disabled={isSaving}
-            title="Save metrics to database — all connected devices will update"
+            onClick={() => {
+              if (onSave) onSave()
+              setIsLocked(true) // Auto-lock editing after saving successfully
+            }}
+            disabled={isSaving || isLocked}
+            title={isLocked ? 'Unlock first to save modifications' : 'Save metrics to database — all connected devices will update'}
             style={{
               fontSize: '0.72rem',
               padding: '0.45rem 0.75rem',
@@ -393,18 +549,20 @@ export const InputForm: React.FC<InputFormProps> = ({
               fontWeight: 700,
               borderRadius: 'var(--radius-sm)',
               border: 'none',
-              cursor: isSaving ? 'not-allowed' : 'pointer',
+              cursor: (isSaving || isLocked) ? 'not-allowed' : 'pointer',
               transition: 'all 0.2s',
               background:
+                isLocked ? 'rgba(255,255,255,0.05)' :
                 saveStatus === 'saved' ? 'rgba(16,185,129,0.15)' :
                 saveStatus === 'error'  ? 'rgba(239,68,68,0.15)'  :
                 'linear-gradient(135deg, var(--color-primary), #6366f1)',
               color:
+                isLocked ? 'var(--text-muted)' :
                 saveStatus === 'saved' ? '#10b981' :
                 saveStatus === 'error'  ? '#ef4444'  :
                 '#ffffff',
-              opacity: isSaving ? 0.7 : 1,
-              boxShadow: saveStatus === 'idle' ? '0 2px 8px rgba(99,102,241,0.35)' : 'none',
+              opacity: (isSaving || isLocked) ? 0.5 : 1,
+              boxShadow: (saveStatus === 'idle' && !isLocked) ? '0 2px 8px rgba(99,102,241,0.35)' : 'none',
             }}
           >
             {isSaving && <Loader size={12} style={{ animation: 'spin 1s linear infinite' }} />}
@@ -415,6 +573,34 @@ export const InputForm: React.FC<InputFormProps> = ({
           </button>
         )}
       </div>
+
+      {/* Change Passcode button if unlocked and passcode exists */}
+      {!isLocked && adminPasscodeHash && (
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '-0.6rem' }}>
+          <button
+            onClick={() => {
+              setCurrentPasscodeVal('')
+              setNewPasscodeVal('')
+              setNewPasscodeConfirmVal('')
+              setChangeError('')
+              setChangePasscodeModalOpen(true)
+            }}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              color: 'var(--text-secondary)',
+              fontSize: '0.68rem',
+              cursor: 'pointer',
+              textDecoration: 'underline',
+              padding: 0,
+            }}
+            onMouseEnter={e => e.currentTarget.style.color = 'var(--text-primary)'}
+            onMouseLeave={e => e.currentTarget.style.color = 'var(--text-secondary)'}
+          >
+            Change Admin Passcode
+          </button>
+        </div>
+      )}
 
       <hr style={{ border: 'none', borderBottom: '1px solid var(--border-divider)' }} />
 
@@ -451,45 +637,47 @@ export const InputForm: React.FC<InputFormProps> = ({
         {laggingMetrics.map(renderFormGroup)}
 
         {/* Inline form to add lagging indicator */}
-        {addingType === 'lagging' ? (
-          <div className="glass-panel" style={{ padding: '0.85rem', border: '1px dashed var(--border-color)', background: 'var(--bg-input)', display: 'flex', flexDirection: 'column', gap: '0.6rem', borderRadius: 'var(--radius-md)', margin: '0.4rem 0' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-primary)' }}>Add Lagging Incident</span>
-              <button onClick={() => setAddingType(null)} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}><X size={12} /></button>
+        {!isLocked && (
+          addingType === 'lagging' ? (
+            <div className="glass-panel" style={{ padding: '0.85rem', border: '1px dashed var(--border-color)', background: 'var(--bg-input)', display: 'flex', flexDirection: 'column', gap: '0.6rem', borderRadius: 'var(--radius-md)', margin: '0.4rem 0' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-primary)' }}>Add Lagging Incident</span>
+                <button onClick={() => setAddingType(null)} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}><X size={12} /></button>
+              </div>
+              <input type="text" placeholder="Name e.g. Near Misses" value={newLabel} onChange={e => setNewLabel(e.target.value)} className="form-input" style={{ fontSize: '0.8rem', padding: '0.4rem 0.6rem' }} />
+              <input type="text" placeholder="Description e.g. Near misses logged" value={newInfo} onChange={e => setNewInfo(e.target.value)} className="form-input" style={{ fontSize: '0.8rem', padding: '0.4rem 0.6rem' }} />
+              <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', alignItems: 'center', marginTop: '0.2rem' }}>
+                <span style={{ fontSize: '0.65rem', fontWeight: 700, color: 'var(--text-muted)' }}>Chart Color:</span>
+                {['#ef4444', '#fbbf24', '#3b82f6', '#10b981', '#8b5cf6', '#ec4899', '#f97316', '#14b8a6'].map(c => (
+                  <button key={c} onClick={() => setNewColor(c)} style={{ width: '12px', height: '12px', borderRadius: '50%', background: c, border: newColor === c ? '2px solid white' : 'none', cursor: 'pointer', outline: newColor === c ? '1px solid black' : 'none' }} />
+                ))}
+              </div>
+              <button onClick={() => saveNewMetric('lagging')} className="btn btn-primary" style={{ fontSize: '0.7rem', padding: '0.35rem', fontWeight: 800 }}>Add Indicator</button>
             </div>
-            <input type="text" placeholder="Name e.g. Near Misses" value={newLabel} onChange={e => setNewLabel(e.target.value)} className="form-input" style={{ fontSize: '0.8rem', padding: '0.4rem 0.6rem' }} />
-            <input type="text" placeholder="Description e.g. Near misses logged" value={newInfo} onChange={e => setNewInfo(e.target.value)} className="form-input" style={{ fontSize: '0.8rem', padding: '0.4rem 0.6rem' }} />
-            <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', alignItems: 'center', marginTop: '0.2rem' }}>
-              <span style={{ fontSize: '0.65rem', fontWeight: 700, color: 'var(--text-muted)' }}>Chart Color:</span>
-              {['#ef4444', '#fbbf24', '#3b82f6', '#10b981', '#8b5cf6', '#ec4899', '#f97316', '#14b8a6'].map(c => (
-                <button key={c} onClick={() => setNewColor(c)} style={{ width: '12px', height: '12px', borderRadius: '50%', background: c, border: newColor === c ? '2px solid white' : 'none', cursor: 'pointer', outline: newColor === c ? '1px solid black' : 'none' }} />
-              ))}
-            </div>
-            <button onClick={() => saveNewMetric('lagging')} className="btn btn-primary" style={{ fontSize: '0.7rem', padding: '0.35rem', fontWeight: 800 }}>Add Indicator</button>
-          </div>
-        ) : (
-          <button
-            onClick={() => { setAddingType('lagging'); setNewColor('#8b5cf6'); }}
-            style={{
-              padding: '0.5rem',
-              background: 'transparent',
-              border: '1px dashed var(--border-color)',
-              borderRadius: '8px',
-              color: 'var(--text-secondary)',
-              fontSize: '0.72rem',
-              fontWeight: 700,
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '0.3rem',
-              transition: 'all 0.25s'
-            }}
-            onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--border-hover)'; e.currentTarget.style.color = 'var(--text-primary)'; }}
-            onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border-color)'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
-          >
-            <Plus size={12} /> Add Custom Lagging Indicator
-          </button>
+          ) : (
+            <button
+              onClick={() => { setAddingType('lagging'); setNewColor('#8b5cf6'); }}
+              style={{
+                padding: '0.5rem',
+                background: 'transparent',
+                border: '1px dashed var(--border-color)',
+                borderRadius: '8px',
+                color: 'var(--text-secondary)',
+                fontSize: '0.72rem',
+                fontWeight: 700,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '0.3rem',
+                transition: 'all 0.25s'
+              }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--border-hover)'; e.currentTarget.style.color = 'var(--text-primary)'; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border-color)'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
+            >
+              <Plus size={12} /> Add Custom Lagging Indicator
+            </button>
+          )
         )}
 
         {/* SECTION 3: LEADING INDICATORS */}
@@ -503,50 +691,52 @@ export const InputForm: React.FC<InputFormProps> = ({
         {leadingMetrics.map(renderFormGroup)}
 
         {/* Inline form to add leading indicator */}
-        {addingType === 'leading' ? (
-          <div className="glass-panel" style={{ padding: '0.85rem', border: '1px dashed var(--border-color)', background: 'var(--bg-input)', display: 'flex', flexDirection: 'column', gap: '0.6rem', borderRadius: 'var(--radius-md)', margin: '0.4rem 0' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-primary)' }}>Add Leading Indicator</span>
-              <button onClick={() => setAddingType(null)} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}><X size={12} /></button>
+        {!isLocked && (
+          addingType === 'leading' ? (
+            <div className="glass-panel" style={{ padding: '0.85rem', border: '1px dashed var(--border-color)', background: 'var(--bg-input)', display: 'flex', flexDirection: 'column', gap: '0.6rem', borderRadius: 'var(--radius-md)', margin: '0.4rem 0' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-primary)' }}>Add Leading Indicator</span>
+                <button onClick={() => setAddingType(null)} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}><X size={12} /></button>
+              </div>
+              <input type="text" placeholder="Name e.g. Toolbox Talks" value={newLabel} onChange={e => setNewLabel(e.target.value)} className="form-input" style={{ fontSize: '0.8rem', padding: '0.4rem 0.6rem' }} />
+              <input type="text" placeholder="Description e.g. Talks completed" value={newInfo} onChange={e => setNewInfo(e.target.value)} className="form-input" style={{ fontSize: '0.8rem', padding: '0.4rem 0.6rem' }} />
+              <input type="number" placeholder="Target Benchmark e.g. 20" value={newTarget} onChange={e => setNewTarget(e.target.value)} className="form-input" style={{ fontSize: '0.8rem', padding: '0.4rem 0.6rem' }} />
+              <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', alignItems: 'center', marginTop: '0.2rem' }}>
+                <span style={{ fontSize: '0.65rem', fontWeight: 700, color: 'var(--text-muted)' }}>Chart Color:</span>
+                {['#ef4444', '#fbbf24', '#3b82f6', '#10b981', '#8b5cf6', '#ec4899', '#f97316', '#14b8a6'].map(c => (
+                  <button key={c} onClick={() => setNewColor(c)} style={{ width: '12px', height: '12px', borderRadius: '50%', background: c, border: newColor === c ? '2px solid white' : 'none', cursor: 'pointer', outline: newColor === c ? '1px solid black' : 'none' }} />
+                ))}
+              </div>
+              <button onClick={() => saveNewMetric('leading')} className="btn btn-primary" style={{ fontSize: '0.7rem', padding: '0.35rem', fontWeight: 800 }}>Add Indicator</button>
             </div>
-            <input type="text" placeholder="Name e.g. Toolbox Talks" value={newLabel} onChange={e => setNewLabel(e.target.value)} className="form-input" style={{ fontSize: '0.8rem', padding: '0.4rem 0.6rem' }} />
-            <input type="text" placeholder="Description e.g. Talks completed" value={newInfo} onChange={e => setNewInfo(e.target.value)} className="form-input" style={{ fontSize: '0.8rem', padding: '0.4rem 0.6rem' }} />
-            <input type="number" placeholder="Target Benchmark e.g. 20" value={newTarget} onChange={e => setNewTarget(e.target.value)} className="form-input" style={{ fontSize: '0.8rem', padding: '0.4rem 0.6rem' }} />
-            <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', alignItems: 'center', marginTop: '0.2rem' }}>
-              <span style={{ fontSize: '0.65rem', fontWeight: 700, color: 'var(--text-muted)' }}>Chart Color:</span>
-              {['#ef4444', '#fbbf24', '#3b82f6', '#10b981', '#8b5cf6', '#ec4899', '#f97316', '#14b8a6'].map(c => (
-                <button key={c} onClick={() => setNewColor(c)} style={{ width: '12px', height: '12px', borderRadius: '50%', background: c, border: newColor === c ? '2px solid white' : 'none', cursor: 'pointer', outline: newColor === c ? '1px solid black' : 'none' }} />
-              ))}
-            </div>
-            <button onClick={() => saveNewMetric('leading')} className="btn btn-primary" style={{ fontSize: '0.7rem', padding: '0.35rem', fontWeight: 800 }}>Add Indicator</button>
-          </div>
-        ) : (
-          <button
-            onClick={() => { setAddingType('leading'); setNewColor('#10b981'); }}
-            style={{
-              padding: '0.5rem',
-              background: 'transparent',
-              border: '1px dashed var(--border-color)',
-              borderRadius: '8px',
-              color: 'var(--text-secondary)',
-              fontSize: '0.72rem',
-              fontWeight: 700,
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '0.3rem',
-              transition: 'all 0.25s'
-            }}
-            onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--border-hover)'; e.currentTarget.style.color = 'var(--text-primary)'; }}
-            onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border-color)'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
-          >
-            <Plus size={12} /> Add Custom Leading Indicator
-          </button>
+          ) : (
+            <button
+              onClick={() => { setAddingType('leading'); setNewColor('#10b981'); }}
+              style={{
+                padding: '0.5rem',
+                background: 'transparent',
+                border: '1px dashed var(--border-color)',
+                borderRadius: '8px',
+                color: 'var(--text-secondary)',
+                fontSize: '0.72rem',
+                fontWeight: 700,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '0.3rem',
+                transition: 'all 0.25s'
+              }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--border-hover)'; e.currentTarget.style.color = 'var(--text-primary)'; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border-color)'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
+            >
+              <Plus size={12} /> Add Custom Leading Indicator
+            </button>
+          )
         )}
 
         {/* Restore hidden default fields if any exist */}
-        {inactiveStandardMetrics.length > 0 && (
+        {!isLocked && inactiveStandardMetrics.length > 0 && (
           <div style={{ marginTop: '0.5rem', padding: '0.6rem', border: '1px dashed var(--border-color)', borderRadius: '8px', background: 'rgba(255, 255, 255, 0.02)' }}>
             <span style={{ fontSize: '0.65rem', fontWeight: 700, color: 'var(--text-muted)', display: 'block', marginBottom: '0.3rem' }}>Hidden Standard Indicators:</span>
             <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap' }}>
@@ -635,7 +825,8 @@ export const InputForm: React.FC<InputFormProps> = ({
         >
           <button
             id="btn-formula-std"
-            onClick={() => onFormulaToggle(false)}
+            onClick={() => !isLocked && onFormulaToggle(false)}
+            disabled={isLocked}
             style={{
               flex: 1,
               padding: '0.35rem',
@@ -643,18 +834,20 @@ export const InputForm: React.FC<InputFormProps> = ({
               fontWeight: 700,
               borderRadius: '6px',
               border: 'none',
-              cursor: 'pointer',
+              cursor: isLocked ? 'not-allowed' : 'pointer',
               background: !useExcelFormula ? 'var(--bg-panel)' : 'transparent',
               color: !useExcelFormula ? 'var(--color-success)' : 'var(--text-secondary)',
               boxShadow: !useExcelFormula ? '0 1px 3px rgba(0,0,0,0.05)' : 'none',
               transition: 'all var(--transition-fast)',
+              opacity: isLocked && useExcelFormula ? 0.35 : 1,
             }}
           >
             Closed / Obs
           </button>
           <button
             id="btn-formula-excel"
-            onClick={() => onFormulaToggle(true)}
+            onClick={() => !isLocked && onFormulaToggle(true)}
+            disabled={isLocked}
             style={{
               flex: 1,
               padding: '0.35rem',
@@ -662,11 +855,12 @@ export const InputForm: React.FC<InputFormProps> = ({
               fontWeight: 700,
               borderRadius: '6px',
               border: 'none',
-              cursor: 'pointer',
+              cursor: isLocked ? 'not-allowed' : 'pointer',
               background: useExcelFormula ? 'var(--bg-panel)' : 'transparent',
               color: useExcelFormula ? 'var(--color-warning)' : 'var(--text-secondary)',
               boxShadow: useExcelFormula ? '0 1px 3px rgba(0,0,0,0.05)' : 'none',
               transition: 'all var(--transition-fast)',
+              opacity: isLocked && !useExcelFormula ? 0.35 : 1,
             }}
           >
             Obs / Closed
@@ -735,6 +929,130 @@ export const InputForm: React.FC<InputFormProps> = ({
             <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
               <button onClick={() => setDeletingMetric(null)} className="btn btn-secondary" style={{ flex: 1, padding: '0.5rem', fontSize: '0.75rem' }}>Cancel</button>
               <button onClick={confirmDelete} className="btn" style={{ flex: 2, padding: '0.5rem', fontSize: '0.75rem', fontWeight: 800, background: '#ef4444', color: 'white', border: 'none' }}>Yes, Delete</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Passcode Lock/Unlock Modal */}
+      {passcodeModalOpen && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0, 0, 0, 0.55)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '1rem' }}>
+          <div className="glass-panel" style={{ width: '100%', maxWidth: '340px', padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem', boxShadow: 'var(--shadow-lg)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h4 style={{ fontSize: '0.9rem', fontWeight: 800, color: 'var(--text-primary)' }}>
+                {!adminPasscodeHash ? 'Create Admin Passcode' : 'Unlock Input Controls'}
+              </h4>
+              <button onClick={() => setPasscodeModalOpen(false)} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}><X size={14} /></button>
+            </div>
+            
+            <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', lineHeight: 1.4 }}>
+              {!adminPasscodeHash
+                ? 'Create a secure admin passcode. This passcode will be required to unlock these dashboard controls for editing in the future.'
+                : 'Enter the admin passcode to enable editing inputs, managing metrics, and database syncing.'
+              }
+            </p>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+                <label style={{ fontSize: '0.65rem', fontWeight: 700, color: 'var(--text-secondary)' }}>Passcode</label>
+                <input
+                  type="password"
+                  placeholder="Enter passcode"
+                  value={passcodeVal}
+                  onChange={e => setPasscodeVal(e.target.value)}
+                  className="form-input"
+                  style={{ fontSize: '0.82rem', padding: '0.45rem 0.65rem' }}
+                  onKeyDown={e => { if (e.key === 'Enter') handleVerifyOrSetPasscode() }}
+                />
+              </div>
+
+              {!adminPasscodeHash && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+                  <label style={{ fontSize: '0.65rem', fontWeight: 700, color: 'var(--text-secondary)' }}>Confirm Passcode</label>
+                  <input
+                    type="password"
+                    placeholder="Confirm passcode"
+                    value={passcodeConfirmVal}
+                    onChange={e => setPasscodeConfirmVal(e.target.value)}
+                    className="form-input"
+                    style={{ fontSize: '0.82rem', padding: '0.45rem 0.65rem' }}
+                    onKeyDown={e => { if (e.key === 'Enter') handleVerifyOrSetPasscode() }}
+                  />
+                </div>
+              )}
+
+              {passcodeError && (
+                <span style={{ fontSize: '0.7rem', color: '#ef4444', fontWeight: 600 }}>{passcodeError}</span>
+              )}
+            </div>
+
+            <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
+              <button onClick={() => setPasscodeModalOpen(false)} className="btn btn-secondary" style={{ flex: 1, padding: '0.5rem', fontSize: '0.75rem' }}>Cancel</button>
+              <button onClick={handleVerifyOrSetPasscode} className="btn btn-primary" style={{ flex: 2, padding: '0.5rem', fontSize: '0.75rem', fontWeight: 800 }}>
+                {!adminPasscodeHash ? 'Set Passcode' : 'Unlock'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Change Passcode Modal */}
+      {changePasscodeModalOpen && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0, 0, 0, 0.55)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '1rem' }}>
+          <div className="glass-panel" style={{ width: '100%', maxWidth: '340px', padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem', boxShadow: 'var(--shadow-lg)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h4 style={{ fontSize: '0.9rem', fontWeight: 800, color: 'var(--text-primary)' }}>Change Passcode</h4>
+              <button onClick={() => setChangePasscodeModalOpen(false)} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}><X size={14} /></button>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+                <label style={{ fontSize: '0.65rem', fontWeight: 700, color: 'var(--text-secondary)' }}>Current Passcode</label>
+                <input
+                  type="password"
+                  placeholder="Enter current passcode"
+                  value={currentPasscodeVal}
+                  onChange={e => setCurrentPasscodeVal(e.target.value)}
+                  className="form-input"
+                  style={{ fontSize: '0.82rem', padding: '0.45rem 0.65rem' }}
+                  onKeyDown={e => { if (e.key === 'Enter') handleChangePasscode() }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+                <label style={{ fontSize: '0.65rem', fontWeight: 700, color: 'var(--text-secondary)' }}>New Passcode</label>
+                <input
+                  type="password"
+                  placeholder="Enter new passcode"
+                  value={newPasscodeVal}
+                  onChange={e => setNewPasscodeVal(e.target.value)}
+                  className="form-input"
+                  style={{ fontSize: '0.82rem', padding: '0.45rem 0.65rem' }}
+                  onKeyDown={e => { if (e.key === 'Enter') handleChangePasscode() }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+                <label style={{ fontSize: '0.65rem', fontWeight: 700, color: 'var(--text-secondary)' }}>Confirm New Passcode</label>
+                <input
+                  type="password"
+                  placeholder="Confirm new passcode"
+                  value={newPasscodeConfirmVal}
+                  onChange={e => setNewPasscodeConfirmVal(e.target.value)}
+                  className="form-input"
+                  style={{ fontSize: '0.82rem', padding: '0.45rem 0.65rem' }}
+                  onKeyDown={e => { if (e.key === 'Enter') handleChangePasscode() }}
+                />
+              </div>
+
+              {changeError && (
+                <span style={{ fontSize: '0.7rem', color: '#ef4444', fontWeight: 600 }}>{changeError}</span>
+              )}
+            </div>
+
+            <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
+              <button onClick={() => setChangePasscodeModalOpen(false)} className="btn btn-secondary" style={{ flex: 1, padding: '0.5rem', fontSize: '0.75rem' }}>Cancel</button>
+              <button onClick={handleChangePasscode} className="btn btn-primary" style={{ flex: 2, padding: '0.5rem', fontSize: '0.75rem', fontWeight: 800 }}>Update Passcode</button>
             </div>
           </div>
         </div>
