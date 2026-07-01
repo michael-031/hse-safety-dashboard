@@ -8,6 +8,7 @@ export interface SafetyData {
   hazardsClosed: number
   auditsPlanned: number
   auditsCompleted: number
+  customMetrics?: any
 }
 
 export interface CalculatedMetrics {
