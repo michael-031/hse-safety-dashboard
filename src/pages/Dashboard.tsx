@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useRef } from 'react'
 import type { SafetyData, MetricItem } from '../types/dashboard'
 import { calculateSafetyMetrics } from '../utils/calculations'
 import InputForm from '../components/forms/InputForm'
@@ -127,6 +127,9 @@ export const Dashboard: React.FC = () => {
   // Toggle input section visibility
   const [isInputVisible, setIsInputVisible] = useState(true)
 
+  // Ref to track if custom_metrics column is supported by Supabase schema
+  const hasCustomMetricsColumn = useRef(false)
+
   // Theme state: dark mode is default
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     const saved = localStorage.getItem('hse_dashboard_theme')
@@ -167,12 +170,23 @@ export const Dashboard: React.FC = () => {
 
   // Sync metricsList with safetyData (e.g. on mount or DB subscription update)
   useEffect(() => {
-    setMetricsList(prev => prev.map(item => {
-      if (!item.isCustom && item.id in safetyData) {
-        return { ...item, value: safetyData[item.id as keyof SafetyData] }
+    setMetricsList(prev => {
+      if (safetyData.customMetrics && Array.isArray(safetyData.customMetrics)) {
+        const syncedList = safetyData.customMetrics as MetricItem[]
+        return syncedList.map(item => {
+          if (!item.isCustom && item.id in safetyData) {
+            return { ...item, value: safetyData[item.id as keyof SafetyData] }
+          }
+          return item
+        })
       }
-      return item
-    }))
+      return prev.map(item => {
+        if (!item.isCustom && item.id in safetyData) {
+          return { ...item, value: safetyData[item.id as keyof SafetyData] }
+        }
+        return item
+      })
+    })
   }, [safetyData])
 
   // Start with Excel formula active
@@ -190,7 +204,10 @@ export const Dashboard: React.FC = () => {
     setMetricsList(newMetrics)
 
     // Extract standard metrics to update safetyData (which triggers DB updates)
-    const updatedSafetyData = { ...safetyData }
+    const updatedSafetyData: SafetyData = {
+      ...safetyData,
+      customMetrics: newMetrics
+    }
     newMetrics.forEach(item => {
       if (!item.isCustom && item.id in updatedSafetyData) {
         updatedSafetyData[item.id as keyof SafetyData] = item.value
@@ -237,7 +254,12 @@ export const Dashboard: React.FC = () => {
   useEffect(() => {
     // Load current row from DB on mount
     fetchMetrics().then((row) => {
-      if (row) setSafetyData(row)
+      if (row) {
+        if ('customMetrics' in row) {
+          hasCustomMetricsColumn.current = true
+        }
+        setSafetyData(row)
+      }
     })
 
     // Subscribe to row-level changes so all devices auto-update on save
@@ -262,7 +284,7 @@ export const Dashboard: React.FC = () => {
     if (isSaving) return
     setIsSaving(true)
     setSaveStatus('idle')
-    const ok = await saveMetrics(safetyData)
+    const ok = await saveMetrics(safetyData, hasCustomMetricsColumn.current)
     setIsSaving(false)
     setSaveStatus(ok ? 'saved' : 'error')
     // Clear status badge after 3 s

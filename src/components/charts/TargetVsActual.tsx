@@ -109,7 +109,7 @@ export const TargetVsActual: React.FC<TargetVsActualProps> = ({
     grid: {
       left: '3%',
       right: '12%',
-      top: '5%',
+      top: 35,
       bottom: '12%',
       containLabel: true,
     },

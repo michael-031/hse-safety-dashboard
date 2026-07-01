@@ -17,34 +17,44 @@ export const supabase = createClient(
   hasSupabaseConfig ? supabaseAnonKey : 'placeholder-key'
 )
 
-// ─── DB row ↔ SafetyData mappers ──────────────────────────────────────────────
-
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const rowToSafetyData = (row: any): SafetyData => ({
-  totalManHours:  row.total_man_hours  ?? 0,
-  lti:            row.lti              ?? 0,
-  rwc:            row.rwc              ?? 0,
-  mtc:            row.mtc              ?? 0,
-  fac:            row.fac              ?? 0,
-  observations:   row.observations     ?? 0,
-  hazardsClosed:  row.hazards_closed   ?? 0,
-  auditsPlanned:  row.audits_planned   ?? 0,
-  auditsCompleted: row.audits_completed ?? 0,
-})
+export const rowToSafetyData = (row: any): SafetyData => {
+  const data: SafetyData = {
+    totalManHours:  row.total_man_hours  ?? 0,
+    lti:            row.lti              ?? 0,
+    rwc:            row.rwc              ?? 0,
+    mtc:            row.mtc              ?? 0,
+    fac:            row.fac              ?? 0,
+    observations:   row.observations     ?? 0,
+    hazardsClosed:  row.hazards_closed   ?? 0,
+    auditsPlanned:  row.audits_planned   ?? 0,
+    auditsCompleted: row.audits_completed ?? 0,
+  }
+  if ('custom_metrics' in row) {
+    data.customMetrics = row.custom_metrics
+  }
+  return data
+}
 
-export const safetyDataToRow = (data: SafetyData) => ({
-  id:               1,
-  total_man_hours:  data.totalManHours,
-  lti:              data.lti,
-  rwc:              data.rwc,
-  mtc:              data.mtc,
-  fac:              data.fac,
-  observations:     data.observations,
-  hazards_closed:   data.hazardsClosed,
-  audits_planned:   data.auditsPlanned,
-  audits_completed: data.auditsCompleted,
-  updated_at:       new Date().toISOString(),
-})
+export const safetyDataToRow = (data: SafetyData) => {
+  const row: any = {
+    id:               1,
+    total_man_hours:  data.totalManHours,
+    lti:              data.lti,
+    rwc:              data.rwc,
+    mtc:              data.mtc,
+    fac:              data.fac,
+    observations:     data.observations,
+    hazards_closed:   data.hazardsClosed,
+    audits_planned:   data.auditsPlanned,
+    audits_completed: data.auditsCompleted,
+    updated_at:       new Date().toISOString(),
+  }
+  if (data.customMetrics !== undefined) {
+    row.custom_metrics = data.customMetrics
+  }
+  return row
+}
 
 // ─── Fetch the single metrics row ─────────────────────────────────────────────
 export const fetchMetrics = async (): Promise<SafetyData | null> => {
@@ -62,8 +72,13 @@ export const fetchMetrics = async (): Promise<SafetyData | null> => {
 }
 
 // ─── Upsert (overwrite) the single metrics row ────────────────────────────────
-export const saveMetrics = async (data: SafetyData): Promise<boolean> => {
-  const { id: _id, ...rowWithoutId } = safetyDataToRow(data)
+export const saveMetrics = async (data: SafetyData, includeCustom: boolean = false): Promise<boolean> => {
+  const row = safetyDataToRow(data)
+  const { id: _id, ...rowWithoutId } = row
+  if (!includeCustom) {
+    delete rowWithoutId.custom_metrics
+  }
+  
   const { error } = await supabase
     .from('hse_metrics')
     .update({ ...rowWithoutId, updated_at: new Date().toISOString() })
@@ -75,3 +90,4 @@ export const saveMetrics = async (data: SafetyData): Promise<boolean> => {
   }
   return true
 }
+
