@@ -1,22 +1,40 @@
 import React from 'react'
 import ReactECharts from 'echarts-for-react'
 
+export interface LeadingMetricData {
+  name: string
+  actual: number
+  target: number
+  displayActual: string
+  displayTarget: string
+  color: string
+}
+
 interface TargetVsActualProps {
-  observations: number
-  hazardRate: number
-  auditRate: number
+  leadingData: LeadingMetricData[]
   hoveredCategory?: string | null
   theme?: 'light' | 'dark'
 }
 
 export const TargetVsActual: React.FC<TargetVsActualProps> = ({
-  observations,
-  hazardRate,
-  auditRate,
+  leadingData,
   hoveredCategory,
   theme = 'dark',
 }) => {
   const chartRef = React.useRef<any>(null)
+
+  const data = React.useMemo(() => {
+    return leadingData.map(d => {
+      const achieved = d.target > 0 ? (d.actual / d.target) * 100 : 0
+      return {
+        name: d.name,
+        achieved: Math.round(achieved * 10) / 10,
+        actual: d.displayActual,
+        target: d.displayTarget,
+        color: d.color,
+      }
+    })
+  }, [leadingData])
 
   React.useEffect(() => {
     if (!chartRef.current) return
@@ -30,13 +48,10 @@ export const TargetVsActual: React.FC<TargetVsActualProps> = ({
     })
 
     if (hoveredCategory) {
-      const nameMap: Record<string, number> = {
-        observations: 0,
-        hazard: 1,
-        audit: 2,
-      }
-      const idx = nameMap[hoveredCategory]
-      if (idx !== undefined) {
+      const idx = leadingData.findIndex((d) => 
+        d.name.toLowerCase().includes(hoveredCategory.toLowerCase())
+      )
+      if (idx !== -1) {
         chartInstance.dispatchAction({
           type: 'highlight',
           seriesIndex: 0,
@@ -49,52 +64,7 @@ export const TargetVsActual: React.FC<TargetVsActualProps> = ({
         })
       }
     }
-  }, [hoveredCategory])
-  // Define targets
-  const targetObs = 400
-  const targetHazard = 90
-  const targetAudit = 95
-
-  // Calculate achievement percentages (normalized)
-  const obsAchieved = targetObs > 0 ? (observations / targetObs) * 100 : 0
-  const hazardAchieved = targetHazard > 0 ? (hazardRate / targetHazard) * 100 : 0
-  const auditAchieved = targetAudit > 0 ? (auditRate / targetAudit) * 100 : 0
-
-  // Colors mapping: Blue (Observations), Yellow (Hazard Closeout), Green (Audit Execution), Red (Failing metrics / Target boundaries)
-  const blueColor = '#3b82f6'
-  const yellowColor = '#fbbf24'
-  const greenColor = '#10b981'
-  const redColor = '#ef4444'
-
-  const data = [
-    {
-      name: 'Safety Observations',
-      achieved: Math.round(obsAchieved * 10) / 10,
-      actual: `${observations} Logged`,
-      target: `Target: > ${targetObs}`,
-      rawActual: observations,
-      rawTarget: targetObs,
-      color: observations >= targetObs ? blueColor : redColor,
-    },
-    {
-      name: 'Hazard SLA Close-Out',
-      achieved: Math.round(hazardAchieved * 10) / 10,
-      actual: `${Math.round(hazardRate * 10) / 10}%`,
-      target: `Target: Min ${targetHazard}%`,
-      rawActual: hazardRate,
-      rawTarget: targetHazard,
-      color: hazardRate >= targetHazard ? yellowColor : redColor,
-    },
-    {
-      name: 'HSE Audit Execution',
-      achieved: Math.round(auditAchieved * 10) / 10,
-      actual: `${Math.round(auditRate * 10) / 10}%`,
-      target: `Target: Min ${targetAudit}%`,
-      rawActual: auditRate,
-      rawTarget: targetAudit,
-      color: auditRate >= targetAudit ? greenColor : redColor,
-    },
-  ]
+  }, [hoveredCategory, leadingData])
 
   const isDark = theme !== 'light'
   const textColor = isDark ? '#ffffff' : '#0f172a'
@@ -125,6 +95,7 @@ export const TargetVsActual: React.FC<TargetVsActualProps> = ({
       formatter: (params: any) => {
         const index = params[0].dataIndex
         const item = data[index]
+        if (!item) return ''
         return `
           <div style="font-weight: 700; margin-bottom: 4px; color: ${textColor};">${item.name}</div>
           <div style="font-size: 11px; color: ${textMuted}; line-height: 1.5;">
@@ -137,7 +108,7 @@ export const TargetVsActual: React.FC<TargetVsActualProps> = ({
     },
     grid: {
       left: '3%',
-      right: '10%',
+      right: '12%',
       top: '5%',
       bottom: '12%',
       containLabel: true,
@@ -184,14 +155,14 @@ export const TargetVsActual: React.FC<TargetVsActualProps> = ({
         itemStyle: {
           borderRadius: 8,
           color: (params: any) => {
-            return data[params.dataIndex].color
+            return data[params.dataIndex]?.color || '#3b82f6'
           },
         },
         label: {
           show: true,
           position: 'right',
           formatter: (params: any) => {
-            return data[params.dataIndex].actual
+            return data[params.dataIndex]?.actual || ''
           },
           color: textColor,
           fontFamily: 'Plus Jakarta Sans',
@@ -238,3 +209,4 @@ export const TargetVsActual: React.FC<TargetVsActualProps> = ({
   )
 }
 export default TargetVsActual
+

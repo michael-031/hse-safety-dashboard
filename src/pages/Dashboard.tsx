@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react'
-import type { SafetyData } from '../types/dashboard'
+import type { SafetyData, MetricItem } from '../types/dashboard'
 import { calculateSafetyMetrics } from '../utils/calculations'
 import InputForm from '../components/forms/InputForm'
 import KPICard from '../components/cards/KPICard'
@@ -19,6 +19,34 @@ const DEFAULT_SAFETY_DATA: SafetyData = {
   hazardsClosed: 385,
   auditsPlanned: 24,
   auditsCompleted: 22,
+}
+
+const getInitialMetrics = (data: SafetyData): MetricItem[] => {
+  const savedCustom = localStorage.getItem('hse_custom_metrics')
+  const customList: MetricItem[] = savedCustom ? JSON.parse(savedCustom) : []
+
+  const savedActiveStatus = localStorage.getItem('hse_metrics_active_status')
+  const activeMap: Record<string, boolean> = savedActiveStatus ? JSON.parse(savedActiveStatus) : {}
+
+  const savedLabels = localStorage.getItem('hse_metrics_labels')
+  const labelsMap: Record<string, string> = savedLabels ? JSON.parse(savedLabels) : {}
+
+  const savedTargets = localStorage.getItem('hse_metrics_targets')
+  const targetsMap: Record<string, number> = savedTargets ? JSON.parse(savedTargets) : {}
+
+  const defaultItems: MetricItem[] = [
+    { id: 'totalManHours', label: labelsMap['totalManHours'] || 'Total Man-Hours Worked', type: 'exposure', value: data.totalManHours, info: 'Staff & Contractors', isActive: activeMap['totalManHours'] !== false },
+    { id: 'lti', label: labelsMap['lti'] || 'Lost Time Injuries (LTI)', type: 'lagging', value: data.lti, info: 'Lost workdays', color: '#ef4444', isActive: activeMap['lti'] !== false },
+    { id: 'rwc', label: labelsMap['rwc'] || 'Restricted Work Cases (RWC)', type: 'lagging', value: data.rwc, info: 'Restricted duties', color: '#fbbf24', isActive: activeMap['rwc'] !== false },
+    { id: 'mtc', label: labelsMap['mtc'] || 'Medical Treatment Cases (MTC)', type: 'lagging', value: data.mtc, info: 'Beyond first aid', color: '#3b82f6', isActive: activeMap['mtc'] !== false },
+    { id: 'fac', label: labelsMap['fac'] || 'First Aid Cases (FAC)', type: 'lagging', value: data.fac, info: 'Minor site treatment', color: '#10b981', isActive: activeMap['fac'] !== false },
+    { id: 'observations', label: labelsMap['observations'] || 'Safety Observations Logged', type: 'leading', value: data.observations, info: 'Hazard cards logged', target: targetsMap['observations'] ?? 400, color: '#3b82f6', isActive: activeMap['observations'] !== false },
+    { id: 'hazardsClosed', label: labelsMap['hazardsClosed'] || 'Hazards Closed Within SLA', type: 'leading', value: data.hazardsClosed, info: 'Closed inside SLA window', target: targetsMap['hazardsClosed'] ?? 360, color: '#fbbf24', isActive: activeMap['hazardsClosed'] !== false },
+    { id: 'auditsPlanned', label: labelsMap['auditsPlanned'] || 'Total Safety Audits Planned', type: 'leading', value: data.auditsPlanned, info: 'Scheduled audits', target: targetsMap['auditsPlanned'] ?? 24, color: '#10b981', isActive: activeMap['auditsPlanned'] !== false },
+    { id: 'auditsCompleted', label: labelsMap['auditsCompleted'] || 'Total Safety Audits Completed', type: 'leading', value: data.auditsCompleted, info: 'Completed & signed off', target: targetsMap['auditsCompleted'] ?? 24, color: '#10b981', isActive: activeMap['auditsCompleted'] !== false },
+  ]
+
+  return [...defaultItems, ...customList]
 }
 
 // Preset quarterly and milestone safety scenarios for slideshow
@@ -123,7 +151,30 @@ export const Dashboard: React.FC = () => {
     return DEFAULT_SAFETY_DATA
   })
 
-  // Start with Excel formula active
+  // Dynamic Metrics List state
+  const [metricsList, setMetricsList] = useState<MetricItem[]>(() => {
+    const saved = localStorage.getItem('hse_safety_data')
+    let startData = DEFAULT_SAFETY_DATA
+    if (saved) {
+      try {
+        startData = JSON.parse(saved) as SafetyData
+      } catch (e) {
+        console.error(e)
+      }
+    }
+    return getInitialMetrics(startData)
+  })
+
+  // Sync metricsList with safetyData (e.g. on mount or DB subscription update)
+  useEffect(() => {
+    setMetricsList(prev => prev.map(item => {
+      if (!item.isCustom && item.id in safetyData) {
+        return { ...item, value: safetyData[item.id as keyof SafetyData] }
+      }
+      return item
+    }))
+  }, [safetyData])
+
   // Start with Excel formula active
   const [useExcelFormula, setUseExcelFormula] = useState<boolean>(() => {
     const saved = localStorage.getItem('hse_use_excel_formula')
@@ -134,9 +185,52 @@ export const Dashboard: React.FC = () => {
   const [isSaving, setIsSaving] = useState(false)
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saved' | 'error'>('idle')
 
-  // Plain state updater (no broadcast)
+  // Handler for custom inputs modification
+  const handleMetricsChange = (newMetrics: MetricItem[]) => {
+    setMetricsList(newMetrics)
+
+    // Extract standard metrics to update safetyData (which triggers DB updates)
+    const updatedSafetyData = { ...safetyData }
+    newMetrics.forEach(item => {
+      if (!item.isCustom && item.id in updatedSafetyData) {
+        updatedSafetyData[item.id as keyof SafetyData] = item.value
+      }
+    })
+    setSafetyData(updatedSafetyData)
+
+    // Save custom list
+    const customList = newMetrics.filter(m => m.isCustom)
+    localStorage.setItem('hse_custom_metrics', JSON.stringify(customList))
+
+    // Save standard configs (labels, active status, targets)
+    const activeMap: Record<string, boolean> = {}
+    const labelsMap: Record<string, string> = {}
+    const targetsMap: Record<string, number> = {}
+
+    newMetrics.forEach(item => {
+      if (!item.isCustom) {
+        activeMap[item.id] = item.isActive !== false
+        labelsMap[item.id] = item.label
+        if (item.target !== undefined) {
+          targetsMap[item.id] = item.target
+        }
+      }
+    })
+
+    localStorage.setItem('hse_metrics_active_status', JSON.stringify(activeMap))
+    localStorage.setItem('hse_metrics_labels', JSON.stringify(labelsMap))
+    localStorage.setItem('hse_metrics_targets', JSON.stringify(targetsMap))
+  }
+
+  // Plain state updater (no broadcast) - maps scenario data to dynamic metrics
   const updateSafetyData = (newData: SafetyData) => {
     setSafetyData(newData)
+    setMetricsList(prev => prev.map(item => {
+      if (!item.isCustom && item.id in newData) {
+        return { ...item, value: newData[item.id as keyof SafetyData] }
+      }
+      return item
+    }))
   }
 
   // ── Supabase DB: load on mount + subscribe to realtime changes ──────────────
@@ -192,8 +286,88 @@ export const Dashboard: React.FC = () => {
     return () => clearTimeout(timer)
   }, [isInputVisible])
 
-  // Compute metrics
-  const calculated = calculateSafetyMetrics(safetyData, useExcelFormula)
+  // Compute metrics dynamically
+  const calculated = calculateSafetyMetrics(safetyData, useExcelFormula, metricsList)
+
+  // Construct dynamic charts lists
+  const laggingData = metricsList
+    .filter(m => m.type === 'lagging' && m.isActive !== false)
+    .map((m, index) => {
+      const defaultColors = ['#ef4444', '#fbbf24', '#3b82f6', '#10b981', '#8b5cf6', '#ec4899', '#f97316', '#14b8a6']
+      return {
+        name: m.label,
+        value: m.value,
+        color: m.color || defaultColors[index % defaultColors.length]
+      }
+    })
+
+  const getLeadingDataForChart = () => {
+    const chartLeadingData: any[] = []
+    const obs = metricsList.find(m => m.id === 'observations')
+    const hc = metricsList.find(m => m.id === 'hazardsClosed')
+    const ap = metricsList.find(m => m.id === 'auditsPlanned')
+    const ac = metricsList.find(m => m.id === 'auditsCompleted')
+
+    const blueColor = '#3b82f6'
+    const yellowColor = '#fbbf24'
+    const greenColor = '#10b981'
+    const redColor = '#ef4444'
+
+    // Observations
+    if (obs && obs.isActive !== false) {
+      chartLeadingData.push({
+        name: obs.label,
+        actual: obs.value,
+        target: obs.target ?? 400,
+        displayActual: `${obs.value} Logged`,
+        displayTarget: `Target: > ${obs.target ?? 400}`,
+        color: obs.value >= (obs.target ?? 400) ? blueColor : redColor
+      })
+    }
+
+    // Hazard Closeout Rate
+    if (obs && obs.isActive !== false && hc && hc.isActive !== false) {
+      const targetVal = 90
+      chartLeadingData.push({
+        name: 'Hazard SLA Close-Out',
+        actual: calculated.hazardCloseOutRate,
+        target: targetVal,
+        displayActual: `${calculated.hazardCloseOutRate.toFixed(1)}%`,
+        displayTarget: `Target: Min ${targetVal}%`,
+        color: calculated.hazardCloseOutRate >= targetVal ? yellowColor : redColor
+      })
+    }
+
+    // Audit Completion
+    if (ap && ap.isActive !== false && ac && ac.isActive !== false) {
+      const targetVal = 95
+      chartLeadingData.push({
+        name: 'HSE Audit Execution',
+        actual: calculated.auditCompletionRate,
+        target: targetVal,
+        displayActual: `${calculated.auditCompletionRate.toFixed(1)}%`,
+        displayTarget: `Target: Min ${targetVal}%`,
+        color: calculated.auditCompletionRate >= targetVal ? greenColor : redColor
+      })
+    }
+
+    // Custom Leading metrics
+    metricsList.filter(m => m.isCustom && m.type === 'leading' && m.isActive !== false).forEach(m => {
+      const targetVal = m.target ?? 0
+      chartLeadingData.push({
+        name: m.label,
+        actual: m.value,
+        target: targetVal,
+        displayActual: `${m.value} Completed`,
+        displayTarget: `Target: ${targetVal}`,
+        color: m.value >= targetVal ? (m.color || greenColor) : redColor
+      })
+    })
+
+    return chartLeadingData
+  }
+
+  const leadingData = getLeadingDataForChart()
 
   // Risk Pill Styling (matching the Carlos Brown / Joel Cannan badges)
   const getRiskPill = () => {
@@ -771,10 +945,7 @@ export const Dashboard: React.FC = () => {
                     <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 0, width: '100%' }}>
                       <div style={{ height: '260px', width: '100%' }}>
                         <IncidentDonut
-                          lti={safetyData.lti}
-                          rwc={safetyData.rwc}
-                          mtc={safetyData.mtc}
-                          fac={safetyData.fac}
+                          laggingData={laggingData}
                           hoveredCategory={pptHoverCategory}
                           theme={theme}
                         />
@@ -801,9 +972,7 @@ export const Dashboard: React.FC = () => {
                     <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 0, width: '100%' }}>
                       <div style={{ height: '260px', width: '100%' }}>
                         <TargetVsActual
-                          observations={safetyData.observations}
-                          hazardRate={calculated.hazardCloseOutRate}
-                          auditRate={calculated.auditCompletionRate}
+                          leadingData={leadingData}
                           hoveredCategory={pptHoverCategory}
                           theme={theme}
                         />
@@ -1103,34 +1272,21 @@ export const Dashboard: React.FC = () => {
                             </tr>
                           </thead>
                           <tbody>
-                            <tr>
-                              <td style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1rem' }}>
-                                <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#ef4444' }}></span>
-                                Lost Time Injuries (LTI)
-                              </td>
-                              <td style={{ textAlign: 'right', fontWeight: 700, color: 'var(--text-primary)', padding: '0.75rem 1rem' }}>{safetyData.lti}</td>
-                            </tr>
-                            <tr>
-                              <td style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1rem' }}>
-                                <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#fbbf24' }}></span>
-                                Restricted Work Cases (RWC)
-                              </td>
-                              <td style={{ textAlign: 'right', fontWeight: 700, color: 'var(--text-primary)', padding: '0.75rem 1rem' }}>{safetyData.rwc}</td>
-                            </tr>
-                            <tr>
-                              <td style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1rem' }}>
-                                <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#3b82f6' }}></span>
-                                Medical Treatment Cases (MTC)
-                              </td>
-                              <td style={{ textAlign: 'right', fontWeight: 700, color: 'var(--text-primary)', padding: '0.75rem 1rem' }}>{safetyData.mtc}</td>
-                            </tr>
-                            <tr>
-                              <td style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1rem' }}>
-                                <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10b981' }}></span>
-                                First Aid Cases (FAC)
-                              </td>
-                              <td style={{ textAlign: 'right', fontWeight: 700, color: 'var(--text-primary)', padding: '0.75rem 1rem' }}>{safetyData.fac}</td>
-                            </tr>
+                            {metricsList
+                              .filter(m => m.type === 'lagging' && m.isActive !== false)
+                              .map((m, index) => {
+                                const defaultColors = ['#ef4444', '#fbbf24', '#3b82f6', '#10b981', '#8b5cf6', '#ec4899', '#f97316', '#14b8a6']
+                                const color = m.color || defaultColors[index % defaultColors.length]
+                                return (
+                                  <tr key={m.id}>
+                                    <td style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1rem' }}>
+                                      <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: color }}></span>
+                                      {m.label}
+                                    </td>
+                                    <td style={{ textAlign: 'right', fontWeight: 700, color: 'var(--text-primary)', padding: '0.75rem 1rem' }}>{m.value}</td>
+                                  </tr>
+                                )
+                              })}
                           </tbody>
                         </table>
                       </div>
@@ -1152,10 +1308,7 @@ export const Dashboard: React.FC = () => {
                         </h3>
                         <div style={{ width: '100%', height: '240px' }} className="executive-donut-wrapper">
                           <IncidentDonut
-                            lti={safetyData.lti}
-                            rwc={safetyData.rwc}
-                            mtc={safetyData.mtc}
-                            fac={safetyData.fac}
+                            laggingData={laggingData}
                             theme={theme}
                           />
                         </div>
@@ -1206,33 +1359,20 @@ export const Dashboard: React.FC = () => {
                             </tr>
                           </thead>
                           <tbody>
-                            <tr>
-                              <td style={{ padding: '0.6rem 1rem' }}>Safety Observations Logged</td>
-                              <td style={{ textAlign: 'center', fontWeight: 700, color: safetyData.observations >= 400 ? 'var(--color-success)' : 'var(--color-warning)', padding: '0.6rem 1rem' }}>
-                                {safetyData.observations}
-                              </td>
-                              <td style={{ textAlign: 'right', color: 'var(--text-secondary)', fontSize: '0.8rem', padding: '0.6rem 1rem' }}>
-                                KPI Target &gt; 400
-                              </td>
-                            </tr>
-                            <tr>
-                              <td style={{ padding: '0.6rem 1rem' }}>Hazard SLA Close-Out Performance</td>
-                              <td style={{ textAlign: 'center', fontWeight: 700, color: calculated.hazardCloseOutRate >= 90 ? 'var(--color-success)' : 'var(--color-warning)', padding: '0.6rem 1rem' }}>
-                                {calculated.hazardCloseOutRate.toFixed(1)}%
-                              </td>
-                              <td style={{ textAlign: 'right', color: 'var(--text-secondary)', fontSize: '0.8rem', padding: '0.6rem 1rem' }}>
-                                Min 90.0% Standard
-                              </td>
-                            </tr>
-                            <tr>
-                              <td style={{ padding: '0.6rem 1rem' }}>HSE Safety Audit Execution</td>
-                              <td style={{ textAlign: 'center', fontWeight: 700, color: calculated.auditCompletionRate >= 95 ? 'var(--color-success)' : 'var(--color-warning)', padding: '0.6rem 1rem' }}>
-                                {calculated.auditCompletionRate.toFixed(1)}%
-                              </td>
-                              <td style={{ textAlign: 'right', color: 'var(--text-secondary)', fontSize: '0.8rem', padding: '0.6rem 1rem' }}>
-                                Min 95.0% Compliance
-                              </td>
-                            </tr>
+                            {leadingData.map((item, idx) => {
+                              const isAchieved = item.actual >= item.target
+                              return (
+                                <tr key={idx}>
+                                  <td style={{ padding: '0.6rem 1rem' }}>{item.name}</td>
+                                  <td style={{ textAlign: 'center', fontWeight: 700, color: isAchieved ? 'var(--color-success)' : 'var(--color-warning)', padding: '0.6rem 1rem' }}>
+                                    {item.displayActual}
+                                  </td>
+                                  <td style={{ textAlign: 'right', color: 'var(--text-secondary)', fontSize: '0.8rem', padding: '0.6rem 1rem' }}>
+                                    {item.displayTarget}
+                                  </td>
+                                </tr>
+                              )
+                            })}
                           </tbody>
                         </table>
                       </div>
@@ -1254,9 +1394,7 @@ export const Dashboard: React.FC = () => {
                         </h3>
                         <div style={{ width: '100%', height: '180px' }} className="executive-bar-wrapper">
                           <TargetVsActual
-                            observations={safetyData.observations}
-                            hazardRate={calculated.hazardCloseOutRate}
-                            auditRate={calculated.auditCompletionRate}
+                            leadingData={leadingData}
                             theme={theme}
                           />
                         </div>
@@ -1459,8 +1597,8 @@ export const Dashboard: React.FC = () => {
           {/* Prevent inner inputs from wrapping during transition */}
           <div style={{ width: '330px', height: '100%', minHeight: 0 }}>
             <InputForm
-              data={safetyData}
-              onChange={(newData) => updateSafetyData(newData)}
+              metrics={metricsList}
+              onChange={handleMetricsChange}
               useExcelFormula={useExcelFormula}
               onFormulaToggle={setUseExcelFormula}
               theme={theme}
@@ -1807,44 +1945,28 @@ export const Dashboard: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    <tr>
-                      <td style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#ef4444' }}></span>
-                        Lost Time Injuries (LTI)
-                      </td>
-                      <td style={{ textAlign: 'right', fontWeight: 700, color: 'var(--text-primary)' }}>{safetyData.lti}</td>
-                    </tr>
-                    <tr>
-                      <td style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#fbbf24' }}></span>
-                        Restricted Work Cases (RWC)
-                      </td>
-                      <td style={{ textAlign: 'right', fontWeight: 700, color: 'var(--text-primary)' }}>{safetyData.rwc}</td>
-                    </tr>
-                    <tr>
-                      <td style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#3b82f6' }}></span>
-                        Medical Treatment Cases (MTC)
-                      </td>
-                      <td style={{ textAlign: 'right', fontWeight: 700, color: 'var(--text-primary)' }}>{safetyData.mtc}</td>
-                    </tr>
-                    <tr>
-                      <td style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#10b981' }}></span>
-                        First Aid Cases (FAC)
-                      </td>
-                      <td style={{ textAlign: 'right', fontWeight: 700, color: 'var(--text-primary)' }}>{safetyData.fac}</td>
-                    </tr>
+                    {metricsList
+                      .filter(m => m.type === 'lagging' && m.isActive !== false)
+                      .map((m, index) => {
+                        const defaultColors = ['#ef4444', '#fbbf24', '#3b82f6', '#10b981', '#8b5cf6', '#ec4899', '#f97316', '#14b8a6']
+                        const color = m.color || defaultColors[index % defaultColors.length]
+                        return (
+                          <tr key={m.id}>
+                            <td style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                              <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: color }}></span>
+                              {m.label}
+                            </td>
+                            <td style={{ textAlign: 'right', fontWeight: 700, color: 'var(--text-primary)' }}>{m.value}</td>
+                          </tr>
+                        )
+                      })}
                   </tbody>
                 </table>
 
                 {/* ECharts donut chart */}
                 <div ref={donutContainerRef}>
                   <IncidentDonut
-                    lti={safetyData.lti}
-                    rwc={safetyData.rwc}
-                    mtc={safetyData.mtc}
-                    fac={safetyData.fac}
+                    laggingData={laggingData}
                     hoveredCategory={donutHoverCategory}
                     theme={theme}
                   />
@@ -1872,42 +1994,27 @@ export const Dashboard: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    <tr>
-                      <td>Safety Observations Logged</td>
-                      <td style={{ textAlign: 'center', fontWeight: 700, color: safetyData.observations >= 400 ? 'var(--color-success)' : 'var(--color-warning)' }}>
-                        {safetyData.observations}
-                      </td>
-                      <td style={{ textAlign: 'right', color: 'var(--text-secondary)', fontSize: '0.78rem' }}>
-                        KPI Target &gt; 400
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>Hazard SLA Close-Out Performance</td>
-                      <td style={{ textAlign: 'center', fontWeight: 700, color: calculated.hazardCloseOutRate >= 90 ? 'var(--color-success)' : 'var(--color-warning)' }}>
-                        {calculated.hazardCloseOutRate.toFixed(1)}%
-                      </td>
-                      <td style={{ textAlign: 'right', color: 'var(--text-secondary)', fontSize: '0.78rem' }}>
-                        Min 90.0% Standard
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>HSE Safety Audit Execution</td>
-                      <td style={{ textAlign: 'center', fontWeight: 700, color: calculated.auditCompletionRate >= 95 ? 'var(--color-success)' : 'var(--color-warning)' }}>
-                        {calculated.auditCompletionRate.toFixed(1)}%
-                      </td>
-                      <td style={{ textAlign: 'right', color: 'var(--text-secondary)', fontSize: '0.78rem' }}>
-                        Min 95.0% Compliance
-                      </td>
-                    </tr>
+                    {leadingData.map((item, idx) => {
+                      const isAchieved = item.actual >= item.target
+                      return (
+                        <tr key={idx}>
+                          <td>{item.name}</td>
+                          <td style={{ textAlign: 'center', fontWeight: 700, color: isAchieved ? 'var(--color-success)' : 'var(--color-warning)' }}>
+                            {item.displayActual}
+                          </td>
+                          <td style={{ textAlign: 'right', color: 'var(--text-secondary)', fontSize: '0.78rem' }}>
+                            {item.displayTarget}
+                          </td>
+                        </tr>
+                      )
+                    })}
                   </tbody>
                 </table>
 
                 {/* Normalized comparison bar chart */}
                 <div ref={barContainerRef}>
                   <TargetVsActual
-                    observations={safetyData.observations}
-                    hazardRate={calculated.hazardCloseOutRate}
-                    auditRate={calculated.auditCompletionRate}
+                    leadingData={leadingData}
                     hoveredCategory={barHoverCategory}
                     theme={theme}
                   />
