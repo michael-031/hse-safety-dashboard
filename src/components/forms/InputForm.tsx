@@ -39,6 +39,9 @@ export const InputForm: React.FC<InputFormProps> = ({
   const [editTarget, setEditTarget] = useState('')
   const [editColor, setEditColor] = useState('')
 
+  // Deleting confirmation state
+  const [deletingMetric, setDeletingMetric] = useState<MetricItem | null>(null)
+
   const handleInputChange = (id: string, value: string) => {
     // Strip any non-digit characters, parse strictly, clamp to >= 0
     const stripped = value.replace(/[^0-9]/g, '')
@@ -99,7 +102,9 @@ export const InputForm: React.FC<InputFormProps> = ({
     setEditingMetric(null)
   }
 
-  const handleDelete = (id: string) => {
+  const confirmDelete = () => {
+    if (!deletingMetric) return
+    const id = deletingMetric.id
     onChange(metrics.map(m => {
       if (m.id === id) {
         if (m.isCustom) {
@@ -110,6 +115,7 @@ export const InputForm: React.FC<InputFormProps> = ({
       }
       return m
     }).filter(Boolean) as MetricItem[])
+    setDeletingMetric(null)
   }
 
   const saveNewMetric = (type: 'lagging' | 'leading') => {
@@ -247,7 +253,7 @@ export const InputForm: React.FC<InputFormProps> = ({
               <Edit2 size={11} />
             </button>
             <button
-              onClick={() => handleDelete(m.id)}
+              onClick={() => setDeletingMetric(m)}
               style={{
                 background: 'var(--bg-input)',
                 border: '1px solid var(--border-color)',
@@ -708,6 +714,27 @@ export const InputForm: React.FC<InputFormProps> = ({
             <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
               <button onClick={() => setEditingMetric(null)} className="btn btn-secondary" style={{ flex: 1, padding: '0.5rem', fontSize: '0.75rem' }}>Cancel</button>
               <button onClick={saveEditedMetric} className="btn btn-primary" style={{ flex: 2, padding: '0.5rem', fontSize: '0.75rem', fontWeight: 800 }}>Save Changes</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Premium Deletion Confirmation Overlay Modal */}
+      {deletingMetric && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0, 0, 0, 0.55)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '1rem' }}>
+          <div className="glass-panel" style={{ width: '100%', maxWidth: '340px', padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem', boxShadow: 'var(--shadow-lg)', border: '1px solid rgba(239, 68, 68, 0.25)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h4 style={{ fontSize: '0.9rem', fontWeight: 800, color: 'var(--text-primary)' }}>Delete Indicator?</h4>
+              <button onClick={() => setDeletingMetric(null)} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}><X size={14} /></button>
+            </div>
+            
+            <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', lineHeight: 1.4 }}>
+              Are you sure you want to delete <strong>{deletingMetric.label}</strong>? This action will remove it from the input form, dashboard cards, and charts.
+            </p>
+
+            <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
+              <button onClick={() => setDeletingMetric(null)} className="btn btn-secondary" style={{ flex: 1, padding: '0.5rem', fontSize: '0.75rem' }}>Cancel</button>
+              <button onClick={confirmDelete} className="btn" style={{ flex: 2, padding: '0.5rem', fontSize: '0.75rem', fontWeight: 800, background: '#ef4444', color: 'white', border: 'none' }}>Yes, Delete</button>
             </div>
           </div>
         </div>
