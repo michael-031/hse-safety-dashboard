@@ -218,7 +218,97 @@ export const Dashboard: React.FC = () => {
     }
   }
 
+
   const riskPill = getRiskPill()
+
+  // Dynamic Overall Status Section
+  const getOverallStatus = () => {
+    let overallStatus: 'On Track' | 'Needs Attention' | 'Critical' = 'On Track'
+    let overallStatusColor = '#10b981' // Success color
+    let overallStatusDesc = ''
+
+    if (calculated.trir >= 2.00 || safetyData.lti > 1 || calculated.auditCompletionRate < 80) {
+      overallStatus = 'Critical'
+      overallStatusColor = '#ef4444' // Danger
+      overallStatusDesc = 'Safety performance bounds exceeded. Immediate leadership attention required to address critical risk trends.'
+    } else if (calculated.trir >= 1.00 || safetyData.lti === 1 || calculated.auditCompletionRate < 95 || calculated.hazardCloseOutRate < 90) {
+      overallStatus = 'Needs Attention'
+      overallStatusColor = '#fbbf24' // Warning
+      overallStatusDesc = 'HSE metrics indicate moderate risk bounds or minor target slippage. Heightened review recommended.'
+    } else {
+      overallStatus = 'On Track'
+      overallStatusColor = '#10b981' // Success
+      overallStatusDesc = 'All safety targets are on track. Stable operations with zero or low incident frequency rates maintained.'
+    }
+    
+    return { overallStatus, overallStatusColor, overallStatusDesc }
+  }
+
+  // Generate Slide 2 Insights
+  const getLaggingInsights = () => {
+    const insights: string[] = []
+    
+    // LTI
+    if (safetyData.lti === 0) {
+      insights.push("Excellent safety record with Zero Lost Time Injuries (LTI) recorded.")
+    } else if (safetyData.lti === 1) {
+      insights.push("Only one Lost Time Injury (LTI) has occurred, which remains a key focus for safety improvement.")
+    } else {
+      insights.push(`Caution: Multiple Lost Time Injuries (${safetyData.lti} LTIs) occurred. Immediate safety controls check required.`)
+    }
+
+    // FAC majority
+    const totalIncidents = safetyData.lti + safetyData.rwc + safetyData.mtc + safetyData.fac
+    if (totalIncidents > 0) {
+      const facPercentage = Math.round((safetyData.fac / totalIncidents) * 100)
+      if (safetyData.fac > 0) {
+        insights.push(`First Aid Cases (FAC) account for the majority of recorded incidents (${safetyData.fac} cases, representing ${facPercentage}% of total).`)
+      }
+    } else {
+      insights.push("No recorded incidents of any classification (FAC, MTC, RWC, LTI).")
+    }
+
+    // MTC second highest / classification review
+    const categories = [
+      { name: 'Medical Treatment Cases (MTC)', value: safetyData.mtc },
+      { name: 'Restricted Work Cases (RWC)', value: safetyData.rwc },
+      { name: 'Lost Time Injuries (LTI)', value: safetyData.lti },
+    ].sort((a, b) => b.value - a.value)
+
+    if (totalIncidents > 0 && safetyData.fac > 0 && categories[0] && categories[0].value > 0) {
+      insights.push(`${categories[0].name} are the second highest incident category with ${categories[0].value} cases.`)
+    }
+
+    return insights
+  }
+
+  // Generate Slide 3 Insights
+  const getLeadingInsights = () => {
+    const insights: string[] = []
+    
+    // Safety Observations
+    if (safetyData.observations >= 400) {
+      insights.push(`Safety observations logged (${safetyData.observations}) exceeded the KPI target of 400, reflecting active hazard reporting.`)
+    } else {
+      insights.push(`Safety observations logged (${safetyData.observations}) remain below the target of 400. Focus campaigns required.`)
+    }
+
+    // Hazard Close-Out
+    if (calculated.hazardCloseOutRate >= 90) {
+      insights.push(`Hazard SLA close-out performance reached ${calculated.hazardCloseOutRate.toFixed(1)}%, exceeding the minimum 90.0% operational standard.`)
+    } else {
+      insights.push(`Hazard SLA close-out performance is at ${calculated.hazardCloseOutRate.toFixed(1)}%, failing to meet the 90.0% operational standard.`)
+    }
+
+    // Audit Completion
+    if (calculated.auditCompletionRate >= 95) {
+      insights.push(`HSE safety audit execution stands at ${calculated.auditCompletionRate.toFixed(1)}%, satisfying the 95.0% compliance compliance target.`)
+    } else {
+      insights.push(`Audit completion remains below the 95% compliance target (currently at ${calculated.auditCompletionRate.toFixed(1)}%).`)
+    }
+
+    return insights
+  }
 
   // Interactive Demo Tour States
   const [demoActive, setDemoActive] = useState(false)
@@ -234,12 +324,32 @@ export const Dashboard: React.FC = () => {
   // Slideshow States
   const [isSlideshowPlaying, setIsSlideshowPlaying] = useState(false)
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0)
-  const [isPresentationMode, setIsPresentationMode] = useState(false)
+  const [presentationMode, setPresentationMode] = useState<'none' | 'scenarios' | 'executive'>('none')
   const [pptHoverCategory, setPptHoverCategory] = useState<string | null>(null)
 
   // Get dynamic adaptive background gradient per slide scenario
   const getSlideBackground = (index: number) => {
     const isLight = theme === 'light'
+    if (presentationMode === 'executive') {
+      switch (index) {
+        case 0: // Executive Summary
+          return isLight 
+            ? 'radial-gradient(circle at 50% 0%, #e2e8f0 0%, #f8fafc 100%)'
+            : 'radial-gradient(circle at 50% 0%, #0f172a 0%, #020617 100%)'
+        case 1: // Lagging Indicators
+          return isLight 
+            ? 'radial-gradient(circle at 50% 0%, #d0e7fc 0%, #f8fafc 100%)'
+            : 'radial-gradient(circle at 50% 0%, #032042 0%, #020617 100%)'
+        case 2: // Leading Indicators
+          return isLight 
+            ? 'radial-gradient(circle at 50% 0%, #d1f7e5 0%, #f8fafc 100%)'
+            : 'radial-gradient(circle at 50% 0%, #022e1b 0%, #020617 100%)'
+        default:
+          return isLight 
+            ? 'radial-gradient(circle at 50% 0%, #cbd5e1 0%, #f8fafc 100%)'
+            : 'radial-gradient(circle at 50% 0%, #0f172a 0%, #020617 100%)'
+      }
+    }
     switch (index) {
       case 0: // Q1 Baseline (Slate Navy)
         return isLight 
@@ -268,12 +378,25 @@ export const Dashboard: React.FC = () => {
     }
   }
 
-  // Toggle Fullscreen PPT Presentation Mode
-  const enterPresentationMode = () => {
-    setIsPresentationMode(true)
-    setIsSlideshowPlaying(true) // Automatically start playing on entering presentation
+  // Toggle Fullscreen PPT Presentation Mode (Scenarios)
+  const enterScenariosMode = () => {
+    setPresentationMode('scenarios')
+    setCurrentSlideIndex(0)
+    setIsSlideshowPlaying(true) // Automatically start playing
     
-    // Request fullscreen on documentElement
+    if (document.documentElement.requestFullscreen) {
+      document.documentElement.requestFullscreen().catch((err) => {
+        console.error("Error attempting to enable fullscreen:", err)
+      })
+    }
+  }
+
+  // Toggle Fullscreen PPT Presentation Mode (Executive Summary)
+  const enterExecutiveMode = () => {
+    setPresentationMode('executive')
+    setCurrentSlideIndex(0)
+    setIsSlideshowPlaying(false) // Manual slide progression by default
+    
     if (document.documentElement.requestFullscreen) {
       document.documentElement.requestFullscreen().catch((err) => {
         console.error("Error attempting to enable fullscreen:", err)
@@ -282,7 +405,7 @@ export const Dashboard: React.FC = () => {
   }
 
   const exitPresentationMode = () => {
-    setIsPresentationMode(false)
+    setPresentationMode('none')
     setIsSlideshowPlaying(false)
     
     if (document.fullscreenElement) {
@@ -296,8 +419,8 @@ export const Dashboard: React.FC = () => {
   useEffect(() => {
     const handleFullscreenChange = () => {
       const isCurrentlyFullscreen = !!document.fullscreenElement
-      setIsPresentationMode(isCurrentlyFullscreen)
       if (!isCurrentlyFullscreen) {
+        setPresentationMode('none')
         setIsSlideshowPlaying(false)
         document.body.classList.remove('presentation-mode-active')
       } else {
@@ -314,21 +437,26 @@ export const Dashboard: React.FC = () => {
 
   // Keyboard navigation for PPT Mode
   useEffect(() => {
-    if (!isPresentationMode) return
+    if (presentationMode === 'none') return
 
     const handleKeyDown = (e: KeyboardEvent) => {
+      const maxSlides = presentationMode === 'executive' ? 3 : SLIDESHOW_DATA.length
       if (e.key === 'ArrowRight' || e.key === ' ') {
         e.preventDefault()
         setCurrentSlideIndex((prevIdx) => {
-          const nextIdx = (prevIdx + 1) % SLIDESHOW_DATA.length
-          setSafetyData(SLIDESHOW_DATA[nextIdx].data)
+          const nextIdx = (prevIdx + 1) % maxSlides
+          if (presentationMode === 'scenarios') {
+            setSafetyData(SLIDESHOW_DATA[nextIdx].data)
+          }
           return nextIdx
         })
       } else if (e.key === 'ArrowLeft') {
         e.preventDefault()
         setCurrentSlideIndex((prevIdx) => {
-          const nextIdx = (prevIdx - 1 + SLIDESHOW_DATA.length) % SLIDESHOW_DATA.length
-          setSafetyData(SLIDESHOW_DATA[nextIdx].data)
+          const nextIdx = (prevIdx - 1 + maxSlides) % maxSlides
+          if (presentationMode === 'scenarios') {
+            setSafetyData(SLIDESHOW_DATA[nextIdx].data)
+          }
           return nextIdx
         })
       } else if (e.key === 'Escape') {
@@ -338,22 +466,26 @@ export const Dashboard: React.FC = () => {
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [isPresentationMode])
+  }, [presentationMode])
 
   // Slideshow Autoplay Timer Effect
   useEffect(() => {
-    if (!isSlideshowPlaying) return
+    if (!isSlideshowPlaying || presentationMode === 'none') return
+
+    const maxSlides = presentationMode === 'executive' ? 3 : SLIDESHOW_DATA.length
 
     const timer = setInterval(() => {
       setCurrentSlideIndex((prevIdx) => {
-        const nextIdx = (prevIdx + 1) % SLIDESHOW_DATA.length
-        setSafetyData(SLIDESHOW_DATA[nextIdx].data)
+        const nextIdx = (prevIdx + 1) % maxSlides
+        if (presentationMode === 'scenarios') {
+          setSafetyData(SLIDESHOW_DATA[nextIdx].data)
+        }
         return nextIdx
       })
-    }, 3000)
+    }, presentationMode === 'executive' ? 5000 : 3000)
 
     return () => clearInterval(timer)
-  }, [isSlideshowPlaying])
+  }, [isSlideshowPlaying, presentationMode])
 
   // Pause slideshow if demo tour becomes active
   useEffect(() => {
@@ -466,7 +598,7 @@ export const Dashboard: React.FC = () => {
 
   return (
     <>
-      {isPresentationMode && (
+      {presentationMode !== 'none' && (
         <div
           id="presentation-overlay"
           style={{
@@ -491,7 +623,7 @@ export const Dashboard: React.FC = () => {
             <div 
               style={{ 
                 height: '100%', 
-                width: `${((currentSlideIndex + 1) / SLIDESHOW_DATA.length) * 100}%`, 
+                width: `${((currentSlideIndex + 1) / (presentationMode === 'executive' ? 3 : SLIDESHOW_DATA.length)) * 100}%`, 
                 background: 'linear-gradient(to right, #60a5fa, #2563eb)',
                 transition: 'width 0.4s cubic-bezier(0.16, 1, 0.3, 1)'
               }} 
@@ -502,14 +634,21 @@ export const Dashboard: React.FC = () => {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
             <div>
               <span style={{ fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.15em', color: theme === 'light' ? '#2563eb' : '#60a5fa', fontWeight: 800 }}>
-                HSE Executive Presentation Mode
+                {presentationMode === 'executive' ? 'HSE Executive Report' : 'HSE Executive Presentation Mode'}
               </span>
               <h2 
                 key={currentSlideIndex}
                 className="ppt-slide-animate"
                 style={{ fontSize: '1.85rem', fontWeight: 800, marginTop: '0.15rem', letterSpacing: '-0.02em', color: theme === 'light' ? '#0f172a' : '#ffffff' }}
               >
-                {SLIDESHOW_DATA[currentSlideIndex].name}
+                {presentationMode === 'executive' 
+                  ? currentSlideIndex === 0 
+                    ? "Executive Summary (Overall Performance)"
+                    : currentSlideIndex === 1
+                      ? "Lagging Indicators (Incident Breakdown)"
+                      : "Leading Indicators (Preventative Performance)"
+                  : SLIDESHOW_DATA[currentSlideIndex].name
+                }
               </h2>
             </div>
             
@@ -560,118 +699,406 @@ export const Dashboard: React.FC = () => {
             </div>
           </div>
 
-          {/* Presentation Body: Large cards + Large Charts */}
+          {/* Presentation Body */}
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '1.5rem', minHeight: 0 }}>
-            
-            {/* KPI Row (Large view) */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '1rem' }}>
-              {[
-                { title: "Total Recordable Incident Rate", value: calculated.trir.toFixed(2), target: "Target: < 1.00", color: calculated.trir < 1.00 ? '#10b981' : '#ef4444', hoverCat: null },
-                { title: "Lost Time Frequency Rate", value: calculated.ltifr.toFixed(2), target: "Target: < 1.00", color: calculated.ltifr < 1.00 ? '#10b981' : '#ef4444', hoverCat: 'lti' },
-                { title: "Hazard Close-Out Rate", value: `${calculated.hazardCloseOutRate.toFixed(1)}%`, target: "Target: > 90%", color: calculated.hazardCloseOutRate >= 90 ? '#fbbf24' : '#ef4444', hoverCat: 'hazard' },
-                { title: "Audit Completion Rate", value: `${calculated.auditCompletionRate.toFixed(1)}%`, target: "Target: > 95%", color: calculated.auditCompletionRate >= 95 ? '#10b981' : '#ef4444', hoverCat: 'audit' },
-                { title: "Total Recordable Cases", value: calculated.tri, target: `LTI: ${safetyData.lti} • RWC: ${safetyData.rwc} • MTC: ${safetyData.mtc}`, color: calculated.tri === 0 ? '#10b981' : '#fbbf24', hoverCat: 'mtc' },
-              ].map((kpi, idx) => (
-                <div 
-                  key={idx} 
-                  className="glass-panel" 
-                  onMouseEnter={() => kpi.hoverCat && setPptHoverCategory(kpi.hoverCat)}
-                  onMouseLeave={() => setPptHoverCategory(null)}
-                  style={{ 
-                    padding: '1.25rem 1.5rem', 
-                    display: 'flex', 
-                    flexDirection: 'column', 
-                    justifyContent: 'space-between',
-                    background: theme === 'light' ? 'rgba(255, 255, 255, 0.65)' : 'rgba(7, 19, 36, 0.65)',
-                    border: pptHoverCategory === kpi.hoverCat && kpi.hoverCat
-                      ? '1px solid var(--color-primary)'
-                      : (theme === 'light' ? '1px solid rgba(0, 0, 0, 0.08)' : '1px solid rgba(255, 255, 255, 0.08)'),
-                    height: '135px',
-                    cursor: kpi.hoverCat ? 'pointer' : 'default',
-                    transition: 'all 0.25s',
-                    transform: pptHoverCategory === kpi.hoverCat && kpi.hoverCat ? 'translateY(-2px)' : 'none',
-                    boxShadow: pptHoverCategory === kpi.hoverCat && kpi.hoverCat 
-                      ? '0 6px 18px rgba(37, 99, 235, 0.25)' 
-                      : 'var(--shadow-sm)',
-                  }}
-                >
-                  <span style={{ fontSize: '0.85rem', color: theme === 'light' ? '#475569' : '#94a3b8', fontWeight: 700 }}>{kpi.title}</span>
-                  <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.5rem', margin: '0.25rem 0' }}>
-                    <span 
-                      key={currentSlideIndex}
-                      className="ppt-slide-animate"
-                      style={{ fontSize: '2.5rem', fontWeight: 800, color: kpi.color, letterSpacing: '-0.02em', display: 'inline-block' }}
+            {presentationMode === 'scenarios' ? (
+              <>
+                {/* KPI Row (Large view) */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '1rem' }}>
+                  {[
+                    { title: "Total Recordable Incident Rate", value: calculated.trir.toFixed(2), target: "Target: < 1.00", color: calculated.trir < 1.00 ? '#10b981' : '#ef4444', hoverCat: null },
+                    { title: "Lost Time Frequency Rate", value: calculated.ltifr.toFixed(2), target: "Target: < 1.00", color: calculated.ltifr < 1.00 ? '#10b981' : '#ef4444', hoverCat: 'lti' },
+                    { title: "Hazard Close-Out Rate", value: `${calculated.hazardCloseOutRate.toFixed(1)}%`, target: "Target: > 90%", color: calculated.hazardCloseOutRate >= 90 ? '#fbbf24' : '#ef4444', hoverCat: 'hazard' },
+                    { title: "Audit Completion Rate", value: `${calculated.auditCompletionRate.toFixed(1)}%`, target: "Target: > 95%", color: calculated.auditCompletionRate >= 95 ? '#10b981' : '#ef4444', hoverCat: 'audit' },
+                    { title: "Total Recordable Cases", value: calculated.tri, target: `LTI: ${safetyData.lti} • RWC: ${safetyData.rwc} • MTC: ${safetyData.mtc}`, color: calculated.tri === 0 ? '#10b981' : '#fbbf24', hoverCat: 'mtc' },
+                  ].map((kpi, idx) => (
+                    <div 
+                      key={idx} 
+                      className="glass-panel" 
+                      onMouseEnter={() => kpi.hoverCat && setPptHoverCategory(kpi.hoverCat)}
+                      onMouseLeave={() => setPptHoverCategory(null)}
+                      style={{ 
+                        padding: '1.25rem 1.5rem', 
+                        display: 'flex', 
+                        flexDirection: 'column', 
+                        justifyContent: 'space-between',
+                        background: theme === 'light' ? 'rgba(255, 255, 255, 0.65)' : 'rgba(7, 19, 36, 0.65)',
+                        border: pptHoverCategory === kpi.hoverCat && kpi.hoverCat
+                          ? '1px solid var(--color-primary)'
+                          : (theme === 'light' ? '1px solid rgba(0, 0, 0, 0.08)' : '1px solid rgba(255, 255, 255, 0.08)'),
+                        height: '135px',
+                        cursor: kpi.hoverCat ? 'pointer' : 'default',
+                        transition: 'all 0.25s',
+                        transform: pptHoverCategory === kpi.hoverCat && kpi.hoverCat ? 'translateY(-2px)' : 'none',
+                        boxShadow: pptHoverCategory === kpi.hoverCat && kpi.hoverCat 
+                          ? '0 6px 18px rgba(37, 99, 235, 0.25)' 
+                          : 'var(--shadow-sm)',
+                      }}
                     >
-                      {kpi.value}
-                    </span>
-                  </div>
-                  <div style={{ fontSize: '0.75rem', color: theme === 'light' ? '#475569' : '#64748b', borderTop: theme === 'light' ? '1px solid rgba(0,0,0,0.06)' : '1px solid rgba(255,255,255,0.05)', paddingTop: '0.4rem' }}>{kpi.target}</div>
+                      <span style={{ fontSize: '0.85rem', color: theme === 'light' ? '#475569' : '#94a3b8', fontWeight: 700 }}>{kpi.title}</span>
+                      <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.5rem', margin: '0.25rem 0' }}>
+                        <span 
+                          key={currentSlideIndex}
+                          className="ppt-slide-animate"
+                          style={{ fontSize: '2.5rem', fontWeight: 800, color: kpi.color, letterSpacing: '-0.02em', display: 'inline-block' }}
+                        >
+                          {kpi.value}
+                        </span>
+                      </div>
+                      <div style={{ fontSize: '0.75rem', color: theme === 'light' ? '#475569' : '#64748b', borderTop: theme === 'light' ? '1px solid rgba(0,0,0,0.06)' : '1px solid rgba(255,255,255,0.05)', paddingTop: '0.4rem' }}>{kpi.target}</div>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
 
-            {/* Charts Row */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', flex: 1, minHeight: 0 }}>
-              {/* Donut Chart Container */}
-              <div 
-                className="glass-panel" 
-                style={{ 
-                  padding: '1rem 1.25rem', 
-                  display: 'flex', 
-                  flexDirection: 'column', 
-                  background: theme === 'light' ? 'rgba(255, 255, 255, 0.65)' : 'rgba(7, 19, 36, 0.65)', 
-                  border: theme === 'light' ? '1px solid rgba(0, 0, 0, 0.08)' : '1px solid rgba(255, 255, 255, 0.08)',
-                  height: '100%',
-                  minHeight: 0
-                }}
-              >
-                <h3 style={{ fontSize: '0.75rem', fontWeight: 800, letterSpacing: '0.04em', textTransform: 'uppercase', color: theme === 'light' ? '#0f172a' : '#ffffff', marginBottom: '0.35rem' }}>
-                  Incident Breakdown (Lagging)
-                </h3>
-                <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 0, width: '100%' }}>
-                  <div style={{ height: '260px', width: '100%' }}>
-                    <IncidentDonut
-                      lti={safetyData.lti}
-                      rwc={safetyData.rwc}
-                      mtc={safetyData.mtc}
-                      fac={safetyData.fac}
-                      hoveredCategory={pptHoverCategory}
-                      theme={theme}
-                    />
+                {/* Charts Row */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', flex: 1, minHeight: 0 }}>
+                  {/* Donut Chart Container */}
+                  <div 
+                    className="glass-panel" 
+                    style={{ 
+                      padding: '1rem 1.25rem', 
+                      display: 'flex', 
+                      flexDirection: 'column', 
+                      background: theme === 'light' ? 'rgba(255, 255, 255, 0.65)' : 'rgba(7, 19, 36, 0.65)', 
+                      border: theme === 'light' ? '1px solid rgba(0, 0, 0, 0.08)' : '1px solid rgba(255, 255, 255, 0.08)',
+                      height: '100%',
+                      minHeight: 0
+                    }}
+                  >
+                    <h3 style={{ fontSize: '0.75rem', fontWeight: 800, letterSpacing: '0.04em', textTransform: 'uppercase', color: theme === 'light' ? '#0f172a' : '#ffffff', marginBottom: '0.35rem' }}>
+                      Incident Breakdown (Lagging)
+                    </h3>
+                    <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 0, width: '100%' }}>
+                      <div style={{ height: '260px', width: '100%' }}>
+                        <IncidentDonut
+                          lti={safetyData.lti}
+                          rwc={safetyData.rwc}
+                          mtc={safetyData.mtc}
+                          fac={safetyData.fac}
+                          hoveredCategory={pptHoverCategory}
+                          theme={theme}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Target vs Actual Bar Chart Container */}
+                  <div 
+                    className="glass-panel" 
+                    style={{ 
+                      padding: '1rem 1.25rem', 
+                      display: 'flex', 
+                      flexDirection: 'column', 
+                      background: theme === 'light' ? 'rgba(255, 255, 255, 0.65)' : 'rgba(7, 19, 36, 0.65)', 
+                      border: theme === 'light' ? '1px solid rgba(0, 0, 0, 0.08)' : '1px solid rgba(255, 255, 255, 0.08)',
+                      height: '100%',
+                      minHeight: 0
+                    }}
+                  >
+                    <h3 style={{ fontSize: '0.75rem', fontWeight: 800, letterSpacing: '0.04em', textTransform: 'uppercase', color: theme === 'light' ? '#0f172a' : '#ffffff', marginBottom: '0.35rem' }}>
+                      Preventative Targets vs Performance (Leading)
+                    </h3>
+                    <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 0, width: '100%' }}>
+                      <div style={{ height: '260px', width: '100%' }}>
+                        <TargetVsActual
+                          observations={safetyData.observations}
+                          hazardRate={calculated.hazardCloseOutRate}
+                          auditRate={calculated.auditCompletionRate}
+                          hoveredCategory={pptHoverCategory}
+                          theme={theme}
+                        />
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
+              </>
+            ) : (
+              <>
+                {/* Executive 3-slide layout */}
+                {currentSlideIndex === 0 && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem', justifyContent: 'center', height: '100%', flex: 1 }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '1.25rem' }}>
+                      <KPICard
+                        title="Total Recordable Incident Rate"
+                        value={calculated.trir.toFixed(2)}
+                        subValue="TRIR Target: < 1.00"
+                        variant="bar"
+                        badgeText={calculated.trir < 1.00 ? 'On Track' : 'Warning'}
+                        badgeColor={calculated.trir < 1.00 ? 'success' : calculated.trir < 2.00 ? 'warning' : 'danger'}
+                      />
+                      <KPICard
+                        title="Lost Time Frequency Rate"
+                        value={calculated.ltifr.toFixed(2)}
+                        subValue="LTIFR Target: < 1.00"
+                        variant="line"
+                      />
+                      <KPICard
+                        title="Hazard Close-Out Rate"
+                        value={`${calculated.hazardCloseOutRate.toFixed(1)}%`}
+                        subValue={useExcelFormula ? 'Formula: Observations/Closed' : 'Formula: Closed/Observations'}
+                        variant="circle"
+                      />
+                      <KPICard
+                        title="Audit Completion Rate"
+                        value={`${calculated.auditCompletionRate.toFixed(1)}%`}
+                        subValue="Compliance Target: 95.0%"
+                        variant="accent"
+                      />
+                      <KPICard
+                        title="Total Recordable Cases"
+                        value={calculated.tri}
+                        subValue={`LTI (${safetyData.lti}) • RWC (${safetyData.rwc}) • MTC (${safetyData.mtc})`}
+                        badgeText={calculated.tri === 0 ? 'Excellent' : calculated.tri < 5 ? 'Stable' : 'Alert'}
+                        badgeColor={calculated.tri === 0 ? 'success' : calculated.tri < 5 ? 'warning' : 'danger'}
+                      />
+                    </div>
 
-              {/* Target vs Actual Bar Chart Container */}
-              <div 
-                className="glass-panel" 
-                style={{ 
-                  padding: '1rem 1.25rem', 
-                  display: 'flex', 
-                  flexDirection: 'column', 
-                  background: theme === 'light' ? 'rgba(255, 255, 255, 0.65)' : 'rgba(7, 19, 36, 0.65)', 
-                  border: theme === 'light' ? '1px solid rgba(0, 0, 0, 0.08)' : '1px solid rgba(255, 255, 255, 0.08)',
-                  height: '100%',
-                  minHeight: 0
-                }}
-              >
-                <h3 style={{ fontSize: '0.75rem', fontWeight: 800, letterSpacing: '0.04em', textTransform: 'uppercase', color: theme === 'light' ? '#0f172a' : '#ffffff', marginBottom: '0.35rem' }}>
-                  Preventative Targets vs Performance (Leading)
-                </h3>
-                <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 0, width: '100%' }}>
-                  <div style={{ height: '260px', width: '100%' }}>
-                    <TargetVsActual
-                      observations={safetyData.observations}
-                      hazardRate={calculated.hazardCloseOutRate}
-                      auditRate={calculated.auditCompletionRate}
-                      hoveredCategory={pptHoverCategory}
-                      theme={theme}
-                    />
+                    {/* Overall Safety Status summary */}
+                    {(() => {
+                      const { overallStatus, overallStatusColor, overallStatusDesc } = getOverallStatus()
+                      return (
+                        <div 
+                          className="glass-panel"
+                          style={{ 
+                            padding: '1.75rem 2.25rem', 
+                            background: theme === 'light' ? 'rgba(255, 255, 255, 0.8)' : 'rgba(7, 19, 36, 0.8)',
+                            borderLeft: `6px solid ${overallStatusColor}`,
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '0.5rem',
+                            boxShadow: 'var(--shadow-lg)'
+                          }}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                            <span 
+                              className="risk-dot" 
+                              style={{ 
+                                backgroundColor: overallStatusColor, 
+                                boxShadow: `0 0 10px ${overallStatusColor}`,
+                                width: '10px',
+                                height: '10px'
+                              }}
+                            />
+                            <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>
+                              Overall Safety Status: <span style={{ color: overallStatusColor }}>{overallStatus}</span>
+                            </h3>
+                          </div>
+                          <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', margin: 0, lineHeight: 1.5 }}>
+                            {overallStatusDesc}
+                          </p>
+                        </div>
+                      )
+                    })()}
                   </div>
-                </div>
-              </div>
-            </div>
+                )}
 
+                {currentSlideIndex === 1 && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', flex: 1, minHeight: 0 }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1.1fr 1fr', gap: '2rem', flex: 1, minHeight: 0 }}>
+                      {/* Incident Table */}
+                      <div 
+                        className="glass-panel" 
+                        style={{ 
+                          padding: '1.5rem 2rem', 
+                          background: theme === 'light' ? 'rgba(255, 255, 255, 0.7)' : 'rgba(7, 19, 36, 0.7)',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          justifyContent: 'center'
+                        }}
+                      >
+                        <h3 style={{ fontSize: '0.9rem', fontWeight: 800, letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--text-primary)', marginBottom: '1.25rem' }}>
+                          Incident Classification Breakdown
+                        </h3>
+                        <table className="hse-table" style={{ fontSize: '0.95rem' }}>
+                          <thead>
+                            <tr>
+                              <th style={{ padding: '0.75rem 1rem' }}>Incident Classification</th>
+                              <th style={{ textAlign: 'right', padding: '0.75rem 1rem' }}>Count</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr>
+                              <td style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1rem' }}>
+                                <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#ef4444' }}></span>
+                                Lost Time Injuries (LTI)
+                              </td>
+                              <td style={{ textAlign: 'right', fontWeight: 700, color: 'var(--text-primary)', padding: '0.75rem 1rem' }}>{safetyData.lti}</td>
+                            </tr>
+                            <tr>
+                              <td style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1rem' }}>
+                                <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#fbbf24' }}></span>
+                                Restricted Work Cases (RWC)
+                              </td>
+                              <td style={{ textAlign: 'right', fontWeight: 700, color: 'var(--text-primary)', padding: '0.75rem 1rem' }}>{safetyData.rwc}</td>
+                            </tr>
+                            <tr>
+                              <td style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1rem' }}>
+                                <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#3b82f6' }}></span>
+                                Medical Treatment Cases (MTC)
+                              </td>
+                              <td style={{ textAlign: 'right', fontWeight: 700, color: 'var(--text-primary)', padding: '0.75rem 1rem' }}>{safetyData.mtc}</td>
+                            </tr>
+                            <tr>
+                              <td style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1rem' }}>
+                                <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10b981' }}></span>
+                                First Aid Cases (FAC)
+                              </td>
+                              <td style={{ textAlign: 'right', fontWeight: 700, color: 'var(--text-primary)', padding: '0.75rem 1rem' }}>{safetyData.fac}</td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+
+                      {/* Enlarged Donut Chart */}
+                      <div 
+                        className="glass-panel" 
+                        style={{ 
+                          padding: '1.5rem 2rem', 
+                          background: theme === 'light' ? 'rgba(255, 255, 255, 0.7)' : 'rgba(7, 19, 36, 0.7)',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'center',
+                          justifyContent: 'center'
+                        }}
+                      >
+                        <h3 style={{ fontSize: '0.9rem', fontWeight: 800, letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--text-primary)', marginBottom: '0.5rem' }}>
+                          Incident Distribution
+                        </h3>
+                        <div style={{ width: '100%', height: '240px' }} className="executive-donut-wrapper">
+                          <IncidentDonut
+                            lti={safetyData.lti}
+                            rwc={safetyData.rwc}
+                            mtc={safetyData.mtc}
+                            fac={safetyData.fac}
+                            theme={theme}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Insights Box */}
+                    <div 
+                      className="glass-panel"
+                      style={{ 
+                        padding: '1.25rem 2rem', 
+                        background: theme === 'light' ? 'rgba(255, 255, 255, 0.8)' : 'rgba(7, 19, 36, 0.8)',
+                        boxShadow: 'var(--shadow-md)'
+                      }}
+                    >
+                      <h4 style={{ fontSize: '0.8rem', fontWeight: 800, textTransform: 'uppercase', color: 'var(--text-secondary)', letterSpacing: '0.05em', margin: '0 0 0.5rem 0' }}>
+                        Lagging Incident Insights
+                      </h4>
+                      <ul style={{ margin: 0, paddingLeft: '1.25rem', fontSize: '0.85rem', color: 'var(--text-primary)', lineHeight: 1.6, display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                        {getLaggingInsights().map((insight, idx) => (
+                          <li key={idx}>{insight}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                )}
+
+                {currentSlideIndex === 2 && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', flex: 1, minHeight: 0 }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', flex: 1, minHeight: 0 }}>
+                      {/* Leading indicators table at top */}
+                      <div 
+                        className="glass-panel" 
+                        style={{ 
+                          padding: '1.25rem 2rem', 
+                          background: theme === 'light' ? 'rgba(255, 255, 255, 0.7)' : 'rgba(7, 19, 36, 0.7)'
+                        }}
+                      >
+                        <h3 style={{ fontSize: '0.9rem', fontWeight: 800, letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--text-primary)', marginBottom: '0.75rem' }}>
+                          Preventative Performance metrics
+                        </h3>
+                        <table className="hse-table" style={{ fontSize: '0.92rem' }}>
+                          <thead>
+                            <tr>
+                              <th style={{ padding: '0.6rem 1rem' }}>Proactive HSE Metric</th>
+                              <th style={{ textAlign: 'center', padding: '0.6rem 1rem' }}>Actual</th>
+                              <th style={{ textAlign: 'right', padding: '0.6rem 1rem' }}>Target Benchmark</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr>
+                              <td style={{ padding: '0.6rem 1rem' }}>Safety Observations Logged</td>
+                              <td style={{ textAlign: 'center', fontWeight: 700, color: safetyData.observations >= 400 ? 'var(--color-success)' : 'var(--color-warning)', padding: '0.6rem 1rem' }}>
+                                {safetyData.observations}
+                              </td>
+                              <td style={{ textAlign: 'right', color: 'var(--text-secondary)', fontSize: '0.8rem', padding: '0.6rem 1rem' }}>
+                                KPI Target &gt; 400
+                              </td>
+                            </tr>
+                            <tr>
+                              <td style={{ padding: '0.6rem 1rem' }}>Hazard SLA Close-Out Performance</td>
+                              <td style={{ textAlign: 'center', fontWeight: 700, color: calculated.hazardCloseOutRate >= 90 ? 'var(--color-success)' : 'var(--color-warning)', padding: '0.6rem 1rem' }}>
+                                {calculated.hazardCloseOutRate.toFixed(1)}%
+                              </td>
+                              <td style={{ textAlign: 'right', color: 'var(--text-secondary)', fontSize: '0.8rem', padding: '0.6rem 1rem' }}>
+                                Min 90.0% Standard
+                              </td>
+                            </tr>
+                            <tr>
+                              <td style={{ padding: '0.6rem 1rem' }}>HSE Safety Audit Execution</td>
+                              <td style={{ textAlign: 'center', fontWeight: 700, color: calculated.auditCompletionRate >= 95 ? 'var(--color-success)' : 'var(--color-warning)', padding: '0.6rem 1rem' }}>
+                                {calculated.auditCompletionRate.toFixed(1)}%
+                              </td>
+                              <td style={{ textAlign: 'right', color: 'var(--text-secondary)', fontSize: '0.8rem', padding: '0.6rem 1rem' }}>
+                                Min 95.0% Compliance
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+
+                      {/* Progress chart below */}
+                      <div 
+                        className="glass-panel" 
+                        style={{ 
+                          padding: '1.25rem 2rem', 
+                          background: theme === 'light' ? 'rgba(255, 255, 255, 0.7)' : 'rgba(7, 19, 36, 0.7)',
+                          flex: 1,
+                          display: 'flex',
+                          flexDirection: 'column',
+                          justifyContent: 'center'
+                        }}
+                      >
+                        <h3 style={{ fontSize: '0.9rem', fontWeight: 800, letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--text-primary)', marginBottom: '0.5rem' }}>
+                          Target Achievement Performance
+                        </h3>
+                        <div style={{ width: '100%', height: '180px' }} className="executive-bar-wrapper">
+                          <TargetVsActual
+                            observations={safetyData.observations}
+                            hazardRate={calculated.hazardCloseOutRate}
+                            auditRate={calculated.auditCompletionRate}
+                            theme={theme}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Insights Box */}
+                    <div 
+                      className="glass-panel"
+                      style={{ 
+                        padding: '1.25rem 2rem', 
+                        background: theme === 'light' ? 'rgba(255, 255, 255, 0.8)' : 'rgba(7, 19, 36, 0.8)',
+                        boxShadow: 'var(--shadow-md)'
+                      }}
+                    >
+                      <h4 style={{ fontSize: '0.8rem', fontWeight: 800, textTransform: 'uppercase', color: 'var(--text-secondary)', letterSpacing: '0.05em', margin: '0 0 0.5rem 0' }}>
+                        Leading Indicator Insights
+                      </h4>
+                      <ul style={{ margin: 0, paddingLeft: '1.25rem', fontSize: '0.85rem', color: 'var(--text-primary)', lineHeight: 1.6, display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                        {getLeadingInsights().map((insight, idx) => (
+                          <li key={idx}>{insight}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
           </div>
 
           {/* Footer controls and direct navigation dots */}
@@ -681,9 +1108,12 @@ export const Dashboard: React.FC = () => {
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
               <button
                 onClick={() => {
+                  const maxSlides = presentationMode === 'executive' ? 3 : SLIDESHOW_DATA.length
                   setCurrentSlideIndex((prev) => {
-                    const nextIdx = (prev - 1 + SLIDESHOW_DATA.length) % SLIDESHOW_DATA.length
-                    updateSafetyData(SLIDESHOW_DATA[nextIdx].data)
+                    const nextIdx = (prev - 1 + maxSlides) % maxSlides
+                    if (presentationMode === 'scenarios') {
+                      updateSafetyData(SLIDESHOW_DATA[nextIdx].data)
+                    }
                     return nextIdx
                   })
                 }}
@@ -732,9 +1162,12 @@ export const Dashboard: React.FC = () => {
 
               <button
                 onClick={() => {
+                  const maxSlides = presentationMode === 'executive' ? 3 : SLIDESHOW_DATA.length
                   setCurrentSlideIndex((prev) => {
-                    const nextIdx = (prev + 1) % SLIDESHOW_DATA.length
-                    updateSafetyData(SLIDESHOW_DATA[nextIdx].data)
+                    const nextIdx = (prev + 1) % maxSlides
+                    if (presentationMode === 'scenarios') {
+                      updateSafetyData(SLIDESHOW_DATA[nextIdx].data)
+                    }
                     return nextIdx
                   })
                 }}
@@ -761,34 +1194,40 @@ export const Dashboard: React.FC = () => {
 
             {/* Dots Indicator */}
             <div style={{ display: 'flex', gap: '0.5rem' }}>
-              {SLIDESHOW_DATA.map((slide, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => {
-                    setCurrentSlideIndex(idx)
-                    updateSafetyData(slide.data)
-                    setIsSlideshowPlaying(false) // Pause autoplay on manual click
-                  }}
-                  style={{
-                    width: '6px',
-                    height: '6px',
-                    borderRadius: '50%',
-                    border: 'none',
-                    backgroundColor: idx === currentSlideIndex ? '#2563eb' : (theme === 'light' ? 'rgba(0,0,0,0.2)' : 'rgba(255, 255, 255, 0.25)'),
-                    cursor: 'pointer',
-                    padding: 0,
-                    transition: 'all 0.2s'
-                  }}
-                  title={slide.name}
-                />
-              ))}
+              {Array.from({ length: presentationMode === 'executive' ? 3 : SLIDESHOW_DATA.length }).map((_, idx) => {
+                const title = presentationMode === 'executive' 
+                  ? `Slide ${idx + 1}` 
+                  : SLIDESHOW_DATA[idx].name
+                return (
+                  <button
+                    key={idx}
+                    onClick={() => {
+                      setCurrentSlideIndex(idx)
+                      if (presentationMode === 'scenarios') {
+                        updateSafetyData(SLIDESHOW_DATA[idx].data)
+                      }
+                      setIsSlideshowPlaying(false) // Pause autoplay on manual click
+                    }}
+                    style={{
+                      width: '6px',
+                      height: '6px',
+                      borderRadius: '50%',
+                      border: 'none',
+                      backgroundColor: idx === currentSlideIndex ? '#2563eb' : (theme === 'light' ? 'rgba(0,0,0,0.2)' : 'rgba(255, 255, 255, 0.25)'),
+                      cursor: 'pointer',
+                      padding: 0,
+                      transition: 'all 0.2s'
+                    }}
+                    title={title}
+                  />
+                )
+              })}
             </div>
 
             <div style={{ fontSize: '0.62rem', color: theme === 'light' ? '#475569' : '#64748b', marginTop: '0.1rem' }}>
               Tip: Use Left/Right Arrow keys or Spacebar to navigate. Press ESC to exit.
             </div>
           </div>
-
         </div>
       )}
 
@@ -1010,10 +1449,41 @@ export const Dashboard: React.FC = () => {
                 ))}
               </select>
 
-              {/* Fullscreen PPT Mode Button */}
+              {/* Fullscreen PPT Mode Button (Scenarios) */}
               <button
                 id="btn-present-ppt"
-                onClick={enterPresentationMode}
+                onClick={enterScenariosMode}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.4rem',
+                  background: 'var(--bg-input)',
+                  border: '1px solid rgba(96, 165, 250, 0.15)',
+                  padding: '0.45rem 0.85rem',
+                  borderRadius: '20px',
+                  cursor: 'pointer',
+                  fontSize: '0.72rem',
+                  fontWeight: 700,
+                  color: 'var(--text-secondary)',
+                  transition: 'all var(--transition-normal)'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(96, 165, 250, 0.1)'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'var(--bg-input)'
+                }}
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
+                </svg>
+                Present Scenarios
+              </button>
+
+              {/* Fullscreen PPT Mode Button (3-Slide Executive Mode) */}
+              <button
+                id="btn-present-exec"
+                onClick={enterExecutiveMode}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
@@ -1039,9 +1509,11 @@ export const Dashboard: React.FC = () => {
                 }}
               >
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
+                  <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
+                  <line x1="8" y1="21" x2="16" y2="21" />
+                  <line x1="12" y1="17" x2="12" y2="21" />
                 </svg>
-                Present Fullscreen
+                Present Executive Summary
               </button>
 
               {/* Risk Badge (Modeled after 'Balance On track' pill tag) */}
@@ -1289,6 +1761,12 @@ export const Dashboard: React.FC = () => {
         }
         #presentation-overlay .target-chart-container {
           height: 230px !important;
+        }
+        #presentation-overlay .executive-donut-wrapper .donut-chart-container {
+          height: 240px !important;
+        }
+        #presentation-overlay .executive-bar-wrapper .target-chart-container {
+          height: 180px !important;
         }
         @media (min-width: 1025px) {
           .dashboard-container {
