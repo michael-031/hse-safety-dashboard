@@ -1,27 +1,38 @@
 import React from 'react'
 import ReactECharts from 'echarts-for-react'
 
+export interface LaggingMetricData {
+  name: string
+  value: number
+  color?: string
+}
+
 interface IncidentDonutProps {
-  lti: number
-  rwc: number
-  mtc: number
-  fac: number
+  laggingData: LaggingMetricData[]
   hoveredCategory?: string | null
   theme?: 'light' | 'dark'
 }
 
 export const IncidentDonut: React.FC<IncidentDonutProps> = ({
-  lti,
-  rwc,
-  mtc,
-  fac,
+  laggingData,
   hoveredCategory,
   theme = 'dark',
 }) => {
-  const total = lti + rwc + mtc + fac
+  const total = laggingData.reduce((sum, item) => sum + item.value, 0)
   const isAllZero = total === 0
 
   const chartRef = React.useRef<any>(null)
+
+  const defaultColors = [
+    '#ef4444', // Red
+    '#fbbf24', // Yellow
+    '#3b82f6', // Blue
+    '#10b981', // Green
+    '#8b5cf6', // Purple
+    '#ec4899', // Pink
+    '#f97316', // Orange
+    '#14b8a6', // Teal
+  ]
 
   const filteredData = React.useMemo(() => {
     return isAllZero
@@ -34,13 +45,16 @@ export const IncidentDonut: React.FC<IncidentDonutProps> = ({
             },
           },
         ]
-      : [
-          { value: lti, name: 'LTI (Lost Time)' },
-          { value: rwc, name: 'RWC (Restricted Work)' },
-          { value: mtc, name: 'MTC (Medical Treatment)' },
-          { value: fac, name: 'FAC (First Aid)' },
-        ].filter((item) => item.value > 0)
-  }, [lti, rwc, mtc, fac, isAllZero])
+      : laggingData
+          .filter((item) => item.value > 0)
+          .map((item, index) => ({
+            value: item.value,
+            name: item.name,
+            itemStyle: {
+              color: item.color || defaultColors[index % defaultColors.length]
+            }
+          }))
+  }, [laggingData, isAllZero])
 
   React.useEffect(() => {
     if (!chartRef.current) return
@@ -131,12 +145,7 @@ export const IncidentDonut: React.FC<IncidentDonutProps> = ({
         },
         color: isAllZero
           ? [isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.08)']
-          : [
-              '#ef4444', // LTI - Red
-              '#fbbf24', // RWC - Yellow
-              '#3b82f6', // MTC - Blue
-              '#10b981', // FAC - Green
-            ],
+          : defaultColors,
         data: filteredData,
       },
     ],
@@ -224,14 +233,9 @@ export const IncidentDonut: React.FC<IncidentDonutProps> = ({
             <span>Safe Workplace</span>
           </div>
         ) : (
-          [
-            { name: 'LTI (Lost Time)', color: '#ef4444', value: lti },
-            { name: 'RWC (Restricted Work)', color: '#fbbf24', value: rwc },
-            { name: 'MTC (Medical Treatment)', color: '#3b82f6', value: mtc },
-            { name: 'FAC (First Aid)', color: '#10b981', value: fac },
-          ]
+          laggingData
             .filter((item) => item.value > 0)
-            .map((item) => (
+            .map((item, index) => (
               <div
                 key={item.name}
                 style={{
@@ -249,7 +253,7 @@ export const IncidentDonut: React.FC<IncidentDonutProps> = ({
                     width: '8px',
                     height: '8px',
                     borderRadius: '50%',
-                    backgroundColor: item.color,
+                    backgroundColor: item.color || defaultColors[index % defaultColors.length],
                     display: 'inline-block',
                   }}
                 />
@@ -262,3 +266,4 @@ export const IncidentDonut: React.FC<IncidentDonutProps> = ({
   )
 }
 export default IncidentDonut
+
