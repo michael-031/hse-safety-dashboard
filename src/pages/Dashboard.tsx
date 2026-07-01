@@ -817,40 +817,226 @@ export const Dashboard: React.FC = () => {
                 {/* Executive 3-slide layout */}
                 {currentSlideIndex === 0 && (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem', justifyContent: 'center', height: '100%', flex: 1 }}>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '1.25rem' }}>
-                      <KPICard
-                        title="Total Recordable Incident Rate"
-                        value={calculated.trir.toFixed(2)}
-                        subValue="TRIR Target: < 1.00"
-                        variant="bar"
-                        badgeText={calculated.trir < 1.00 ? 'On Track' : 'Warning'}
-                        badgeColor={calculated.trir < 1.00 ? 'success' : calculated.trir < 2.00 ? 'warning' : 'danger'}
-                      />
-                      <KPICard
-                        title="Lost Time Frequency Rate"
-                        value={calculated.ltifr.toFixed(2)}
-                        subValue="LTIFR Target: < 1.00"
-                        variant="line"
-                      />
-                      <KPICard
-                        title="Hazard Close-Out Rate"
-                        value={`${calculated.hazardCloseOutRate.toFixed(1)}%`}
-                        subValue={useExcelFormula ? 'Formula: Observations/Closed' : 'Formula: Closed/Observations'}
-                        variant="circle"
-                      />
-                      <KPICard
-                        title="Audit Completion Rate"
-                        value={`${calculated.auditCompletionRate.toFixed(1)}%`}
-                        subValue="Compliance Target: 95.0%"
-                        variant="accent"
-                      />
-                      <KPICard
-                        title="Total Recordable Cases"
-                        value={calculated.tri}
-                        subValue={`LTI (${safetyData.lti}) • RWC (${safetyData.rwc}) • MTC (${safetyData.mtc})`}
-                        badgeText={calculated.tri === 0 ? 'Excellent' : calculated.tri < 5 ? 'Stable' : 'Alert'}
-                        badgeColor={calculated.tri === 0 ? 'success' : calculated.tri < 5 ? 'warning' : 'danger'}
-                      />
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '1.5rem' }}>
+                      {/* Card 1: TRIR */}
+                      <div 
+                        className="glass-panel"
+                        style={{
+                          display: 'flex',
+                          flexDirection: 'column',
+                          justifyContent: 'space-between',
+                          padding: '1.5rem 1.75rem',
+                          background: theme === 'light' ? 'rgba(255, 255, 255, 0.75)' : 'rgba(7, 19, 36, 0.75)',
+                          border: theme === 'light' ? '1px solid rgba(0, 0, 0, 0.08)' : '1px solid rgba(255, 255, 255, 0.08)',
+                          height: '185px',
+                          boxShadow: 'var(--shadow-md)',
+                        }}
+                      >
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem', width: '100%' }}>
+                          <span style={{ fontSize: '0.88rem', fontWeight: 700, color: theme === 'light' ? 'rgba(15, 23, 42, 0.75)' : 'rgba(255, 255, 255, 0.75)', letterSpacing: '0.01em' }}>
+                            Total Recordable Incident Rate
+                          </span>
+                          <svg width="45" height="28" viewBox="0 0 40 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ marginLeft: 'auto' }}>
+                            <rect x="2" y="10" width="4" height="14" rx="2" fill="var(--color-primary)" opacity="0.35" />
+                            <rect x="10" y="4" width="4" height="20" rx="2" fill="var(--color-primary)" opacity="0.55" />
+                            <rect x="18" y="14" width="4" height="10" rx="2" fill="var(--color-primary)" opacity="0.75" />
+                            <rect x="26" y="8" width="4" height="16" rx="2" fill="var(--color-primary)" opacity="0.95" />
+                            <rect x="34" y="2" width="4" height="22" rx="2" fill="var(--color-primary)" />
+                          </svg>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginTop: '0.5rem' }}>
+                          <span style={{ fontSize: '2.8rem', fontWeight: 800, letterSpacing: '-0.03em', color: calculated.trir < 1.00 ? '#10b981' : '#ef4444' }}>
+                            {calculated.trir.toFixed(2)}
+                          </span>
+                          <span style={{
+                            backgroundColor: calculated.trir < 1.00 ? 'var(--color-success-bg)' : calculated.trir < 2.00 ? 'var(--color-warning-bg)' : 'var(--color-danger-bg)',
+                            color: calculated.trir < 1.00 ? 'var(--color-success)' : calculated.trir < 2.00 ? 'var(--color-warning)' : 'var(--color-danger)',
+                            padding: '0.3rem 0.65rem',
+                            borderRadius: '20px',
+                            fontSize: '0.78rem',
+                            fontWeight: 700,
+                          }}>
+                            {calculated.trir < 1.00 ? 'On Track' : 'Warning'}
+                          </span>
+                        </div>
+                        <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginTop: '0.5rem', paddingTop: '0.5rem', borderTop: theme === 'light' ? '1px solid rgba(0,0,0,0.08)' : '1px solid rgba(255,255,255,0.05)', fontWeight: 500 }}>
+                          TRIR Target: &lt; 1.00
+                        </div>
+                      </div>
+
+                      {/* Card 2: LTIFR */}
+                      <div 
+                        className="glass-panel"
+                        style={{
+                          display: 'flex',
+                          flexDirection: 'column',
+                          justifyContent: 'space-between',
+                          padding: '1.5rem 1.75rem',
+                          background: theme === 'light' ? 'rgba(255, 255, 255, 0.75)' : 'rgba(7, 19, 36, 0.75)',
+                          border: theme === 'light' ? '1px solid rgba(0, 0, 0, 0.08)' : '1px solid rgba(255, 255, 255, 0.08)',
+                          height: '185px',
+                          boxShadow: 'var(--shadow-md)',
+                        }}
+                      >
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem', width: '100%' }}>
+                          <span style={{ fontSize: '0.88rem', fontWeight: 700, color: theme === 'light' ? 'rgba(15, 23, 42, 0.75)' : 'rgba(255, 255, 255, 0.75)', letterSpacing: '0.01em' }}>
+                            Lost Time Frequency Rate
+                          </span>
+                          <svg width="60" height="28" viewBox="0 0 55 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ marginLeft: 'auto' }}>
+                            <path
+                              d="M2 18C8 16 10 6 18 10C26 14 28 4 36 8C44 12 46 2 53 6"
+                              stroke="var(--color-primary)"
+                              strokeWidth="2.5"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                          </svg>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginTop: '0.5rem' }}>
+                          <span style={{ fontSize: '2.8rem', fontWeight: 800, letterSpacing: '-0.03em', color: calculated.ltifr < 1.00 ? '#10b981' : '#ef4444' }}>
+                            {calculated.ltifr.toFixed(2)}
+                          </span>
+                        </div>
+                        <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginTop: '0.5rem', paddingTop: '0.5rem', borderTop: theme === 'light' ? '1px solid rgba(0,0,0,0.08)' : '1px solid rgba(255,255,255,0.05)', fontWeight: 500 }}>
+                          LTIFR Target: &lt; 1.00
+                        </div>
+                      </div>
+
+                      {/* Card 3: Hazard Close-Out */}
+                      <div 
+                        className="glass-panel"
+                        style={{
+                          display: 'flex',
+                          flexDirection: 'column',
+                          justifyContent: 'space-between',
+                          padding: '1.5rem 1.75rem',
+                          background: theme === 'light' ? 'rgba(255, 255, 255, 0.75)' : 'rgba(7, 19, 36, 0.75)',
+                          border: theme === 'light' ? '1px solid rgba(0, 0, 0, 0.08)' : '1px solid rgba(255, 255, 255, 0.08)',
+                          height: '185px',
+                          boxShadow: 'var(--shadow-md)',
+                        }}
+                      >
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem', width: '100%' }}>
+                          <span style={{ fontSize: '0.88rem', fontWeight: 700, color: theme === 'light' ? 'rgba(15, 23, 42, 0.75)' : 'rgba(255, 255, 255, 0.75)', letterSpacing: '0.01em' }}>
+                            Hazard Close-Out Rate
+                          </span>
+                          <div style={{ marginLeft: 'auto', width: '2.4rem', height: '2.4rem', borderRadius: '50%', backgroundColor: 'var(--color-primary-glow)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                              <circle cx="12" cy="12" r="10" />
+                              <path d="M12 6v6l4 2" />
+                            </svg>
+                          </div>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginTop: '0.5rem' }}>
+                          <span style={{ fontSize: '2.8rem', fontWeight: 800, letterSpacing: '-0.03em', color: calculated.hazardCloseOutRate >= 90 ? '#10b981' : '#ef4444' }}>
+                            {calculated.hazardCloseOutRate.toFixed(1)}%
+                          </span>
+                          <span style={{
+                            backgroundColor: calculated.hazardCloseOutRate >= 90 ? 'var(--color-success-bg)' : 'var(--color-danger-bg)',
+                            color: calculated.hazardCloseOutRate >= 90 ? 'var(--color-success)' : 'var(--color-danger)',
+                            padding: '0.3rem 0.65rem',
+                            borderRadius: '20px',
+                            fontSize: '0.78rem',
+                            fontWeight: 700,
+                          }}>
+                            {calculated.hazardCloseOutRate >= 90 ? 'Passed' : 'Action Req.'}
+                          </span>
+                        </div>
+                        <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginTop: '0.5rem', paddingTop: '0.5rem', borderTop: theme === 'light' ? '1px solid rgba(0,0,0,0.08)' : '1px solid rgba(255,255,255,0.05)', fontWeight: 500 }}>
+                          Target SLA: &gt;= 90%
+                        </div>
+                      </div>
+
+                      {/* Card 4: Audit Completion */}
+                      <div 
+                        className="glass-panel"
+                        style={{
+                          display: 'flex',
+                          flexDirection: 'column',
+                          justifyContent: 'space-between',
+                          padding: '1.5rem 1.75rem',
+                          background: calculated.auditCompletionRate >= 95 
+                            ? (theme === 'light' ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)' : 'linear-gradient(135deg, #064e3b 0%, #022c22 100%)')
+                            : (theme === 'light' ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' : 'linear-gradient(135deg, #7f1d1d 0%, #450a0a 100%)'),
+                          color: '#ffffff',
+                          border: 'none',
+                          height: '185px',
+                          boxShadow: '0 8px 24px rgba(16, 185, 129, 0.25)',
+                        }}
+                      >
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem', width: '100%' }}>
+                          <span style={{ fontSize: '0.88rem', fontWeight: 700, color: 'rgba(255, 255, 255, 0.85)', letterSpacing: '0.01em' }}>
+                            Audit Completion Rate
+                          </span>
+                          <svg width="60" height="28" viewBox="0 0 55 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ marginLeft: 'auto' }}>
+                            <path
+                              d="M2 14C8 16 10 4 18 8C26 12 28 2 36 6C44 10 46 4 53 2"
+                              stroke="#ffffff"
+                              strokeWidth="2.5"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              opacity="0.9"
+                            />
+                          </svg>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginTop: '0.5rem' }}>
+                          <span style={{ fontSize: '2.8rem', fontWeight: 800, letterSpacing: '-0.03em', color: '#ffffff' }}>
+                            {calculated.auditCompletionRate.toFixed(1)}%
+                          </span>
+                          <span style={{
+                            backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                            color: '#ffffff',
+                            padding: '0.3rem 0.65rem',
+                            borderRadius: '20px',
+                            fontSize: '0.78rem',
+                            fontWeight: 700,
+                          }}>
+                            {calculated.auditCompletionRate >= 95 ? 'Compliant' : 'Non-Compliant'}
+                          </span>
+                        </div>
+                        <div style={{ fontSize: '0.82rem', color: 'rgba(255, 255, 255, 0.75)', marginTop: '0.5rem', paddingTop: '0.5rem', borderTop: '1px solid rgba(255,255,255,0.2)', fontWeight: 500 }}>
+                          Compliance Target: 95.0%
+                        </div>
+                      </div>
+
+                      {/* Card 5: Total Cases */}
+                      <div 
+                        className="glass-panel"
+                        style={{
+                          display: 'flex',
+                          flexDirection: 'column',
+                          justifyContent: 'space-between',
+                          padding: '1.5rem 1.75rem',
+                          background: theme === 'light' ? 'rgba(255, 255, 255, 0.75)' : 'rgba(7, 19, 36, 0.75)',
+                          border: theme === 'light' ? '1px solid rgba(0, 0, 0, 0.08)' : '1px solid rgba(255, 255, 255, 0.08)',
+                          height: '185px',
+                          boxShadow: 'var(--shadow-md)',
+                        }}
+                      >
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem', width: '100%' }}>
+                          <span style={{ fontSize: '0.88rem', fontWeight: 700, color: theme === 'light' ? 'rgba(15, 23, 42, 0.75)' : 'rgba(255, 255, 255, 0.75)', letterSpacing: '0.01em' }}>
+                            Total Recordable Cases
+                          </span>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginTop: '0.5rem' }}>
+                          <span style={{ fontSize: '2.8rem', fontWeight: 800, letterSpacing: '-0.03em', color: calculated.tri === 0 ? '#10b981' : '#fbbf24' }}>
+                            {calculated.tri}
+                          </span>
+                          <span style={{
+                            backgroundColor: calculated.tri === 0 ? 'var(--color-success-bg)' : calculated.tri < 5 ? 'var(--color-warning-bg)' : 'var(--color-danger-bg)',
+                            color: calculated.tri === 0 ? 'var(--color-success)' : calculated.tri < 5 ? 'var(--color-warning)' : 'var(--color-danger)',
+                            padding: '0.3rem 0.65rem',
+                            borderRadius: '20px',
+                            fontSize: '0.78rem',
+                            fontWeight: 700,
+                          }}>
+                            {calculated.tri === 0 ? 'Excellent' : calculated.tri < 5 ? 'Stable' : 'Alert'}
+                          </span>
+                        </div>
+                        <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginTop: '0.5rem', paddingTop: '0.5rem', borderTop: theme === 'light' ? '1px solid rgba(0,0,0,0.08)' : '1px solid rgba(255, 255, 255, 0.05)', fontWeight: 500 }}>
+                          LTI ({safetyData.lti}) • RWC ({safetyData.rwc}) • MTC ({safetyData.mtc})
+                        </div>
+                      </div>
                     </div>
 
                     {/* Overall Safety Status summary */}
