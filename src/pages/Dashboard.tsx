@@ -715,6 +715,87 @@ export const Dashboard: React.FC = () => {
     return () => clearInterval(timer)
   }, [isSlideshowPlaying, presentationMode])
 
+  // Auto-scroll scrollable features in slideshow presentation slides
+  useEffect(() => {
+    if (presentationMode === 'none') return
+
+    const intervalTime = 50 // ms per step
+    const scrollStep = 1 // pixels per step
+    const pauseDuration = 2000 // ms to pause at top/bottom
+
+    const containers = document.querySelectorAll('.auto-scroll-presentation')
+    const activeIntervals: any[] = []
+    const activeTimeouts: any[] = []
+    const cleanupListeners: Array<() => void> = []
+
+    containers.forEach((containerEl) => {
+      const el = containerEl as HTMLDivElement
+      let direction = 1 // 1 = down
+      let isHovered = false
+
+      const handleMouseEnter = () => {
+        isHovered = true
+      }
+      const handleMouseLeave = () => {
+        isHovered = false
+      }
+
+      el.addEventListener('mouseenter', handleMouseEnter)
+      el.addEventListener('mouseleave', handleMouseLeave)
+      cleanupListeners.push(() => {
+        el.removeEventListener('mouseenter', handleMouseEnter)
+        el.removeEventListener('mouseleave', handleMouseLeave)
+      })
+
+      // Start scrolling loop
+      const startScrolling = () => {
+        const interval = setInterval(() => {
+          if (isHovered) return
+          if (el.scrollHeight <= el.clientHeight) return
+
+          const maxScroll = el.scrollHeight - el.clientHeight
+
+          if (direction === 1) {
+            // Scroll down
+            el.scrollTop += scrollStep
+            if (el.scrollTop >= maxScroll - 1) {
+              // Reached the bottom, pause
+              direction = 0
+              clearInterval(interval)
+              const t1 = setTimeout(() => {
+                // Now prepare to reset to top smoothly
+                el.scrollTo({ top: 0, behavior: 'smooth' })
+                // Wait for smooth scroll to finish, then pause at top before starting again
+                const t2 = setTimeout(() => {
+                  direction = 1
+                  startScrolling()
+                }, pauseDuration)
+                activeTimeouts.push(t2)
+              }, pauseDuration)
+              activeTimeouts.push(t1)
+            }
+          }
+        }, intervalTime)
+
+        activeIntervals.push(interval)
+      }
+
+      // Initial small delay before starting to scroll
+      const initialTimeout = setTimeout(() => {
+        el.scrollTop = 0
+        startScrolling()
+      }, 1500)
+
+      activeTimeouts.push(initialTimeout)
+    })
+
+    return () => {
+      activeIntervals.forEach(clearInterval)
+      activeTimeouts.forEach(clearTimeout)
+      cleanupListeners.forEach(cleanup => cleanup())
+    }
+  }, [currentSlideIndex, presentationMode])
+
   // Pause slideshow if demo tour becomes active
   useEffect(() => {
     if (demoActive) {
@@ -1318,7 +1399,7 @@ export const Dashboard: React.FC = () => {
                         <h3 style={{ fontSize: '0.9rem', fontWeight: 800, letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--text-primary)', marginBottom: '1.25rem' }}>
                           Incident Classification Breakdown
                         </h3>
-                        <div style={{ maxHeight: '380px', overflowY: 'auto', paddingRight: '0.25rem', width: '100%' }}>
+                        <div className="auto-scroll-presentation" style={{ maxHeight: '380px', overflowY: 'auto', paddingRight: '0.25rem', width: '100%' }}>
                           <table className="hse-table" style={{ fontSize: '0.95rem', width: '100%', borderCollapse: 'collapse' }}>
                             <thead>
                               <tr>
@@ -1406,7 +1487,7 @@ export const Dashboard: React.FC = () => {
                         <h3 style={{ fontSize: '0.9rem', fontWeight: 800, letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--text-primary)', marginBottom: '0.75rem' }}>
                           Preventative Performance metrics
                         </h3>
-                        <div style={{ maxHeight: '180px', overflowY: 'auto', paddingRight: '0.25rem', width: '100%' }}>
+                        <div className="auto-scroll-presentation" style={{ maxHeight: '180px', overflowY: 'auto', paddingRight: '0.25rem', width: '100%' }}>
                           <table className="hse-table" style={{ fontSize: '0.92rem', width: '100%', borderCollapse: 'collapse' }}>
                             <thead>
                               <tr>
