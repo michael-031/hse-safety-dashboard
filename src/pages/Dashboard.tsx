@@ -1318,31 +1318,33 @@ export const Dashboard: React.FC = () => {
                         <h3 style={{ fontSize: '0.9rem', fontWeight: 800, letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--text-primary)', marginBottom: '1.25rem' }}>
                           Incident Classification Breakdown
                         </h3>
-                        <table className="hse-table" style={{ fontSize: '0.95rem' }}>
-                          <thead>
-                            <tr>
-                              <th style={{ padding: '0.75rem 1rem' }}>Incident Classification</th>
-                              <th style={{ textAlign: 'right', padding: '0.75rem 1rem' }}>Count</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {metricsList
-                              .filter(m => m.type === 'lagging' && m.isActive !== false)
-                              .map((m, index) => {
-                                const defaultColors = ['#ef4444', '#fbbf24', '#3b82f6', '#10b981', '#8b5cf6', '#ec4899', '#f97316', '#14b8a6']
-                                const color = m.color || defaultColors[index % defaultColors.length]
-                                return (
-                                  <tr key={m.id}>
-                                    <td style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1rem' }}>
-                                      <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: color }}></span>
-                                      {m.label}
-                                    </td>
-                                    <td style={{ textAlign: 'right', fontWeight: 700, color: 'var(--text-primary)', padding: '0.75rem 1rem' }}>{m.value}</td>
-                                  </tr>
-                                )
-                              })}
-                          </tbody>
-                        </table>
+                        <div style={{ maxHeight: '240px', overflowY: 'auto', paddingRight: '0.25rem', width: '100%' }}>
+                          <table className="hse-table" style={{ fontSize: '0.95rem', width: '100%', borderCollapse: 'collapse' }}>
+                            <thead>
+                              <tr>
+                                <th style={{ padding: '0.75rem 1rem', position: 'sticky', top: 0, background: theme === 'light' ? '#ffffff' : '#0a121e', zIndex: 1 }}>Incident Classification</th>
+                                <th style={{ textAlign: 'right', padding: '0.75rem 1rem', position: 'sticky', top: 0, background: theme === 'light' ? '#ffffff' : '#0a121e', zIndex: 1 }}>Count</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {metricsList
+                                .filter(m => m.type === 'lagging' && m.isActive !== false)
+                                .map((m, index) => {
+                                  const defaultColors = ['#ef4444', '#fbbf24', '#3b82f6', '#10b981', '#8b5cf6', '#ec4899', '#f97316', '#14b8a6']
+                                  const color = m.color || defaultColors[index % defaultColors.length]
+                                  return (
+                                    <tr key={m.id}>
+                                      <td style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1rem' }}>
+                                        <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: color }}></span>
+                                        {m.label}
+                                      </td>
+                                      <td style={{ textAlign: 'right', fontWeight: 700, color: 'var(--text-primary)', padding: '0.75rem 1rem' }}>{m.value}</td>
+                                    </tr>
+                                  )
+                                })}
+                            </tbody>
+                          </table>
+                        </div>
                       </div>
 
                       {/* Enlarged Donut Chart */}
@@ -1404,31 +1406,33 @@ export const Dashboard: React.FC = () => {
                         <h3 style={{ fontSize: '0.9rem', fontWeight: 800, letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--text-primary)', marginBottom: '0.75rem' }}>
                           Preventative Performance metrics
                         </h3>
-                        <table className="hse-table" style={{ fontSize: '0.92rem' }}>
-                          <thead>
-                            <tr>
-                              <th style={{ padding: '0.6rem 1rem' }}>Proactive HSE Metric</th>
-                              <th style={{ textAlign: 'center', padding: '0.6rem 1rem' }}>Actual</th>
-                              <th style={{ textAlign: 'right', padding: '0.6rem 1rem' }}>Target Benchmark</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {leadingData.map((item, idx) => {
-                              const isAchieved = item.actual >= item.target
-                              return (
-                                <tr key={idx}>
-                                  <td style={{ padding: '0.6rem 1rem' }}>{item.name}</td>
-                                  <td style={{ textAlign: 'center', fontWeight: 700, color: isAchieved ? 'var(--color-success)' : 'var(--color-warning)', padding: '0.6rem 1rem' }}>
-                                    {item.displayActual}
-                                  </td>
-                                  <td style={{ textAlign: 'right', color: 'var(--text-secondary)', fontSize: '0.8rem', padding: '0.6rem 1rem' }}>
-                                    {item.displayTarget}
-                                  </td>
-                                </tr>
-                              )
-                            })}
-                          </tbody>
-                        </table>
+                        <div style={{ maxHeight: '180px', overflowY: 'auto', paddingRight: '0.25rem', width: '100%' }}>
+                          <table className="hse-table" style={{ fontSize: '0.92rem', width: '100%', borderCollapse: 'collapse' }}>
+                            <thead>
+                              <tr>
+                                <th style={{ padding: '0.6rem 1rem', position: 'sticky', top: 0, background: theme === 'light' ? '#ffffff' : '#0a121e', zIndex: 1 }}>Proactive HSE Metric</th>
+                                <th style={{ textAlign: 'center', padding: '0.6rem 1rem', position: 'sticky', top: 0, background: theme === 'light' ? '#ffffff' : '#0a121e', zIndex: 1 }}>Actual</th>
+                                <th style={{ textAlign: 'right', padding: '0.6rem 1rem', position: 'sticky', top: 0, background: theme === 'light' ? '#ffffff' : '#0a121e', zIndex: 1 }}>Target Benchmark</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {leadingData.map((item, idx) => {
+                                const isAchieved = item.actual >= item.target
+                                return (
+                                  <tr key={idx}>
+                                    <td style={{ padding: '0.6rem 1rem' }}>{item.name}</td>
+                                    <td style={{ textAlign: 'center', fontWeight: 700, color: isAchieved ? 'var(--color-success)' : 'var(--color-warning)', padding: '0.6rem 1rem' }}>
+                                      {item.displayActual}
+                                    </td>
+                                    <td style={{ textAlign: 'right', color: 'var(--text-secondary)', fontSize: '0.8rem', padding: '0.6rem 1rem' }}>
+                                      {item.displayTarget}
+                                    </td>
+                                  </tr>
+                                )
+                              })}
+                            </tbody>
+                          </table>
+                        </div>
                       </div>
 
                       {/* Progress chart below */}
@@ -1993,31 +1997,33 @@ export const Dashboard: React.FC = () => {
 
               {/* Layout for Table & Donut */}
               <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '1.5rem', alignItems: 'center', flex: 1, width: '100%' }}>
-                <table className="hse-table">
-                  <thead>
-                    <tr>
-                      <th>Incident Classification</th>
-                      <th style={{ textAlign: 'right' }}>Count</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {metricsList
-                      .filter(m => m.type === 'lagging' && m.isActive !== false)
-                      .map((m, index) => {
-                        const defaultColors = ['#ef4444', '#fbbf24', '#3b82f6', '#10b981', '#8b5cf6', '#ec4899', '#f97316', '#14b8a6']
-                        const color = m.color || defaultColors[index % defaultColors.length]
-                        return (
-                          <tr key={m.id}>
-                            <td style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                              <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: color }}></span>
-                              {m.label}
-                            </td>
-                            <td style={{ textAlign: 'right', fontWeight: 700, color: 'var(--text-primary)' }}>{m.value}</td>
-                          </tr>
-                        )
-                      })}
-                  </tbody>
-                </table>
+                <div style={{ maxHeight: '240px', overflowY: 'auto', paddingRight: '0.25rem', width: '100%' }}>
+                  <table className="hse-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
+                    <thead>
+                      <tr>
+                        <th style={{ position: 'sticky', top: 0, background: theme === 'light' ? '#ffffff' : '#0a121e', zIndex: 1 }}>Incident Classification</th>
+                        <th style={{ textAlign: 'right', position: 'sticky', top: 0, background: theme === 'light' ? '#ffffff' : '#0a121e', zIndex: 1 }}>Count</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {metricsList
+                        .filter(m => m.type === 'lagging' && m.isActive !== false)
+                        .map((m, index) => {
+                          const defaultColors = ['#ef4444', '#fbbf24', '#3b82f6', '#10b981', '#8b5cf6', '#ec4899', '#f97316', '#14b8a6']
+                          const color = m.color || defaultColors[index % defaultColors.length]
+                          return (
+                            <tr key={m.id}>
+                              <td style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: color }}></span>
+                                {m.label}
+                              </td>
+                              <td style={{ textAlign: 'right', fontWeight: 700, color: 'var(--text-primary)' }}>{m.value}</td>
+                            </tr>
+                          )
+                        })}
+                    </tbody>
+                  </table>
+                </div>
 
                 {/* ECharts donut chart */}
                 <div ref={donutContainerRef}>
@@ -2041,31 +2047,33 @@ export const Dashboard: React.FC = () => {
 
               {/* Table and Comparison Chart */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', flex: 1, justifyContent: 'space-around' }}>
-                <table className="hse-table">
-                  <thead>
-                    <tr>
-                      <th>Proactive HSE Metric</th>
-                      <th style={{ textAlign: 'center' }}>Actual</th>
-                      <th style={{ textAlign: 'right' }}>Target Benchmark</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {leadingData.map((item, idx) => {
-                      const isAchieved = item.actual >= item.target
-                      return (
-                        <tr key={idx}>
-                          <td>{item.name}</td>
-                          <td style={{ textAlign: 'center', fontWeight: 700, color: isAchieved ? 'var(--color-success)' : 'var(--color-warning)' }}>
-                            {item.displayActual}
-                          </td>
-                          <td style={{ textAlign: 'right', color: 'var(--text-secondary)', fontSize: '0.78rem' }}>
-                            {item.displayTarget}
-                          </td>
-                        </tr>
-                      )
-                    })}
-                  </tbody>
-                </table>
+                <div style={{ maxHeight: '180px', overflowY: 'auto', paddingRight: '0.25rem', width: '100%' }}>
+                  <table className="hse-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
+                    <thead>
+                      <tr>
+                        <th style={{ position: 'sticky', top: 0, background: theme === 'light' ? '#ffffff' : '#0a121e', zIndex: 1 }}>Proactive HSE Metric</th>
+                        <th style={{ textAlign: 'center', position: 'sticky', top: 0, background: theme === 'light' ? '#ffffff' : '#0a121e', zIndex: 1 }}>Actual</th>
+                        <th style={{ textAlign: 'right', position: 'sticky', top: 0, background: theme === 'light' ? '#ffffff' : '#0a121e', zIndex: 1 }}>Target Benchmark</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {leadingData.map((item, idx) => {
+                        const isAchieved = item.actual >= item.target
+                        return (
+                          <tr key={idx}>
+                            <td>{item.name}</td>
+                            <td style={{ textAlign: 'center', fontWeight: 700, color: isAchieved ? 'var(--color-success)' : 'var(--color-warning)' }}>
+                              {item.displayActual}
+                            </td>
+                            <td style={{ textAlign: 'right', color: 'var(--text-secondary)', fontSize: '0.78rem' }}>
+                              {item.displayTarget}
+                            </td>
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </table>
+                </div>
 
                 {/* Normalized comparison bar chart */}
                 <div ref={barContainerRef}>
@@ -2141,10 +2149,10 @@ export const Dashboard: React.FC = () => {
             height: 100%;
           }
           .donut-chart-container {
-            height: 180px;
+            height: 220px;
           }
           .target-chart-container {
-            height: 165px;
+            height: 240px;
           }
           .hse-table th {
             padding: 0.5rem 0.75rem !important;
