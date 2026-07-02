@@ -731,7 +731,6 @@ export const Dashboard: React.FC = () => {
     containers.forEach((containerEl) => {
       const el = containerEl as HTMLDivElement
       let direction = 1 // 1 = down
-      let pauseTimer: any = null
       let isHovered = false
 
       const handleMouseEnter = () => {
@@ -763,15 +762,17 @@ export const Dashboard: React.FC = () => {
               // Reached the bottom, pause
               direction = 0
               clearInterval(interval)
-              pauseTimer = setTimeout(() => {
+              const t1 = setTimeout(() => {
                 // Now prepare to reset to top smoothly
                 el.scrollTo({ top: 0, behavior: 'smooth' })
                 // Wait for smooth scroll to finish, then pause at top before starting again
-                pauseTimer = setTimeout(() => {
+                const t2 = setTimeout(() => {
                   direction = 1
                   startScrolling()
                 }, pauseDuration)
+                activeTimeouts.push(t2)
               }, pauseDuration)
+              activeTimeouts.push(t1)
             }
           }
         }, intervalTime)
