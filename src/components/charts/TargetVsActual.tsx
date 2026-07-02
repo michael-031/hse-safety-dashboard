@@ -48,7 +48,7 @@ export const TargetVsActual: React.FC<TargetVsActualProps> = ({
     })
 
     if (hoveredCategory) {
-      const idx = leadingData.findIndex((d) => 
+      const idx = leadingData.findIndex((d) =>
         d.name.toLowerCase().includes(hoveredCategory.toLowerCase())
       )
       if (idx !== -1) {
@@ -195,6 +195,32 @@ export const TargetVsActual: React.FC<TargetVsActualProps> = ({
         },
       },
     ],
+    dataZoom: data.length > 8 ? [
+      {
+        type: 'inside',
+        yAxisIndex: 0,
+        startValue: Math.max(0, data.length - 8),
+        endValue: data.length - 1,
+        zoomOnMouseWheel: false,
+        moveOnMouseMove: true,
+        moveOnMouseWheel: true
+      },
+      {
+        type: 'slider',
+        show: true,
+        yAxisIndex: 0,
+        width: 8,
+        right: 4,
+        startValue: Math.max(0, data.length - 8),
+        endValue: data.length - 1,
+        borderColor: 'transparent',
+        fillerColor: theme === 'dark' ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.15)',
+        backgroundColor: 'transparent',
+        handleSize: 0,
+        showDetail: false,
+        zoomLock: true
+      }
+    ] : [],
   }
 
   return (

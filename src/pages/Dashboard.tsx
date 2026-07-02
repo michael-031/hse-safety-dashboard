@@ -468,14 +468,14 @@ export const Dashboard: React.FC = () => {
       overallStatusColor = '#10b981' // Success
       overallStatusDesc = 'All safety targets are on track. Stable operations with zero or low incident frequency rates maintained.'
     }
-    
+
     return { overallStatus, overallStatusColor, overallStatusDesc }
   }
 
   // Generate Slide 2 Insights
   const getLaggingInsights = () => {
     const insights: string[] = []
-    
+
     // LTI
     if (safetyData.lti === 0) {
       insights.push("Excellent safety record with Zero Lost Time Injuries (LTI) recorded.")
@@ -513,7 +513,7 @@ export const Dashboard: React.FC = () => {
   // Generate Slide 3 Insights
   const getLeadingInsights = () => {
     const insights: string[] = []
-    
+
     // Safety Observations
     if (safetyData.observations >= 400) {
       insights.push(`Safety observations logged (${safetyData.observations}) exceeded the KPI target of 400, reflecting active hazard reporting.`)
@@ -561,46 +561,46 @@ export const Dashboard: React.FC = () => {
     if (presentationMode === 'executive') {
       switch (index) {
         case 0: // Executive Summary
-          return isLight 
+          return isLight
             ? 'radial-gradient(circle at 50% 0%, #e2e8f0 0%, #f8fafc 100%)'
             : 'radial-gradient(circle at 50% 0%, #0f172a 0%, #020617 100%)'
         case 1: // Lagging Indicators
-          return isLight 
+          return isLight
             ? 'radial-gradient(circle at 50% 0%, #d0e7fc 0%, #f8fafc 100%)'
             : 'radial-gradient(circle at 50% 0%, #032042 0%, #020617 100%)'
         case 2: // Leading Indicators
-          return isLight 
+          return isLight
             ? 'radial-gradient(circle at 50% 0%, #d1f7e5 0%, #f8fafc 100%)'
             : 'radial-gradient(circle at 50% 0%, #022e1b 0%, #020617 100%)'
         default:
-          return isLight 
+          return isLight
             ? 'radial-gradient(circle at 50% 0%, #cbd5e1 0%, #f8fafc 100%)'
             : 'radial-gradient(circle at 50% 0%, #0f172a 0%, #020617 100%)'
       }
     }
     switch (index) {
       case 0: // Q1 Baseline (Slate Navy)
-        return isLight 
+        return isLight
           ? 'radial-gradient(circle at 50% 0%, #cbd5e1 0%, #f8fafc 100%)' // Soft Gray Glow
           : 'radial-gradient(circle at 50% 0%, #0d2547 0%, #020813 100%)'
       case 1: // Q2 High Activity (Ocean Blue)
-        return isLight 
+        return isLight
           ? 'radial-gradient(circle at 50% 0%, #d0e7fc 0%, #f8fafc 100%)' // Soft Blue Glow
           : 'radial-gradient(circle at 50% 0%, #0a355c 0%, #010f22 100%)'
       case 2: // Q3 Zero Harm (Emerald Green)
-        return isLight 
+        return isLight
           ? 'radial-gradient(circle at 50% 0%, #d1f7e5 0%, #f8fafc 100%)' // Soft Green Glow
           : 'radial-gradient(circle at 50% 0%, #063c26 0%, #000c07 100%)'
       case 3: // Q4 High Risk Alert (Critical Red)
-        return isLight 
+        return isLight
           ? 'radial-gradient(circle at 50% 0%, #ffd8d8 0%, #f8fafc 100%)' // Soft Red Glow
           : 'radial-gradient(circle at 50% 0%, #3a0e0e 0%, #0b0202 100%)'
       case 4: // Year-End Recovery (Amber Gold)
-        return isLight 
+        return isLight
           ? 'radial-gradient(circle at 50% 0%, #fef0c7 0%, #f8fafc 100%)' // Soft Gold Glow
           : 'radial-gradient(circle at 50% 0%, #352506 0%, #0a0701 100%)'
       default:
-        return isLight 
+        return isLight
           ? 'radial-gradient(circle at 50% 0%, #cbd5e1 0%, #f8fafc 100%)'
           : 'radial-gradient(circle at 50% 0%, #0d2547 0%, #020813 100%)'
     }
@@ -611,7 +611,7 @@ export const Dashboard: React.FC = () => {
     setPresentationMode('scenarios')
     setCurrentSlideIndex(0)
     setIsSlideshowPlaying(true) // Automatically start playing
-    
+
     if (document.documentElement.requestFullscreen) {
       document.documentElement.requestFullscreen().catch((err) => {
         console.error("Error attempting to enable fullscreen:", err)
@@ -624,7 +624,7 @@ export const Dashboard: React.FC = () => {
     setPresentationMode('executive')
     setCurrentSlideIndex(0)
     setIsSlideshowPlaying(false) // Manual slide progression by default
-    
+
     if (document.documentElement.requestFullscreen) {
       document.documentElement.requestFullscreen().catch((err) => {
         console.error("Error attempting to enable fullscreen:", err)
@@ -635,7 +635,7 @@ export const Dashboard: React.FC = () => {
   const exitPresentationMode = () => {
     setPresentationMode('none')
     setIsSlideshowPlaying(false)
-    
+
     if (document.fullscreenElement) {
       document.exitFullscreen().catch((err) => {
         console.error("Error attempting to exit fullscreen:", err)
@@ -848,13 +848,13 @@ export const Dashboard: React.FC = () => {
         >
           {/* Top Progress bar */}
           <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '4px', background: theme === 'light' ? 'rgba(0, 0, 0, 0.05)' : 'rgba(255, 255, 255, 0.05)' }}>
-            <div 
-              style={{ 
-                height: '100%', 
-                width: `${((currentSlideIndex + 1) / (presentationMode === 'executive' ? 3 : SLIDESHOW_DATA.length)) * 100}%`, 
+            <div
+              style={{
+                height: '100%',
+                width: `${((currentSlideIndex + 1) / (presentationMode === 'executive' ? 3 : SLIDESHOW_DATA.length)) * 100}%`,
                 background: 'linear-gradient(to right, #60a5fa, #2563eb)',
                 transition: 'width 0.4s cubic-bezier(0.16, 1, 0.3, 1)'
-              }} 
+              }}
             />
           </div>
 
@@ -864,13 +864,13 @@ export const Dashboard: React.FC = () => {
               <span style={{ fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.15em', color: theme === 'light' ? '#2563eb' : '#60a5fa', fontWeight: 800 }}>
                 {presentationMode === 'executive' ? 'HSE Executive Report' : 'HSE Executive Presentation Mode'}
               </span>
-              <h2 
+              <h2
                 key={currentSlideIndex}
                 className="ppt-slide-animate"
                 style={{ fontSize: '1.85rem', fontWeight: 800, marginTop: '0.15rem', letterSpacing: '-0.02em', color: theme === 'light' ? '#0f172a' : '#ffffff' }}
               >
-                {presentationMode === 'executive' 
-                  ? currentSlideIndex === 0 
+                {presentationMode === 'executive'
+                  ? currentSlideIndex === 0
                     ? "Executive Summary (Overall Performance)"
                     : currentSlideIndex === 1
                       ? "Lagging Indicators (Incident Breakdown)"
@@ -879,7 +879,7 @@ export const Dashboard: React.FC = () => {
                 }
               </h2>
             </div>
-            
+
             <div style={{ display: 'flex', gap: '0.8rem', alignItems: 'center' }}>
               {/* Risk Badge */}
               <div
@@ -940,15 +940,15 @@ export const Dashboard: React.FC = () => {
                     { title: "Audit Completion Rate", value: `${calculated.auditCompletionRate.toFixed(1)}%`, target: "Target: > 95%", color: calculated.auditCompletionRate >= 95 ? '#10b981' : '#ef4444', hoverCat: 'audit' },
                     { title: "Total Recordable Cases", value: calculated.tri, target: `LTI: ${safetyData.lti} • RWC: ${safetyData.rwc} • MTC: ${safetyData.mtc}`, color: calculated.tri === 0 ? '#10b981' : '#fbbf24', hoverCat: 'mtc' },
                   ].map((kpi, idx) => (
-                    <div 
-                      key={idx} 
-                      className="glass-panel" 
+                    <div
+                      key={idx}
+                      className="glass-panel"
                       onMouseEnter={() => kpi.hoverCat && setPptHoverCategory(kpi.hoverCat)}
                       onMouseLeave={() => setPptHoverCategory(null)}
-                      style={{ 
-                        padding: '1.25rem 1.5rem', 
-                        display: 'flex', 
-                        flexDirection: 'column', 
+                      style={{
+                        padding: '1.25rem 1.5rem',
+                        display: 'flex',
+                        flexDirection: 'column',
                         justifyContent: 'space-between',
                         background: theme === 'light' ? 'rgba(255, 255, 255, 0.65)' : 'rgba(7, 19, 36, 0.65)',
                         border: pptHoverCategory === kpi.hoverCat && kpi.hoverCat
@@ -958,14 +958,14 @@ export const Dashboard: React.FC = () => {
                         cursor: kpi.hoverCat ? 'pointer' : 'default',
                         transition: 'all 0.25s',
                         transform: pptHoverCategory === kpi.hoverCat && kpi.hoverCat ? 'translateY(-2px)' : 'none',
-                        boxShadow: pptHoverCategory === kpi.hoverCat && kpi.hoverCat 
-                          ? '0 6px 18px rgba(37, 99, 235, 0.25)' 
+                        boxShadow: pptHoverCategory === kpi.hoverCat && kpi.hoverCat
+                          ? '0 6px 18px rgba(37, 99, 235, 0.25)'
                           : 'var(--shadow-sm)',
                       }}
                     >
                       <span style={{ fontSize: '0.85rem', color: theme === 'light' ? '#475569' : '#94a3b8', fontWeight: 700 }}>{kpi.title}</span>
                       <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.5rem', margin: '0.25rem 0' }}>
-                        <span 
+                        <span
                           key={currentSlideIndex}
                           className="ppt-slide-animate"
                           style={{ fontSize: '2.5rem', fontWeight: 800, color: kpi.color, letterSpacing: '-0.02em', display: 'inline-block' }}
@@ -981,13 +981,13 @@ export const Dashboard: React.FC = () => {
                 {/* Charts Row */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', flex: 1, minHeight: 0 }}>
                   {/* Donut Chart Container */}
-                  <div 
-                    className="glass-panel" 
-                    style={{ 
-                      padding: '1rem 1.25rem', 
-                      display: 'flex', 
-                      flexDirection: 'column', 
-                      background: theme === 'light' ? 'rgba(255, 255, 255, 0.65)' : 'rgba(7, 19, 36, 0.65)', 
+                  <div
+                    className="glass-panel"
+                    style={{
+                      padding: '1rem 1.25rem',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      background: theme === 'light' ? 'rgba(255, 255, 255, 0.65)' : 'rgba(7, 19, 36, 0.65)',
                       border: theme === 'light' ? '1px solid rgba(0, 0, 0, 0.08)' : '1px solid rgba(255, 255, 255, 0.08)',
                       height: '100%',
                       minHeight: 0
@@ -1008,13 +1008,13 @@ export const Dashboard: React.FC = () => {
                   </div>
 
                   {/* Target vs Actual Bar Chart Container */}
-                  <div 
-                    className="glass-panel" 
-                    style={{ 
-                      padding: '1rem 1.25rem', 
-                      display: 'flex', 
-                      flexDirection: 'column', 
-                      background: theme === 'light' ? 'rgba(255, 255, 255, 0.65)' : 'rgba(7, 19, 36, 0.65)', 
+                  <div
+                    className="glass-panel"
+                    style={{
+                      padding: '1rem 1.25rem',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      background: theme === 'light' ? 'rgba(255, 255, 255, 0.65)' : 'rgba(7, 19, 36, 0.65)',
                       border: theme === 'light' ? '1px solid rgba(0, 0, 0, 0.08)' : '1px solid rgba(255, 255, 255, 0.08)',
                       height: '100%',
                       minHeight: 0
@@ -1042,7 +1042,7 @@ export const Dashboard: React.FC = () => {
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem', justifyContent: 'center', height: '100%', flex: 1 }}>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '1.5rem' }}>
                       {/* Card 1: TRIR */}
-                      <div 
+                      <div
                         className="glass-panel"
                         style={{
                           display: 'flex',
@@ -1088,7 +1088,7 @@ export const Dashboard: React.FC = () => {
                       </div>
 
                       {/* Card 2: LTIFR */}
-                      <div 
+                      <div
                         className="glass-panel"
                         style={{
                           display: 'flex',
@@ -1126,7 +1126,7 @@ export const Dashboard: React.FC = () => {
                       </div>
 
                       {/* Card 3: Hazard Close-Out */}
-                      <div 
+                      <div
                         className="glass-panel"
                         style={{
                           display: 'flex',
@@ -1171,14 +1171,14 @@ export const Dashboard: React.FC = () => {
                       </div>
 
                       {/* Card 4: Audit Completion */}
-                      <div 
+                      <div
                         className="glass-panel"
                         style={{
                           display: 'flex',
                           flexDirection: 'column',
                           justifyContent: 'space-between',
                           padding: '1.5rem 1.75rem',
-                          background: calculated.auditCompletionRate >= 95 
+                          background: calculated.auditCompletionRate >= 95
                             ? (theme === 'light' ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)' : 'linear-gradient(135deg, #064e3b 0%, #022c22 100%)')
                             : (theme === 'light' ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' : 'linear-gradient(135deg, #7f1d1d 0%, #450a0a 100%)'),
                           color: '#ffffff',
@@ -1223,7 +1223,7 @@ export const Dashboard: React.FC = () => {
                       </div>
 
                       {/* Card 5: Total Cases */}
-                      <div 
+                      <div
                         className="glass-panel"
                         style={{
                           display: 'flex',
@@ -1266,10 +1266,10 @@ export const Dashboard: React.FC = () => {
                     {(() => {
                       const { overallStatus, overallStatusColor, overallStatusDesc } = getOverallStatus()
                       return (
-                        <div 
+                        <div
                           className="glass-panel"
-                          style={{ 
-                            padding: '1.75rem 2.25rem', 
+                          style={{
+                            padding: '1.75rem 2.25rem',
                             background: theme === 'light' ? 'rgba(255, 255, 255, 0.8)' : 'rgba(7, 19, 36, 0.8)',
                             borderLeft: `6px solid ${overallStatusColor}`,
                             display: 'flex',
@@ -1279,10 +1279,10 @@ export const Dashboard: React.FC = () => {
                           }}
                         >
                           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                            <span 
-                              className="risk-dot" 
-                              style={{ 
-                                backgroundColor: overallStatusColor, 
+                            <span
+                              className="risk-dot"
+                              style={{
+                                backgroundColor: overallStatusColor,
                                 boxShadow: `0 0 10px ${overallStatusColor}`,
                                 width: '10px',
                                 height: '10px'
@@ -1305,10 +1305,10 @@ export const Dashboard: React.FC = () => {
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', flex: 1, minHeight: 0 }}>
                     <div style={{ display: 'grid', gridTemplateColumns: '1.1fr 1fr', gap: '2rem', flex: 1, minHeight: 0 }}>
                       {/* Incident Table */}
-                      <div 
-                        className="glass-panel" 
-                        style={{ 
-                          padding: '1.5rem 2rem', 
+                      <div
+                        className="glass-panel"
+                        style={{
+                          padding: '1.5rem 2rem',
                           background: theme === 'light' ? 'rgba(255, 255, 255, 0.7)' : 'rgba(7, 19, 36, 0.7)',
                           display: 'flex',
                           flexDirection: 'column',
@@ -1318,38 +1318,40 @@ export const Dashboard: React.FC = () => {
                         <h3 style={{ fontSize: '0.9rem', fontWeight: 800, letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--text-primary)', marginBottom: '1.25rem' }}>
                           Incident Classification Breakdown
                         </h3>
-                        <table className="hse-table" style={{ fontSize: '0.95rem' }}>
-                          <thead>
-                            <tr>
-                              <th style={{ padding: '0.75rem 1rem' }}>Incident Classification</th>
-                              <th style={{ textAlign: 'right', padding: '0.75rem 1rem' }}>Count</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {metricsList
-                              .filter(m => m.type === 'lagging' && m.isActive !== false)
-                              .map((m, index) => {
-                                const defaultColors = ['#ef4444', '#fbbf24', '#3b82f6', '#10b981', '#8b5cf6', '#ec4899', '#f97316', '#14b8a6']
-                                const color = m.color || defaultColors[index % defaultColors.length]
-                                return (
-                                  <tr key={m.id}>
-                                    <td style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1rem' }}>
-                                      <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: color }}></span>
-                                      {m.label}
-                                    </td>
-                                    <td style={{ textAlign: 'right', fontWeight: 700, color: 'var(--text-primary)', padding: '0.75rem 1rem' }}>{m.value}</td>
-                                  </tr>
-                                )
-                              })}
-                          </tbody>
-                        </table>
+                        <div style={{ maxHeight: '380px', overflowY: 'auto', paddingRight: '0.25rem', width: '100%' }}>
+                          <table className="hse-table" style={{ fontSize: '0.95rem', width: '100%', borderCollapse: 'collapse' }}>
+                            <thead>
+                              <tr>
+                                <th style={{ padding: '0.75rem 1rem', position: 'sticky', top: 0, background: theme === 'light' ? '#ffffff' : '#0a121e', zIndex: 1 }}>Incident Classification</th>
+                                <th style={{ textAlign: 'right', padding: '0.75rem 1rem', position: 'sticky', top: 0, background: theme === 'light' ? '#ffffff' : '#0a121e', zIndex: 1 }}>Count</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {metricsList
+                                .filter(m => m.type === 'lagging' && m.isActive !== false)
+                                .map((m, index) => {
+                                  const defaultColors = ['#ef4444', '#fbbf24', '#3b82f6', '#10b981', '#8b5cf6', '#ec4899', '#f97316', '#14b8a6']
+                                  const color = m.color || defaultColors[index % defaultColors.length]
+                                  return (
+                                    <tr key={m.id}>
+                                      <td style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1rem' }}>
+                                        <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: color }}></span>
+                                        {m.label}
+                                      </td>
+                                      <td style={{ textAlign: 'right', fontWeight: 700, color: 'var(--text-primary)', padding: '0.75rem 1rem' }}>{m.value}</td>
+                                    </tr>
+                                  )
+                                })}
+                            </tbody>
+                          </table>
+                        </div>
                       </div>
 
                       {/* Enlarged Donut Chart */}
-                      <div 
-                        className="glass-panel" 
-                        style={{ 
-                          padding: '1.5rem 2rem', 
+                      <div
+                        className="glass-panel"
+                        style={{
+                          padding: '1.5rem 2rem',
                           background: theme === 'light' ? 'rgba(255, 255, 255, 0.7)' : 'rgba(7, 19, 36, 0.7)',
                           display: 'flex',
                           flexDirection: 'column',
@@ -1370,10 +1372,10 @@ export const Dashboard: React.FC = () => {
                     </div>
 
                     {/* Insights Box */}
-                    <div 
+                    <div
                       className="glass-panel"
-                      style={{ 
-                        padding: '1.25rem 2rem', 
+                      style={{
+                        padding: '1.25rem 2rem',
                         background: theme === 'light' ? 'rgba(255, 255, 255, 0.8)' : 'rgba(7, 19, 36, 0.8)',
                         boxShadow: 'var(--shadow-md)'
                       }}
@@ -1394,48 +1396,50 @@ export const Dashboard: React.FC = () => {
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', flex: 1, minHeight: 0 }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', flex: 1, minHeight: 0 }}>
                       {/* Leading indicators table at top */}
-                      <div 
-                        className="glass-panel" 
-                        style={{ 
-                          padding: '1.25rem 2rem', 
+                      <div
+                        className="glass-panel"
+                        style={{
+                          padding: '1.25rem 2rem',
                           background: theme === 'light' ? 'rgba(255, 255, 255, 0.7)' : 'rgba(7, 19, 36, 0.7)'
                         }}
                       >
                         <h3 style={{ fontSize: '0.9rem', fontWeight: 800, letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--text-primary)', marginBottom: '0.75rem' }}>
                           Preventative Performance metrics
                         </h3>
-                        <table className="hse-table" style={{ fontSize: '0.92rem' }}>
-                          <thead>
-                            <tr>
-                              <th style={{ padding: '0.6rem 1rem' }}>Proactive HSE Metric</th>
-                              <th style={{ textAlign: 'center', padding: '0.6rem 1rem' }}>Actual</th>
-                              <th style={{ textAlign: 'right', padding: '0.6rem 1rem' }}>Target Benchmark</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {leadingData.map((item, idx) => {
-                              const isAchieved = item.actual >= item.target
-                              return (
-                                <tr key={idx}>
-                                  <td style={{ padding: '0.6rem 1rem' }}>{item.name}</td>
-                                  <td style={{ textAlign: 'center', fontWeight: 700, color: isAchieved ? 'var(--color-success)' : 'var(--color-warning)', padding: '0.6rem 1rem' }}>
-                                    {item.displayActual}
-                                  </td>
-                                  <td style={{ textAlign: 'right', color: 'var(--text-secondary)', fontSize: '0.8rem', padding: '0.6rem 1rem' }}>
-                                    {item.displayTarget}
-                                  </td>
-                                </tr>
-                              )
-                            })}
-                          </tbody>
-                        </table>
+                        <div style={{ maxHeight: '180px', overflowY: 'auto', paddingRight: '0.25rem', width: '100%' }}>
+                          <table className="hse-table" style={{ fontSize: '0.92rem', width: '100%', borderCollapse: 'collapse' }}>
+                            <thead>
+                              <tr>
+                                <th style={{ padding: '0.6rem 1rem', position: 'sticky', top: 0, background: theme === 'light' ? '#ffffff' : '#0a121e', zIndex: 1 }}>Proactive HSE Metric</th>
+                                <th style={{ textAlign: 'center', padding: '0.6rem 1rem', position: 'sticky', top: 0, background: theme === 'light' ? '#ffffff' : '#0a121e', zIndex: 1 }}>Actual</th>
+                                <th style={{ textAlign: 'right', padding: '0.6rem 1rem', position: 'sticky', top: 0, background: theme === 'light' ? '#ffffff' : '#0a121e', zIndex: 1 }}>Target Benchmark</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {leadingData.map((item, idx) => {
+                                const isAchieved = item.actual >= item.target
+                                return (
+                                  <tr key={idx}>
+                                    <td style={{ padding: '0.6rem 1rem' }}>{item.name}</td>
+                                    <td style={{ textAlign: 'center', fontWeight: 700, color: isAchieved ? 'var(--color-success)' : 'var(--color-warning)', padding: '0.6rem 1rem' }}>
+                                      {item.displayActual}
+                                    </td>
+                                    <td style={{ textAlign: 'right', color: 'var(--text-secondary)', fontSize: '0.8rem', padding: '0.6rem 1rem' }}>
+                                      {item.displayTarget}
+                                    </td>
+                                  </tr>
+                                )
+                              })}
+                            </tbody>
+                          </table>
+                        </div>
                       </div>
 
                       {/* Progress chart below */}
-                      <div 
-                        className="glass-panel" 
-                        style={{ 
-                          padding: '1.25rem 2rem', 
+                      <div
+                        className="glass-panel"
+                        style={{
+                          padding: '1.25rem 2rem',
                           background: theme === 'light' ? 'rgba(255, 255, 255, 0.7)' : 'rgba(7, 19, 36, 0.7)',
                           flex: 1,
                           display: 'flex',
@@ -1456,10 +1460,10 @@ export const Dashboard: React.FC = () => {
                     </div>
 
                     {/* Insights Box */}
-                    <div 
+                    <div
                       className="glass-panel"
-                      style={{ 
-                        padding: '1.25rem 2rem', 
+                      style={{
+                        padding: '1.25rem 2rem',
                         background: theme === 'light' ? 'rgba(255, 255, 255, 0.8)' : 'rgba(7, 19, 36, 0.8)',
                         boxShadow: 'var(--shadow-md)'
                       }}
@@ -1481,7 +1485,7 @@ export const Dashboard: React.FC = () => {
 
           {/* Footer controls and direct navigation dots */}
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem', marginTop: '1rem' }}>
-            
+
             {/* Action Row */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
               <button
@@ -1519,11 +1523,11 @@ export const Dashboard: React.FC = () => {
                 onClick={() => setIsSlideshowPlaying(!isSlideshowPlaying)}
                 className="btn"
                 style={{
-                  background: isSlideshowPlaying 
-                    ? 'linear-gradient(to bottom, #2563eb, #1d4ed8)' 
+                  background: isSlideshowPlaying
+                    ? 'linear-gradient(to bottom, #2563eb, #1d4ed8)'
                     : (theme === 'light' ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.08)'),
-                  border: isSlideshowPlaying 
-                    ? '1px solid rgba(255, 255, 255, 0.2)' 
+                  border: isSlideshowPlaying
+                    ? '1px solid rgba(255, 255, 255, 0.2)'
                     : (theme === 'light' ? '1px solid rgba(0,0,0,0.1)' : '1px solid rgba(255,255,255,0.12)'),
                   color: isSlideshowPlaying ? '#ffffff' : (theme === 'light' ? '#0f172a' : '#ffffff'),
                   fontSize: '0.75rem',
@@ -1573,8 +1577,8 @@ export const Dashboard: React.FC = () => {
             {/* Dots Indicator */}
             <div style={{ display: 'flex', gap: '0.5rem' }}>
               {Array.from({ length: presentationMode === 'executive' ? 3 : SLIDESHOW_DATA.length }).map((_, idx) => {
-                const title = presentationMode === 'executive' 
-                  ? `Slide ${idx + 1}` 
+                const title = presentationMode === 'executive'
+                  ? `Slide ${idx + 1}`
                   : SLIDESHOW_DATA[idx].name
                 return (
                   <button
@@ -1620,491 +1624,501 @@ export const Dashboard: React.FC = () => {
         className="dashboard-container"
       >
 
-      {/* Main content area split */}
-      <div
-        style={{
-          display: 'flex',
-          gap: isInputVisible ? '1.5rem' : '0px',
-          minWidth: 0,
-          width: '100%',
-          flex: 1,
-          transition: 'gap 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
-        }}
-        className="layout-grid"
-      >
-
-        {/* Left column: Input parameters card */}
-        <aside
+        {/* Main content area split */}
+        <div
           style={{
-            width: isInputVisible ? '330px' : '0px',
-            flexShrink: 0,
-            opacity: isInputVisible ? 1 : 0,
-            transform: isInputVisible ? 'translateX(0)' : 'translateX(-20px)',
-            transition: 'width 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease, transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
-            overflow: 'hidden',
-            position: 'sticky',
-            top: '1.5rem',
-            height: '100%',
-            minHeight: 0,
+            display: 'flex',
+            gap: isInputVisible ? '1.5rem' : '0px',
+            minWidth: 0,
+            width: '100%',
+            flex: 1,
+            transition: 'gap 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
           }}
+          className="layout-grid"
         >
-          {/* Prevent inner inputs from wrapping during transition */}
-          <div style={{ width: '330px', height: '100%', minHeight: 0 }}>
-            <InputForm
-              metrics={metricsList}
-              onChange={handleMetricsChange}
-              useExcelFormula={useExcelFormula}
-              onFormulaToggle={setUseExcelFormula}
-              theme={theme}
-              onThemeToggle={() => setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'))}
-              onSave={handleSave}
-              isSaving={isSaving}
-              saveStatus={saveStatus}
-              adminPasscodeHash={adminPasscodeHash}
-              onSavePasscodeHash={handleSavePasscodeHash}
-            />
-          </div>
-        </aside>
 
-        {/* Right column: Analytics Dashboard */}
-        <main style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '1rem', minWidth: 0, height: '100%', minHeight: 0 }}>
-
-          {/* Header Card */}
-          <div
-            className="glass-panel"
+          {/* Left column: Input parameters card */}
+          <aside
             style={{
-              padding: '1.25rem 1.75rem',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              flexWrap: 'wrap',
-              gap: '1rem',
-              boxShadow: 'var(--shadow-sm)'
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-              {/* Toggle Input Button */}
-              <button
-                id="btn-toggle-input"
-                onClick={() => setIsInputVisible(!isInputVisible)}
-                style={{
-                  background: 'var(--bg-input)',
-                  border: '1px solid rgba(96, 165, 250, 0.15)',
-                  borderRadius: '50%',
-                  width: '2.5rem',
-                  height: '2.5rem',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  cursor: 'pointer',
-                  color: 'var(--text-secondary)',
-                  transition: 'all var(--transition-normal)'
-                }}
-                onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(96, 165, 250, 0.1)'}
-                onMouseLeave={(e) => e.currentTarget.style.background = 'var(--bg-input)'}
-                title={isInputVisible ? "Hide Inputs" : "Show Inputs"}
-              >
-                {isInputVisible ? <PanelLeftClose size={18} /> : <PanelLeftOpen size={18} />}
-              </button>
-
-              <div>
-                <h1
-                  style={{
-                    fontSize: '1.35rem',
-                    fontWeight: 800,
-                    letterSpacing: '-0.02em',
-                    color: 'var(--text-primary)'
-                  }}
-                >
-                  Executive Health & Safety Dashboard
-                </h1>
-                <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginTop: '0.15rem' }}>
-                  HSE Performance Calculator & Preventative Indicator Analysis
-                </p>
-              </div>
-            </div>
-
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
-              {/* Interactive Demo Tour Toggle */}
-              <button
-                id="btn-toggle-demo"
-                onClick={() => setDemoActive(!demoActive)}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.4rem',
-                  background: demoActive ? 'rgba(37, 99, 235, 0.15)' : 'var(--bg-input)',
-                  border: demoActive ? '1px solid var(--color-primary)' : '1px solid rgba(96, 165, 250, 0.15)',
-                  padding: '0.45rem 0.85rem',
-                  borderRadius: '20px',
-                  cursor: 'pointer',
-                  fontSize: '0.72rem',
-                  fontWeight: 700,
-                  color: demoActive ? 'var(--color-primary)' : 'var(--text-secondary)',
-                  transition: 'all var(--transition-normal)'
-                }}
-              >
-                <span
-                  className="risk-dot"
-                  style={{
-                    width: '6px',
-                    height: '6px',
-                    borderRadius: '50%',
-                    backgroundColor: demoActive ? 'var(--color-primary)' : 'var(--text-muted)',
-                    animation: demoActive ? 'pulse-dot 1.5s infinite ease-in-out' : 'none',
-                    boxShadow: demoActive ? '0 0 6px var(--color-primary)' : 'none',
-                    display: 'inline-block'
-                  }}
-                ></span>
-                {demoActive ? 'Interactive Tour Active' : 'Start Interactive Tour'}
-              </button>
-
-              {/* Autoplay Slideshow Toggle */}
-              <button
-                id="btn-toggle-slideshow"
-                onClick={() => setIsSlideshowPlaying(!isSlideshowPlaying)}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.4rem',
-                  background: isSlideshowPlaying 
-                    ? 'linear-gradient(to bottom, #2563eb, #1d4ed8)' 
-                    : 'var(--bg-input)',
-                  border: isSlideshowPlaying 
-                    ? '1px solid rgba(255, 255, 255, 0.2)' 
-                    : '1px solid rgba(96, 165, 250, 0.15)',
-                  padding: '0.45rem 0.85rem',
-                  borderRadius: '20px',
-                  cursor: 'pointer',
-                  fontSize: '0.72rem',
-                  fontWeight: 700,
-                  color: isSlideshowPlaying ? '#ffffff' : 'var(--text-secondary)',
-                  boxShadow: isSlideshowPlaying ? '0 4px 12px rgba(37, 99, 235, 0.3)' : 'none',
-                  transition: 'all var(--transition-normal)'
-                }}
-              >
-                <span
-                  className="risk-dot"
-                  style={{
-                    width: '6px',
-                    height: '6px',
-                    borderRadius: '50%',
-                    backgroundColor: isSlideshowPlaying ? '#ffffff' : 'var(--text-muted)',
-                    animation: isSlideshowPlaying ? 'pulse-dot 1.5s infinite ease-in-out' : 'none',
-                    boxShadow: isSlideshowPlaying ? '0 0 6px #ffffff' : 'none',
-                    display: 'inline-block'
-                  }}
-                ></span>
-                {isSlideshowPlaying ? 'Pause Slideshow' : 'Play Slideshow'}
-              </button>
-
-              {/* Manual Scenario Select Dropdown */}
-              <select
-                id="select-slideshow-scenario"
-                value={currentSlideIndex}
-                onChange={(e) => {
-                  const idx = parseInt(e.target.value, 10)
-                  setCurrentSlideIndex(idx)
-                  updateSafetyData(SLIDESHOW_DATA[idx].data)
-                  setIsSlideshowPlaying(false) // Pause autoplay on manual change
-                }}
-                style={{
-                  background: 'var(--bg-input)',
-                  border: '1px solid rgba(96, 165, 250, 0.15)',
-                  color: 'var(--text-primary)',
-                  fontSize: '0.72rem',
-                  fontWeight: 700,
-                  padding: '0.42rem 0.75rem',
-                  borderRadius: '20px',
-                  outline: 'none',
-                  cursor: 'pointer',
-                  fontFamily: 'inherit',
-                  transition: 'all var(--transition-normal)'
-                }}
-              >
-                {SLIDESHOW_DATA.map((slide, idx) => (
-                  <option key={idx} value={idx} style={{ background: 'var(--bg-panel)', color: 'var(--text-primary)' }}>
-                    {slide.name}
-                  </option>
-                ))}
-              </select>
-
-              {/* Fullscreen PPT Mode Button (Scenarios) */}
-              <button
-                id="btn-present-ppt"
-                onClick={enterScenariosMode}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.4rem',
-                  background: 'var(--bg-input)',
-                  border: '1px solid rgba(96, 165, 250, 0.15)',
-                  padding: '0.45rem 0.85rem',
-                  borderRadius: '20px',
-                  cursor: 'pointer',
-                  fontSize: '0.72rem',
-                  fontWeight: 700,
-                  color: 'var(--text-secondary)',
-                  transition: 'all var(--transition-normal)'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = 'rgba(96, 165, 250, 0.1)'
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'var(--bg-input)'
-                }}
-              >
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
-                </svg>
-                Present Scenarios
-              </button>
-
-              {/* Fullscreen PPT Mode Button (3-Slide Executive Mode) */}
-              <button
-                id="btn-present-exec"
-                onClick={enterExecutiveMode}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.4rem',
-                  background: 'linear-gradient(to bottom, #2563eb, #1d4ed8)',
-                  border: '1px solid rgba(255, 255, 255, 0.15)',
-                  padding: '0.45rem 0.85rem',
-                  borderRadius: '20px',
-                  cursor: 'pointer',
-                  fontSize: '0.72rem',
-                  fontWeight: 700,
-                  color: '#ffffff',
-                  boxShadow: '0 4px 12px rgba(37, 99, 235, 0.3)',
-                  transition: 'all var(--transition-normal)'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-1px)'
-                  e.currentTarget.style.boxShadow = '0 6px 16px rgba(37, 99, 235, 0.45)'
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'none'
-                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(37, 99, 235, 0.3)'
-                }}
-              >
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
-                  <line x1="8" y1="21" x2="16" y2="21" />
-                  <line x1="12" y1="17" x2="12" y2="21" />
-                </svg>
-                Present Executive Summary
-              </button>
-
-              {/* Risk Badge (Modeled after 'Balance On track' pill tag) */}
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.45rem',
-                  background: riskPill.bg,
-                  padding: '0.35rem 0.75rem',
-                  borderRadius: '20px',
-                  border: 'none',
-                }}
-              >
-                <span
-                  className="risk-dot"
-                  style={{
-                    backgroundColor: riskPill.text,
-                    boxShadow: `0 0 8px ${riskPill.text}`
-                  }}
-                ></span>
-                <span style={{ fontSize: '0.72rem', fontWeight: 700, color: riskPill.text }}>
-                  {riskPill.label}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Top KPI Cards Row */}
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-              gap: '1rem'
-            }}
-          >
-            {/* TRIR Card: Bar sparkline variant */}
-            <KPICard
-              title="Total Recordable Incident Rate"
-              value={calculated.trir.toFixed(2)}
-              subValue="TRIR Target: < 1.00"
-              variant="bar"
-              badgeText={calculated.trir < 1.00 ? 'On Track' : 'Warning'}
-              badgeColor={calculated.trir < 1.00 ? 'success' : calculated.trir < 2.00 ? 'warning' : 'danger'}
-            />
-            {/* LTIFR Card: Line sparkline variant */}
-            <KPICard
-              title="Lost Time Frequency Rate"
-              value={calculated.ltifr.toFixed(2)}
-              subValue="LTIFR Target: < 1.00"
-              variant="line"
-            />
-            {/* Hazard Rate: Circle indicator */}
-            <KPICard
-              title="Hazard Close-Out Rate"
-              value={`${calculated.hazardCloseOutRate.toFixed(1)}%`}
-              subValue={useExcelFormula ? 'Formula: Observations/Closed' : 'Formula: Closed/Observations'}
-              variant="circle"
-            />
-            {/* Audit Completion: Solid Sage green accent card! */}
-            <KPICard
-              title="Audit Completion Rate"
-              value={`${calculated.auditCompletionRate.toFixed(1)}%`}
-              subValue="Compliance Target: 95.0%"
-              variant="accent"
-            />
-            {/* Recordable Cases: Default style, displays dynamic risk pills */}
-            <KPICard
-              title="Total Recordable Cases"
-              value={calculated.tri}
-              subValue={`LTI (${safetyData.lti}) • RWC (${safetyData.rwc}) • MTC (${safetyData.mtc})`}
-              badgeText={calculated.tri === 0 ? 'Excellent' : calculated.tri < 5 ? 'Stable' : 'Alert'}
-              badgeColor={calculated.tri === 0 ? 'success' : calculated.tri < 5 ? 'warning' : 'danger'}
-            />
-          </div>
-
-          {/* Bottom Indicators Panels */}
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(420px, 1fr))',
-              gap: '1.5rem',
-              flex: 1,
+              width: isInputVisible ? '330px' : '0px',
+              flexShrink: 0,
+              opacity: isInputVisible ? 1 : 0,
+              transform: isInputVisible ? 'translateX(0)' : 'translateX(-20px)',
+              transition: 'width 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease, transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
+              overflow: 'hidden',
+              position: 'sticky',
+              top: '1.5rem',
+              height: '100%',
               minHeight: 0,
             }}
-            className="indicators-grid"
           >
+            {/* Prevent inner inputs from wrapping during transition */}
+            <div style={{ width: '330px', height: '100%', minHeight: 0 }}>
+              <InputForm
+                metrics={metricsList}
+                onChange={handleMetricsChange}
+                useExcelFormula={useExcelFormula}
+                onFormulaToggle={setUseExcelFormula}
+                theme={theme}
+                onThemeToggle={() => setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'))}
+                onSave={handleSave}
+                isSaving={isSaving}
+                saveStatus={saveStatus}
+                adminPasscodeHash={adminPasscodeHash}
+                onSavePasscodeHash={handleSavePasscodeHash}
+              />
+            </div>
+          </aside>
 
-            {/* Lagging Indicators Panel */}
-            <section className="glass-panel" style={{ padding: '1.15rem 1.25rem', display: 'flex', flexDirection: 'column', gap: '0.75rem', height: '100%' }}>
-              <div>
-                <h3 style={{ fontSize: '0.82rem', fontWeight: 800, letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--text-primary)' }}>
-                  Lagging Indicators (Incident Breakdown)
-                </h3>
-                <div style={{ height: '1px', background: 'var(--border-divider)', marginTop: '0.4rem' }}></div>
-              </div>
+          {/* Right column: Analytics Dashboard */}
+          <main style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '1rem', minWidth: 0, height: '100%', minHeight: 0 }}>
 
-              {/* Layout for Table & Donut */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '1.5rem', alignItems: 'center', flex: 1, width: '100%' }}>
-                <table className="hse-table">
-                  <thead>
-                    <tr>
-                      <th>Incident Classification</th>
-                      <th style={{ textAlign: 'right' }}>Count</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {metricsList
-                      .filter(m => m.type === 'lagging' && m.isActive !== false)
-                      .map((m, index) => {
-                        const defaultColors = ['#ef4444', '#fbbf24', '#3b82f6', '#10b981', '#8b5cf6', '#ec4899', '#f97316', '#14b8a6']
-                        const color = m.color || defaultColors[index % defaultColors.length]
-                        return (
-                          <tr key={m.id}>
-                            <td style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                              <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: color }}></span>
-                              {m.label}
-                            </td>
-                            <td style={{ textAlign: 'right', fontWeight: 700, color: 'var(--text-primary)' }}>{m.value}</td>
-                          </tr>
-                        )
-                      })}
-                  </tbody>
-                </table>
+            {/* Header Card */}
+            <div
+              className="glass-panel"
+              style={{
+                padding: '1.25rem 1.75rem',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                flexWrap: 'wrap',
+                gap: '1rem',
+                boxShadow: 'var(--shadow-sm)'
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                {/* Toggle Input Button */}
+                <button
+                  id="btn-toggle-input"
+                  onClick={() => setIsInputVisible(!isInputVisible)}
+                  style={{
+                    background: 'var(--bg-input)',
+                    border: '1px solid rgba(96, 165, 250, 0.15)',
+                    borderRadius: '50%',
+                    width: '2.5rem',
+                    height: '2.5rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    color: 'var(--text-secondary)',
+                    transition: 'all var(--transition-normal)'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(96, 165, 250, 0.1)'}
+                  onMouseLeave={(e) => e.currentTarget.style.background = 'var(--bg-input)'}
+                  title={isInputVisible ? "Hide Inputs" : "Show Inputs"}
+                >
+                  {isInputVisible ? <PanelLeftClose size={18} /> : <PanelLeftOpen size={18} />}
+                </button>
 
-                {/* ECharts donut chart */}
-                <div ref={donutContainerRef}>
-                  <IncidentDonut
-                    laggingData={laggingData}
-                    hoveredCategory={donutHoverCategory}
-                    theme={theme}
-                  />
+                <div>
+                  <h1
+                    style={{
+                      fontSize: '1.35rem',
+                      fontWeight: 800,
+                      letterSpacing: '-0.02em',
+                      color: 'var(--text-primary)'
+                    }}
+                  >
+                    Executive Health & Safety Dashboard
+                  </h1>
+                  <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginTop: '0.15rem' }}>
+                    HSE Performance Calculator & Preventative Indicator Analysis
+                  </p>
                 </div>
               </div>
-            </section>
 
-            {/* Leading Indicators Panel */}
-            <section className="glass-panel" style={{ padding: '1.15rem 1.25rem', display: 'flex', flexDirection: 'column', gap: '0.75rem', height: '100%' }}>
-              <div>
-                <h3 style={{ fontSize: '0.82rem', fontWeight: 800, letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--text-primary)' }}>
-                  Leading Indicators (Preventative Targets)
-                </h3>
-                <div style={{ height: '1px', background: 'var(--border-divider)', marginTop: '0.4rem' }}></div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+                {/* Interactive Demo Tour Toggle */}
+                <button
+                  id="btn-toggle-demo"
+                  onClick={() => setDemoActive(!demoActive)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.4rem',
+                    background: demoActive ? 'rgba(37, 99, 235, 0.15)' : 'var(--bg-input)',
+                    border: demoActive ? '1px solid var(--color-primary)' : '1px solid rgba(96, 165, 250, 0.15)',
+                    padding: '0.45rem 0.85rem',
+                    borderRadius: '20px',
+                    cursor: 'pointer',
+                    fontSize: '0.72rem',
+                    fontWeight: 700,
+                    color: demoActive ? 'var(--color-primary)' : 'var(--text-secondary)',
+                    transition: 'all var(--transition-normal)'
+                  }}
+                >
+                  <span
+                    className="risk-dot"
+                    style={{
+                      width: '6px',
+                      height: '6px',
+                      borderRadius: '50%',
+                      backgroundColor: demoActive ? 'var(--color-primary)' : 'var(--text-muted)',
+                      animation: demoActive ? 'pulse-dot 1.5s infinite ease-in-out' : 'none',
+                      boxShadow: demoActive ? '0 0 6px var(--color-primary)' : 'none',
+                      display: 'inline-block'
+                    }}
+                  ></span>
+                  {demoActive ? 'Interactive Tour Active' : 'Start Interactive Tour'}
+                </button>
+
+                {/* Autoplay Slideshow Toggle */}
+                <button
+                  id="btn-toggle-slideshow"
+                  onClick={() => setIsSlideshowPlaying(!isSlideshowPlaying)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.4rem',
+                    background: isSlideshowPlaying
+                      ? 'linear-gradient(to bottom, #2563eb, #1d4ed8)'
+                      : 'var(--bg-input)',
+                    border: isSlideshowPlaying
+                      ? '1px solid rgba(255, 255, 255, 0.2)'
+                      : '1px solid rgba(96, 165, 250, 0.15)',
+                    padding: '0.45rem 0.85rem',
+                    borderRadius: '20px',
+                    cursor: 'pointer',
+                    fontSize: '0.72rem',
+                    fontWeight: 700,
+                    color: isSlideshowPlaying ? '#ffffff' : 'var(--text-secondary)',
+                    boxShadow: isSlideshowPlaying ? '0 4px 12px rgba(37, 99, 235, 0.3)' : 'none',
+                    transition: 'all var(--transition-normal)'
+                  }}
+                >
+                  <span
+                    className="risk-dot"
+                    style={{
+                      width: '6px',
+                      height: '6px',
+                      borderRadius: '50%',
+                      backgroundColor: isSlideshowPlaying ? '#ffffff' : 'var(--text-muted)',
+                      animation: isSlideshowPlaying ? 'pulse-dot 1.5s infinite ease-in-out' : 'none',
+                      boxShadow: isSlideshowPlaying ? '0 0 6px #ffffff' : 'none',
+                      display: 'inline-block'
+                    }}
+                  ></span>
+                  {isSlideshowPlaying ? 'Pause Slideshow' : 'Play Slideshow'}
+                </button>
+
+                {/* Manual Scenario Select Dropdown */}
+                <select
+                  id="select-slideshow-scenario"
+                  value={currentSlideIndex}
+                  onChange={(e) => {
+                    const idx = parseInt(e.target.value, 10)
+                    setCurrentSlideIndex(idx)
+                    updateSafetyData(SLIDESHOW_DATA[idx].data)
+                    setIsSlideshowPlaying(false) // Pause autoplay on manual change
+                  }}
+                  style={{
+                    background: 'var(--bg-input)',
+                    border: '1px solid rgba(96, 165, 250, 0.15)',
+                    color: 'var(--text-primary)',
+                    fontSize: '0.72rem',
+                    fontWeight: 700,
+                    padding: '0.42rem 0.75rem',
+                    borderRadius: '20px',
+                    outline: 'none',
+                    cursor: 'pointer',
+                    fontFamily: 'inherit',
+                    transition: 'all var(--transition-normal)'
+                  }}
+                >
+                  {SLIDESHOW_DATA.map((slide, idx) => (
+                    <option key={idx} value={idx} style={{ background: 'var(--bg-panel)', color: 'var(--text-primary)' }}>
+                      {slide.name}
+                    </option>
+                  ))}
+                </select>
+
+                {/* Fullscreen PPT Mode Button (Scenarios) */}
+                <button
+                  id="btn-present-ppt"
+                  onClick={enterScenariosMode}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.4rem',
+                    background: 'var(--bg-input)',
+                    border: '1px solid rgba(96, 165, 250, 0.15)',
+                    padding: '0.45rem 0.85rem',
+                    borderRadius: '20px',
+                    cursor: 'pointer',
+                    fontSize: '0.72rem',
+                    fontWeight: 700,
+                    color: 'var(--text-secondary)',
+                    transition: 'all var(--transition-normal)'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = 'rgba(96, 165, 250, 0.1)'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'var(--bg-input)'
+                  }}
+                >
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
+                  </svg>
+                  Present Scenarios
+                </button>
+
+                {/* Fullscreen PPT Mode Button (3-Slide Executive Mode) */}
+                <button
+                  id="btn-present-exec"
+                  onClick={enterExecutiveMode}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.4rem',
+                    background: 'linear-gradient(to bottom, #2563eb, #1d4ed8)',
+                    border: '1px solid rgba(255, 255, 255, 0.15)',
+                    padding: '0.45rem 0.85rem',
+                    borderRadius: '20px',
+                    cursor: 'pointer',
+                    fontSize: '0.72rem',
+                    fontWeight: 700,
+                    color: '#ffffff',
+                    boxShadow: '0 4px 12px rgba(37, 99, 235, 0.3)',
+                    transition: 'all var(--transition-normal)'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = 'translateY(-1px)'
+                    e.currentTarget.style.boxShadow = '0 6px 16px rgba(37, 99, 235, 0.45)'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'none'
+                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(37, 99, 235, 0.3)'
+                  }}
+                >
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
+                    <line x1="8" y1="21" x2="16" y2="21" />
+                    <line x1="12" y1="17" x2="12" y2="21" />
+                  </svg>
+                  Present Executive Summary
+                </button>
+
+                {/* Risk Badge (Modeled after 'Balance On track' pill tag) */}
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.45rem',
+                    background: riskPill.bg,
+                    padding: '0.35rem 0.75rem',
+                    borderRadius: '20px',
+                    border: 'none',
+                  }}
+                >
+                  <span
+                    className="risk-dot"
+                    style={{
+                      backgroundColor: riskPill.text,
+                      boxShadow: `0 0 8px ${riskPill.text}`
+                    }}
+                  ></span>
+                  <span style={{ fontSize: '0.72rem', fontWeight: 700, color: riskPill.text }}>
+                    {riskPill.label}
+                  </span>
+                </div>
               </div>
+            </div>
 
-              {/* Table and Comparison Chart */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', flex: 1, justifyContent: 'space-around' }}>
-                <table className="hse-table">
-                  <thead>
-                    <tr>
-                      <th>Proactive HSE Metric</th>
-                      <th style={{ textAlign: 'center' }}>Actual</th>
-                      <th style={{ textAlign: 'right' }}>Target Benchmark</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {leadingData.map((item, idx) => {
-                      const isAchieved = item.actual >= item.target
-                      return (
-                        <tr key={idx}>
-                          <td>{item.name}</td>
-                          <td style={{ textAlign: 'center', fontWeight: 700, color: isAchieved ? 'var(--color-success)' : 'var(--color-warning)' }}>
-                            {item.displayActual}
-                          </td>
-                          <td style={{ textAlign: 'right', color: 'var(--text-secondary)', fontSize: '0.78rem' }}>
-                            {item.displayTarget}
-                          </td>
+            {/* Top KPI Cards Row */}
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+                gap: '1rem'
+              }}
+            >
+              {/* TRIR Card: Bar sparkline variant */}
+              <KPICard
+                title="Total Recordable Incident Rate"
+                value={calculated.trir.toFixed(2)}
+                subValue="TRIR Target: < 1.00"
+                variant="bar"
+                badgeText={calculated.trir < 1.00 ? 'On Track' : 'Warning'}
+                badgeColor={calculated.trir < 1.00 ? 'success' : calculated.trir < 2.00 ? 'warning' : 'danger'}
+              />
+              {/* LTIFR Card: Line sparkline variant */}
+              <KPICard
+                title="Lost Time Frequency Rate"
+                value={calculated.ltifr.toFixed(2)}
+                subValue="LTIFR Target: < 1.00"
+                variant="line"
+              />
+              {/* Hazard Rate: Circle indicator */}
+              <KPICard
+                title="Hazard Close-Out Rate"
+                value={`${calculated.hazardCloseOutRate.toFixed(1)}%`}
+                subValue={useExcelFormula ? 'Formula: Observations/Closed' : 'Formula: Closed/Observations'}
+                variant="circle"
+              />
+              {/* Audit Completion: Solid Sage green accent card! */}
+              <KPICard
+                title="Audit Completion Rate"
+                value={`${calculated.auditCompletionRate.toFixed(1)}%`}
+                subValue="Compliance Target: 95.0%"
+                variant="accent"
+              />
+              {/* Recordable Cases: Default style, displays dynamic risk pills */}
+              <KPICard
+                title="Total Recordable Cases"
+                value={calculated.tri}
+                subValue={`LTI (${safetyData.lti}) • RWC (${safetyData.rwc}) • MTC (${safetyData.mtc})`}
+                badgeText={calculated.tri === 0 ? 'Excellent' : calculated.tri < 5 ? 'Stable' : 'Alert'}
+                badgeColor={calculated.tri === 0 ? 'success' : calculated.tri < 5 ? 'warning' : 'danger'}
+              />
+            </div>
+
+            {/* Bottom Indicators Panels */}
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(420px, 1fr))',
+                gap: '1.5rem',
+                flex: 1,
+                minHeight: 0,
+              }}
+              className="indicators-grid"
+            >
+
+              {/* Lagging Indicators Panel */}
+              <section className="glass-panel" style={{ padding: '1.15rem 1.25rem', display: 'flex', flexDirection: 'column', gap: '0.75rem', height: '100%' }}>
+                <div>
+                  <h3 style={{ fontSize: '0.82rem', fontWeight: 800, letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--text-primary)' }}>
+                    Lagging Indicators (Incident Breakdown)
+                  </h3>
+                  <div style={{ height: '1px', background: 'var(--border-divider)', marginTop: '0.4rem' }}></div>
+                </div>
+
+                {/* Layout for Table & Donut */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '1.5rem', alignItems: 'start', flex: 1, width: '100%' }}>
+                  <div style={{ maxHeight: '380px', overflowY: 'auto', paddingRight: '0.25rem', width: '100%' }}>
+                    <table className="hse-table lagging-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
+                      <thead>
+                        <tr>
+                          <th style={{ position: 'sticky', top: 0, background: theme === 'light' ? '#ffffff' : '#0a121e', zIndex: 1 }}>Incident Classification</th>
+                          <th style={{ textAlign: 'right', position: 'sticky', top: 0, background: theme === 'light' ? '#ffffff' : '#0a121e', zIndex: 1 }}>Count</th>
                         </tr>
-                      )
-                    })}
-                  </tbody>
-                </table>
+                      </thead>
+                      <tbody>
+                        {metricsList
+                          .filter(m => m.type === 'lagging' && m.isActive !== false)
+                          .map((m, index) => {
+                            const defaultColors = ['#ef4444', '#fbbf24', '#3b82f6', '#10b981', '#8b5cf6', '#ec4899', '#f97316', '#14b8a6']
+                            const color = m.color || defaultColors[index % defaultColors.length]
+                            return (
+                              <tr key={m.id}>
+                                <td style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                  <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: color }}></span>
+                                  {m.label}
+                                </td>
+                                <td style={{ textAlign: 'right', fontWeight: 700, color: 'var(--text-primary)' }}>{m.value}</td>
+                              </tr>
+                            )
+                          })}
+                      </tbody>
+                    </table>
+                  </div>
 
-                {/* Normalized comparison bar chart */}
-                <div ref={barContainerRef}>
-                  <TargetVsActual
-                    leadingData={leadingData}
-                    hoveredCategory={barHoverCategory}
-                    theme={theme}
-                  />
+                  {/* ECharts donut chart */}
+                  <div ref={donutContainerRef}>
+                    <IncidentDonut
+                      laggingData={laggingData}
+                      hoveredCategory={donutHoverCategory}
+                      theme={theme}
+                    />
+                  </div>
                 </div>
-              </div>
-            </section>
+              </section>
 
-          </div>
+              {/* Leading Indicators Panel */}
+              <section className="glass-panel" style={{ padding: '1.15rem 1.25rem', display: 'flex', flexDirection: 'column', gap: '0.75rem', height: '100%' }}>
+                <div>
+                  <h3 style={{ fontSize: '0.82rem', fontWeight: 800, letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--text-primary)' }}>
+                    Leading Indicators (Preventative Targets)
+                  </h3>
+                  <div style={{ height: '1px', background: 'var(--border-divider)', marginTop: '0.4rem' }}></div>
+                </div>
 
-        </main>
+                {/* Table and Comparison Chart */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', flex: 1, justifyContent: 'space-around' }}>
+                  <div style={{ maxHeight: '180px', overflowY: 'auto', paddingRight: '0.25rem', width: '100%' }}>
+                    <table className="hse-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
+                      <thead>
+                        <tr>
+                          <th style={{ position: 'sticky', top: 0, background: theme === 'light' ? '#ffffff' : '#0a121e', zIndex: 1 }}>Proactive HSE Metric</th>
+                          <th style={{ textAlign: 'center', position: 'sticky', top: 0, background: theme === 'light' ? '#ffffff' : '#0a121e', zIndex: 1 }}>Actual</th>
+                          <th style={{ textAlign: 'right', position: 'sticky', top: 0, background: theme === 'light' ? '#ffffff' : '#0a121e', zIndex: 1 }}>Target Benchmark</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {leadingData.map((item, idx) => {
+                          const isAchieved = item.actual >= item.target
+                          return (
+                            <tr key={idx}>
+                              <td>{item.name}</td>
+                              <td style={{ textAlign: 'center', fontWeight: 700, color: isAchieved ? 'var(--color-success)' : 'var(--color-warning)' }}>
+                                {item.displayActual}
+                              </td>
+                              <td style={{ textAlign: 'right', color: 'var(--text-secondary)', fontSize: '0.78rem' }}>
+                                {item.displayTarget}
+                              </td>
+                            </tr>
+                          )
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
 
-      </div>
+                  {/* Normalized comparison bar chart */}
+                  <div ref={barContainerRef}>
+                    <TargetVsActual
+                      leadingData={leadingData}
+                      hoveredCategory={barHoverCategory}
+                      theme={theme}
+                    />
+                  </div>
+                </div>
+              </section>
 
-      {/* Virtual Cursor element for Tour Demo */}
-      {demoActive && (
-        <div
-          id="virtual-cursor"
-          style={{
-            position: 'fixed',
-            left: cursorPos.x,
-            top: cursorPos.y,
-            width: '20px',
-            height: '20px',
-            backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'24\' height=\'24\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%231c2821\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3E%3Cpath d=\'m4 4 7.07 17 2.51-7.39L21 11.07z\'/%3E%3C/svg%3E")',
-            backgroundSize: 'contain',
-            pointerEvents: 'none',
-            zIndex: 999999,
-            transition: 'left 1.2s cubic-bezier(0.25, 1, 0.5, 1), top 1.2s cubic-bezier(0.25, 1, 0.5, 1)',
-          }}
-        />
-      )}
+            </div>
 
-      {/* Responsive adjustments helper styles */}
-      <style>{`
+          </main>
+
+        </div>
+
+        {/* Virtual Cursor element for Tour Demo */}
+        {demoActive && (
+          <div
+            id="virtual-cursor"
+            style={{
+              position: 'fixed',
+              left: cursorPos.x,
+              top: cursorPos.y,
+              width: '20px',
+              height: '20px',
+              backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'24\' height=\'24\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%231c2821\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3E%3Cpath d=\'m4 4 7.07 17 2.51-7.39L21 11.07z\'/%3E%3C/svg%3E")',
+              backgroundSize: 'contain',
+              pointerEvents: 'none',
+              zIndex: 999999,
+              transition: 'left 1.2s cubic-bezier(0.25, 1, 0.5, 1), top 1.2s cubic-bezier(0.25, 1, 0.5, 1)',
+            }}
+          />
+        )}
+
+        {/* Responsive adjustments helper styles */}
+        <style>{`
+        .lagging-table th {
+          padding: 0.9rem 0.75rem !important;
+        }
+        .lagging-table td {
+          padding: 1.05rem 0.75rem !important;
+        }
         #presentation-overlay .donut-chart-container {
           height: 220px !important;
         }
@@ -2141,10 +2155,10 @@ export const Dashboard: React.FC = () => {
             height: 100%;
           }
           .donut-chart-container {
-            height: 180px;
+            height: 220px;
           }
           .target-chart-container {
-            height: 165px;
+            height: 240px;
           }
           .hse-table th {
             padding: 0.5rem 0.75rem !important;
@@ -2188,7 +2202,7 @@ export const Dashboard: React.FC = () => {
           }
         }
       `}</style>
-    </div>
+      </div>
     </>
   )
 }
