@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import type { MetricItem } from '../../types/dashboard'
+import type { MetricItem, KPITargets } from '../../types/dashboard'
 import { RotateCcw, HelpCircle, Sun, Moon, Save, CheckCircle, AlertCircle, Loader, Edit2, Trash2, Plus, X, Lock, Unlock } from 'lucide-react'
 
 interface InputFormProps {
@@ -14,6 +14,8 @@ interface InputFormProps {
   saveStatus?: 'idle' | 'saved' | 'error'
   adminPasscodeHash: string | null
   onSavePasscodeHash: (newHash: string) => void
+  kpiTargets: KPITargets
+  onKpiTargetsChange: (newTargets: KPITargets) => void
 }
 
 export const InputForm: React.FC<InputFormProps> = ({
@@ -28,6 +30,8 @@ export const InputForm: React.FC<InputFormProps> = ({
   saveStatus = 'idle',
   adminPasscodeHash = null,
   onSavePasscodeHash,
+  kpiTargets,
+  onKpiTargetsChange,
 }) => {
   // Lock state: starts locked if an admin passcode hash exists in the database
   const [isLocked, setIsLocked] = useState(() => !!adminPasscodeHash)
@@ -201,7 +205,7 @@ export const InputForm: React.FC<InputFormProps> = ({
     setEditingMetric(m)
     setEditLabel(m.label)
     setEditInfo(m.info || '')
-    setEditTarget(String(m.target || ''))
+    setEditTarget(m.target !== undefined ? String(m.target) : '')
     setEditColor(m.color || '')
   }
 
@@ -213,7 +217,9 @@ export const InputForm: React.FC<InputFormProps> = ({
           ...m,
           label: editLabel,
           info: editInfo || undefined,
-          target: m.type === 'leading' ? (parseInt(editTarget, 10) || 100) : undefined,
+          target: (m.type === 'leading' || m.type === 'lagging')
+            ? (isNaN(parseInt(editTarget, 10)) ? (m.type === 'leading' ? 100 : 0) : parseInt(editTarget, 10))
+            : undefined,
           color: editColor || undefined
         }
       }
@@ -247,7 +253,9 @@ export const InputForm: React.FC<InputFormProps> = ({
       type,
       value: 0,
       info: newInfo || undefined,
-      target: type === 'leading' ? (parseInt(newTarget, 10) || 100) : undefined,
+      target: (type === 'leading' || type === 'lagging')
+        ? (isNaN(parseInt(newTarget, 10)) ? (type === 'leading' ? 100 : 0) : parseInt(newTarget, 10))
+        : undefined,
       color: newColor,
       isCustom: true,
       isActive: true
@@ -646,6 +654,7 @@ export const InputForm: React.FC<InputFormProps> = ({
               </div>
               <input type="text" placeholder="Name e.g. Near Misses" value={newLabel} onChange={e => setNewLabel(e.target.value)} className="form-input" style={{ fontSize: '0.8rem', padding: '0.4rem 0.6rem' }} />
               <input type="text" placeholder="Description e.g. Near misses logged" value={newInfo} onChange={e => setNewInfo(e.target.value)} className="form-input" style={{ fontSize: '0.8rem', padding: '0.4rem 0.6rem' }} />
+              <input type="number" placeholder="Target Benchmark e.g. 0" value={newTarget} onChange={e => setNewTarget(e.target.value)} className="form-input" style={{ fontSize: '0.8rem', padding: '0.4rem 0.6rem' }} />
               <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', alignItems: 'center', marginTop: '0.2rem' }}>
                 <span style={{ fontSize: '0.65rem', fontWeight: 700, color: 'var(--text-muted)' }}>Chart Color:</span>
                 {['#ef4444', '#fbbf24', '#3b82f6', '#10b981', '#8b5cf6', '#ec4899', '#f97316', '#14b8a6'].map(c => (
@@ -868,6 +877,87 @@ export const InputForm: React.FC<InputFormProps> = ({
         </div>
       </div>
 
+      {/* Global KPI Target Baselines Panel */}
+      <div
+        style={{
+          background: 'var(--bg-input)',
+          borderRadius: 'var(--radius-md)',
+          padding: '0.75rem',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '0.5rem',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.1rem' }}>
+          <span style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-primary)' }}>
+            Global KPI Targets
+          </span>
+          <span style={{ fontSize: '0.62rem', fontWeight: 700, color: 'var(--text-muted)' }}>
+            (Unlocked Edit)
+          </span>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.15rem' }}>
+            <label style={{ fontSize: '0.6rem', fontWeight: 700, color: 'var(--text-secondary)' }}>TRIR Limit</label>
+            <input
+              type="number"
+              step="0.01"
+              min="0.1"
+              disabled={isLocked}
+              value={kpiTargets.trir}
+              onChange={e => onKpiTargetsChange({ ...kpiTargets, trir: parseFloat(e.target.value) || 1.00 })}
+              className="form-input"
+              style={{ fontSize: '0.72rem', padding: '0.25rem 0.45rem' }}
+            />
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.15rem' }}>
+            <label style={{ fontSize: '0.6rem', fontWeight: 700, color: 'var(--text-secondary)' }}>LTIFR Limit</label>
+            <input
+              type="number"
+              step="0.01"
+              min="0.1"
+              disabled={isLocked}
+              value={kpiTargets.ltifr}
+              onChange={e => onKpiTargetsChange({ ...kpiTargets, ltifr: parseFloat(e.target.value) || 1.00 })}
+              className="form-input"
+              style={{ fontSize: '0.72rem', padding: '0.25rem 0.45rem' }}
+            />
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.15rem' }}>
+            <label style={{ fontSize: '0.6rem', fontWeight: 700, color: 'var(--text-secondary)' }}>Hazard SLA Min %</label>
+            <input
+              type="number"
+              step="1"
+              min="1"
+              max="100"
+              disabled={isLocked}
+              value={kpiTargets.hazardCloseOut}
+              onChange={e => onKpiTargetsChange({ ...kpiTargets, hazardCloseOut: parseInt(e.target.value, 10) || 90 })}
+              className="form-input"
+              style={{ fontSize: '0.72rem', padding: '0.25rem 0.45rem' }}
+            />
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.15rem' }}>
+            <label style={{ fontSize: '0.6rem', fontWeight: 700, color: 'var(--text-secondary)' }}>Audit Comp Min %</label>
+            <input
+              type="number"
+              step="1"
+              min="1"
+              max="100"
+              disabled={isLocked}
+              value={kpiTargets.auditCompletion}
+              onChange={e => onKpiTargetsChange({ ...kpiTargets, auditCompletion: parseInt(e.target.value, 10) || 95 })}
+              className="form-input"
+              style={{ fontSize: '0.72rem', padding: '0.25rem 0.45rem' }}
+            />
+          </div>
+        </div>
+      </div>
+
       {/* Premium Edit Settings Overlay Modal */}
       {editingMetric && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0, 0, 0, 0.55)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '1rem' }}>
@@ -887,10 +977,10 @@ export const InputForm: React.FC<InputFormProps> = ({
               <input type="text" value={editInfo} onChange={e => setEditInfo(e.target.value)} className="form-input" style={{ fontSize: '0.82rem', padding: '0.45rem 0.65rem' }} />
             </div>
 
-            {editingMetric.type === 'leading' && (
+            {(editingMetric.type === 'leading' || editingMetric.type === 'lagging') && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
                 <label style={{ fontSize: '0.65rem', fontWeight: 700, color: 'var(--text-secondary)' }}>Target Value</label>
-                <input type="number" min="1" value={editTarget} onChange={e => setEditTarget(e.target.value)} className="form-input" style={{ fontSize: '0.82rem', padding: '0.45rem 0.65rem' }} />
+                <input type="number" min="0" value={editTarget} onChange={e => setEditTarget(e.target.value)} className="form-input" style={{ fontSize: '0.82rem', padding: '0.45rem 0.65rem' }} />
               </div>
             )}
 

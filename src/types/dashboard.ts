@@ -27,9 +27,16 @@ export interface MetricItem {
   type: 'exposure' | 'lagging' | 'leading'
   value: number
   info?: string
-  target?: number        // Leading indicators only
+  target?: number        // Target baseline benchmark
   isCustom?: boolean     // Added by user
   isRecordable?: boolean // Lagging indicators: if it contributes to TRIR/TRI (defaults to true)
   color?: string         // Legend & chart color override
   isActive?: boolean     // False if soft-deleted
+}
+
+export interface KPITargets {
+  trir: number
+  ltifr: number
+  hazardCloseOut: number
+  auditCompletion: number
 }
