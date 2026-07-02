@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react'
-import type { SafetyData, MetricItem } from '../types/dashboard'
+import type { SafetyData, MetricItem, KPITargets } from '../types/dashboard'
 import { calculateSafetyMetrics } from '../utils/calculations'
 import InputForm from '../components/forms/InputForm'
 import KPICard from '../components/cards/KPICard'
@@ -36,10 +36,10 @@ const getInitialMetrics = (data: SafetyData): MetricItem[] => {
 
   const defaultItems: MetricItem[] = [
     { id: 'totalManHours', label: labelsMap['totalManHours'] || 'Total Man-Hours Worked', type: 'exposure', value: data.totalManHours, info: 'Staff & Contractors', isActive: activeMap['totalManHours'] !== false },
-    { id: 'lti', label: labelsMap['lti'] || 'Lost Time Injuries (LTI)', type: 'lagging', value: data.lti, info: 'Lost workdays', color: '#ef4444', isActive: activeMap['lti'] !== false },
-    { id: 'rwc', label: labelsMap['rwc'] || 'Restricted Work Cases (RWC)', type: 'lagging', value: data.rwc, info: 'Restricted duties', color: '#fbbf24', isActive: activeMap['rwc'] !== false },
-    { id: 'mtc', label: labelsMap['mtc'] || 'Medical Treatment Cases (MTC)', type: 'lagging', value: data.mtc, info: 'Beyond first aid', color: '#3b82f6', isActive: activeMap['mtc'] !== false },
-    { id: 'fac', label: labelsMap['fac'] || 'First Aid Cases (FAC)', type: 'lagging', value: data.fac, info: 'Minor site treatment', color: '#10b981', isActive: activeMap['fac'] !== false },
+    { id: 'lti', label: labelsMap['lti'] || 'Lost Time Injuries (LTI)', type: 'lagging', value: data.lti, info: 'Lost workdays', target: targetsMap['lti'] ?? 0, color: '#ef4444', isActive: activeMap['lti'] !== false },
+    { id: 'rwc', label: labelsMap['rwc'] || 'Restricted Work Cases (RWC)', type: 'lagging', value: data.rwc, info: 'Restricted duties', target: targetsMap['rwc'] ?? 0, color: '#fbbf24', isActive: activeMap['rwc'] !== false },
+    { id: 'mtc', label: labelsMap['mtc'] || 'Medical Treatment Cases (MTC)', type: 'lagging', value: data.mtc, info: 'Beyond first aid', target: targetsMap['mtc'] ?? 0, color: '#3b82f6', isActive: activeMap['mtc'] !== false },
+    { id: 'fac', label: labelsMap['fac'] || 'First Aid Cases (FAC)', type: 'lagging', value: data.fac, info: 'Minor site treatment', target: targetsMap['fac'] ?? 0, color: '#10b981', isActive: activeMap['fac'] !== false },
     { id: 'observations', label: labelsMap['observations'] || 'Safety Observations Logged', type: 'leading', value: data.observations, info: 'Hazard cards logged', target: targetsMap['observations'] ?? 400, color: '#3b82f6', isActive: activeMap['observations'] !== false },
     { id: 'hazardsClosed', label: labelsMap['hazardsClosed'] || 'Hazards Closed Within SLA', type: 'leading', value: data.hazardsClosed, info: 'Closed inside SLA window', target: targetsMap['hazardsClosed'] ?? 360, color: '#fbbf24', isActive: activeMap['hazardsClosed'] !== false },
     { id: 'auditsPlanned', label: labelsMap['auditsPlanned'] || 'Total Safety Audits Planned', type: 'leading', value: data.auditsPlanned, info: 'Scheduled audits', target: targetsMap['auditsPlanned'] ?? 24, color: '#10b981', isActive: activeMap['auditsPlanned'] !== false },
@@ -168,6 +168,28 @@ export const Dashboard: React.FC = () => {
     return getInitialMetrics(startData)
   })
 
+  // Global KPI Targets state
+  const [kpiTargets, setKpiTargets] = useState<KPITargets>(() => {
+    const saved = localStorage.getItem('hse_kpi_targets')
+    if (saved) {
+      try {
+        return JSON.parse(saved) as KPITargets
+      } catch (e) {
+        console.error('Error parsing KPI targets:', e)
+      }
+    }
+    return {
+      trir: 1.00,
+      ltifr: 1.00,
+      hazardCloseOut: 90,
+      auditCompletion: 95,
+    }
+  })
+
+  useEffect(() => {
+    localStorage.setItem('hse_kpi_targets', JSON.stringify(kpiTargets))
+  }, [kpiTargets])
+
   // Sync metricsList with safetyData (e.g. on mount or DB subscription update)
   useEffect(() => {
     setMetricsList(prev => {
@@ -178,6 +200,9 @@ export const Dashboard: React.FC = () => {
           syncedList = safetyData.customMetrics
         } else if (typeof safetyData.customMetrics === 'object') {
           syncedList = safetyData.customMetrics.metrics || null
+          if (safetyData.customMetrics.kpi_targets) {
+            setKpiTargets(safetyData.customMetrics.kpi_targets)
+          }
         }
       }
 
@@ -221,7 +246,8 @@ export const Dashboard: React.FC = () => {
       ...safetyData,
       customMetrics: {
         metrics: newMetrics,
-        admin_passcode_hash: currentHash
+        admin_passcode_hash: currentHash,
+        kpi_targets: kpiTargets
       }
     }
     newMetrics.forEach(item => {
@@ -255,6 +281,24 @@ export const Dashboard: React.FC = () => {
     localStorage.setItem('hse_metrics_targets', JSON.stringify(targetsMap))
   }
 
+  const handleKpiTargetsChange = (newTargets: KPITargets) => {
+    setKpiTargets(newTargets)
+
+    const currentHash = (safetyData.customMetrics && typeof safetyData.customMetrics === 'object' && !Array.isArray(safetyData.customMetrics))
+      ? (safetyData.customMetrics.admin_passcode_hash || null)
+      : null
+
+    const updatedSafetyData: SafetyData = {
+      ...safetyData,
+      customMetrics: {
+        metrics: metricsList,
+        admin_passcode_hash: currentHash,
+        kpi_targets: newTargets
+      }
+    }
+    setSafetyData(updatedSafetyData)
+  }
+
   const adminPasscodeHash = (safetyData.customMetrics && typeof safetyData.customMetrics === 'object' && !Array.isArray(safetyData.customMetrics))
     ? (safetyData.customMetrics.admin_passcode_hash || null)
     : null
@@ -264,7 +308,8 @@ export const Dashboard: React.FC = () => {
       ...safetyData,
       customMetrics: {
         metrics: metricsList,
-        admin_passcode_hash: newHash
+        admin_passcode_hash: newHash,
+        kpi_targets: kpiTargets
       }
     }
     setSafetyData(updatedSafetyData)
@@ -341,7 +386,7 @@ export const Dashboard: React.FC = () => {
   }, [isInputVisible])
 
   // Compute metrics dynamically
-  const calculated = calculateSafetyMetrics(safetyData, useExcelFormula, metricsList)
+  const calculated = calculateSafetyMetrics(safetyData, useExcelFormula, metricsList, kpiTargets)
 
   // Construct dynamic charts lists
   const laggingData = metricsList
@@ -381,7 +426,7 @@ export const Dashboard: React.FC = () => {
 
     // Hazard Closeout Rate
     if (obs && obs.isActive !== false && hc && hc.isActive !== false) {
-      const targetVal = 90
+      const targetVal = kpiTargets.hazardCloseOut
       chartLeadingData.push({
         name: 'Hazard SLA Close-Out',
         actual: calculated.hazardCloseOutRate,
@@ -394,7 +439,7 @@ export const Dashboard: React.FC = () => {
 
     // Audit Completion
     if (ap && ap.isActive !== false && ac && ac.isActive !== false) {
-      const targetVal = 95
+      const targetVal = kpiTargets.auditCompletion
       chartLeadingData.push({
         name: 'HSE Audit Execution',
         actual: calculated.auditCompletionRate,
@@ -455,11 +500,11 @@ export const Dashboard: React.FC = () => {
     let overallStatusColor = '#10b981' // Success color
     let overallStatusDesc = ''
 
-    if (calculated.trir >= 2.00 || safetyData.lti > 1 || calculated.auditCompletionRate < 80) {
+    if (calculated.trir >= 2 * kpiTargets.trir || safetyData.lti > 1 || calculated.auditCompletionRate < (kpiTargets.auditCompletion - 15)) {
       overallStatus = 'Critical'
       overallStatusColor = '#ef4444' // Danger
       overallStatusDesc = 'Safety performance bounds exceeded. Immediate leadership attention required to address critical risk trends.'
-    } else if (calculated.trir >= 1.00 || safetyData.lti === 1 || calculated.auditCompletionRate < 95 || calculated.hazardCloseOutRate < 90) {
+    } else if (calculated.trir >= kpiTargets.trir || safetyData.lti === 1 || calculated.auditCompletionRate < kpiTargets.auditCompletion || calculated.hazardCloseOutRate < kpiTargets.hazardCloseOut) {
       overallStatus = 'Needs Attention'
       overallStatusColor = '#fbbf24' // Warning
       overallStatusDesc = 'HSE metrics indicate moderate risk bounds or minor target slippage. Heightened review recommended.'
@@ -514,25 +559,28 @@ export const Dashboard: React.FC = () => {
   const getLeadingInsights = () => {
     const insights: string[] = []
 
+    const obsMetric = metricsList.find(m => m.id === 'observations')
+    const obsTarget = obsMetric?.target ?? 400
+
     // Safety Observations
-    if (safetyData.observations >= 400) {
-      insights.push(`Safety observations logged (${safetyData.observations}) exceeded the KPI target of 400, reflecting active hazard reporting.`)
+    if (safetyData.observations >= obsTarget) {
+      insights.push(`Safety observations logged (${safetyData.observations}) exceeded the KPI target of ${obsTarget}, reflecting active hazard reporting.`)
     } else {
-      insights.push(`Safety observations logged (${safetyData.observations}) remain below the target of 400. Focus campaigns required.`)
+      insights.push(`Safety observations logged (${safetyData.observations}) remain below the target of ${obsTarget}. Focus campaigns required.`)
     }
 
     // Hazard Close-Out
-    if (calculated.hazardCloseOutRate >= 90) {
-      insights.push(`Hazard SLA close-out performance reached ${calculated.hazardCloseOutRate.toFixed(1)}%, exceeding the minimum 90.0% operational standard.`)
+    if (calculated.hazardCloseOutRate >= kpiTargets.hazardCloseOut) {
+      insights.push(`Hazard SLA close-out performance reached ${calculated.hazardCloseOutRate.toFixed(1)}%, exceeding the minimum ${kpiTargets.hazardCloseOut.toFixed(1)}% operational standard.`)
     } else {
-      insights.push(`Hazard SLA close-out performance is at ${calculated.hazardCloseOutRate.toFixed(1)}%, failing to meet the 90.0% operational standard.`)
+      insights.push(`Hazard SLA close-out performance is at ${calculated.hazardCloseOutRate.toFixed(1)}%, failing to meet the ${kpiTargets.hazardCloseOut.toFixed(1)}% operational standard.`)
     }
 
     // Audit Completion
-    if (calculated.auditCompletionRate >= 95) {
-      insights.push(`HSE safety audit execution stands at ${calculated.auditCompletionRate.toFixed(1)}%, satisfying the 95.0% compliance compliance target.`)
+    if (calculated.auditCompletionRate >= kpiTargets.auditCompletion) {
+      insights.push(`HSE safety audit execution stands at ${calculated.auditCompletionRate.toFixed(1)}%, satisfying the ${kpiTargets.auditCompletion.toFixed(1)}% compliance compliance target.`)
     } else {
-      insights.push(`Audit completion remains below the 95% compliance target (currently at ${calculated.auditCompletionRate.toFixed(1)}%).`)
+      insights.push(`Audit completion remains below the ${kpiTargets.auditCompletion}% compliance target (currently at ${calculated.auditCompletionRate.toFixed(1)}%).`)
     }
 
     return insights
@@ -1015,10 +1063,10 @@ export const Dashboard: React.FC = () => {
                 {/* KPI Row (Large view) */}
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '1rem' }}>
                   {[
-                    { title: "Total Recordable Incident Rate", value: calculated.trir.toFixed(2), target: "Target: < 1.00", color: calculated.trir < 1.00 ? '#10b981' : '#ef4444', hoverCat: null },
-                    { title: "Lost Time Frequency Rate", value: calculated.ltifr.toFixed(2), target: "Target: < 1.00", color: calculated.ltifr < 1.00 ? '#10b981' : '#ef4444', hoverCat: 'lti' },
-                    { title: "Hazard Close-Out Rate", value: `${calculated.hazardCloseOutRate.toFixed(1)}%`, target: "Target: > 90%", color: calculated.hazardCloseOutRate >= 90 ? '#fbbf24' : '#ef4444', hoverCat: 'hazard' },
-                    { title: "Audit Completion Rate", value: `${calculated.auditCompletionRate.toFixed(1)}%`, target: "Target: > 95%", color: calculated.auditCompletionRate >= 95 ? '#10b981' : '#ef4444', hoverCat: 'audit' },
+                    { title: "Total Recordable Incident Rate", value: calculated.trir.toFixed(2), target: `Target: < ${kpiTargets.trir.toFixed(2)}`, color: calculated.trir < kpiTargets.trir ? '#10b981' : '#ef4444', hoverCat: null },
+                    { title: "Lost Time Frequency Rate", value: calculated.ltifr.toFixed(2), target: `Target: < ${kpiTargets.ltifr.toFixed(2)}`, color: calculated.ltifr < kpiTargets.ltifr ? '#10b981' : '#ef4444', hoverCat: 'lti' },
+                    { title: "Hazard Close-Out Rate", value: `${calculated.hazardCloseOutRate.toFixed(1)}%`, target: `Target: >= ${kpiTargets.hazardCloseOut}%`, color: calculated.hazardCloseOutRate >= kpiTargets.hazardCloseOut ? '#fbbf24' : '#ef4444', hoverCat: 'hazard' },
+                    { title: "Audit Completion Rate", value: `${calculated.auditCompletionRate.toFixed(1)}%`, target: `Target: >= ${kpiTargets.auditCompletion}%`, color: calculated.auditCompletionRate >= kpiTargets.auditCompletion ? '#10b981' : '#ef4444', hoverCat: 'audit' },
                     { title: "Total Recordable Cases", value: calculated.tri, target: `LTI: ${safetyData.lti} • RWC: ${safetyData.rwc} • MTC: ${safetyData.mtc}`, color: calculated.tri === 0 ? '#10b981' : '#fbbf24', hoverCat: 'mtc' },
                   ].map((kpi, idx) => (
                     <div
@@ -1149,22 +1197,22 @@ export const Dashboard: React.FC = () => {
                           </svg>
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginTop: '0.5rem' }}>
-                          <span style={{ fontSize: '2.8rem', fontWeight: 800, letterSpacing: '-0.03em', color: calculated.trir < 1.00 ? '#10b981' : '#ef4444' }}>
+                          <span style={{ fontSize: '2.8rem', fontWeight: 800, letterSpacing: '-0.03em', color: calculated.trir < kpiTargets.trir ? '#10b981' : '#ef4444' }}>
                             {calculated.trir.toFixed(2)}
                           </span>
                           <span style={{
-                            backgroundColor: calculated.trir < 1.00 ? 'var(--color-success-bg)' : calculated.trir < 2.00 ? 'var(--color-warning-bg)' : 'var(--color-danger-bg)',
-                            color: calculated.trir < 1.00 ? 'var(--color-success)' : calculated.trir < 2.00 ? 'var(--color-warning)' : 'var(--color-danger)',
+                            backgroundColor: calculated.trir < kpiTargets.trir ? 'var(--color-success-bg)' : calculated.trir < 2 * kpiTargets.trir ? 'var(--color-warning-bg)' : 'var(--color-danger-bg)',
+                            color: calculated.trir < kpiTargets.trir ? 'var(--color-success)' : calculated.trir < 2 * kpiTargets.trir ? 'var(--color-warning)' : 'var(--color-danger)',
                             padding: '0.3rem 0.65rem',
                             borderRadius: '20px',
                             fontSize: '0.78rem',
                             fontWeight: 700,
                           }}>
-                            {calculated.trir < 1.00 ? 'On Track' : 'Warning'}
+                            {calculated.trir < kpiTargets.trir ? 'On Track' : 'Warning'}
                           </span>
                         </div>
                         <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginTop: '0.5rem', paddingTop: '0.5rem', borderTop: theme === 'light' ? '1px solid rgba(0,0,0,0.08)' : '1px solid rgba(255,255,255,0.05)', fontWeight: 500 }}>
-                          TRIR Target: &lt; 1.00
+                          TRIR Target: &lt; {kpiTargets.trir.toFixed(2)}
                         </div>
                       </div>
 
@@ -1197,12 +1245,12 @@ export const Dashboard: React.FC = () => {
                           </svg>
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginTop: '0.5rem' }}>
-                          <span style={{ fontSize: '2.8rem', fontWeight: 800, letterSpacing: '-0.03em', color: calculated.ltifr < 1.00 ? '#10b981' : '#ef4444' }}>
+                          <span style={{ fontSize: '2.8rem', fontWeight: 800, letterSpacing: '-0.03em', color: calculated.ltifr < kpiTargets.ltifr ? '#10b981' : '#ef4444' }}>
                             {calculated.ltifr.toFixed(2)}
                           </span>
                         </div>
                         <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginTop: '0.5rem', paddingTop: '0.5rem', borderTop: theme === 'light' ? '1px solid rgba(0,0,0,0.08)' : '1px solid rgba(255,255,255,0.05)', fontWeight: 500 }}>
-                          LTIFR Target: &lt; 1.00
+                          LTIFR Target: &lt; {kpiTargets.ltifr.toFixed(2)}
                         </div>
                       </div>
 
@@ -1232,22 +1280,22 @@ export const Dashboard: React.FC = () => {
                           </div>
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginTop: '0.5rem' }}>
-                          <span style={{ fontSize: '2.8rem', fontWeight: 800, letterSpacing: '-0.03em', color: calculated.hazardCloseOutRate >= 90 ? '#10b981' : '#ef4444' }}>
+                          <span style={{ fontSize: '2.8rem', fontWeight: 800, letterSpacing: '-0.03em', color: calculated.hazardCloseOutRate >= kpiTargets.hazardCloseOut ? '#10b981' : '#ef4444' }}>
                             {calculated.hazardCloseOutRate.toFixed(1)}%
                           </span>
                           <span style={{
-                            backgroundColor: calculated.hazardCloseOutRate >= 90 ? 'var(--color-success-bg)' : 'var(--color-danger-bg)',
-                            color: calculated.hazardCloseOutRate >= 90 ? 'var(--color-success)' : 'var(--color-danger)',
+                            backgroundColor: calculated.hazardCloseOutRate >= kpiTargets.hazardCloseOut ? 'var(--color-success-bg)' : 'var(--color-danger-bg)',
+                            color: calculated.hazardCloseOutRate >= kpiTargets.hazardCloseOut ? 'var(--color-success)' : 'var(--color-danger)',
                             padding: '0.3rem 0.65rem',
                             borderRadius: '20px',
                             fontSize: '0.78rem',
                             fontWeight: 700,
                           }}>
-                            {calculated.hazardCloseOutRate >= 90 ? 'Passed' : 'Action Req.'}
+                            {calculated.hazardCloseOutRate >= kpiTargets.hazardCloseOut ? 'Passed' : 'Action Req.'}
                           </span>
                         </div>
                         <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginTop: '0.5rem', paddingTop: '0.5rem', borderTop: theme === 'light' ? '1px solid rgba(0,0,0,0.08)' : '1px solid rgba(255,255,255,0.05)', fontWeight: 500 }}>
-                          Target SLA: &gt;= 90%
+                          Target SLA: &gt;= {kpiTargets.hazardCloseOut}%
                         </div>
                       </div>
 
@@ -1259,13 +1307,15 @@ export const Dashboard: React.FC = () => {
                           flexDirection: 'column',
                           justifyContent: 'space-between',
                           padding: '1.5rem 1.75rem',
-                          background: calculated.auditCompletionRate >= 95
+                          background: calculated.auditCompletionRate >= kpiTargets.auditCompletion
                             ? (theme === 'light' ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)' : 'linear-gradient(135deg, #064e3b 0%, #022c22 100%)')
                             : (theme === 'light' ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' : 'linear-gradient(135deg, #7f1d1d 0%, #450a0a 100%)'),
                           color: '#ffffff',
                           border: 'none',
                           height: '185px',
-                          boxShadow: '0 8px 24px rgba(16, 185, 129, 0.25)',
+                          boxShadow: calculated.auditCompletionRate >= kpiTargets.auditCompletion 
+                            ? '0 8px 24px rgba(16, 185, 129, 0.25)' 
+                            : '0 8px 24px rgba(239, 68, 68, 0.25)',
                         }}
                       >
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem', width: '100%' }}>
@@ -1274,13 +1324,13 @@ export const Dashboard: React.FC = () => {
                           </span>
                           <svg width="60" height="28" viewBox="0 0 55 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ marginLeft: 'auto' }}>
                             <path
-                              d="M2 14C8 16 10 4 18 8C26 12 28 2 36 6C44 10 46 4 53 2"
-                              stroke="#ffffff"
-                              strokeWidth="2.5"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              opacity="0.9"
-                            />
+                                d="M2 14C8 16 10 4 18 8C26 12 28 2 36 6C44 10 46 4 53 2"
+                                stroke="#ffffff"
+                                strokeWidth="2.5"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                opacity="0.9"
+                              />
                           </svg>
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginTop: '0.5rem' }}>
@@ -1295,11 +1345,11 @@ export const Dashboard: React.FC = () => {
                             fontSize: '0.78rem',
                             fontWeight: 700,
                           }}>
-                            {calculated.auditCompletionRate >= 95 ? 'Compliant' : 'Non-Compliant'}
+                            {calculated.auditCompletionRate >= kpiTargets.auditCompletion ? 'Compliant' : 'Non-Compliant'}
                           </span>
                         </div>
                         <div style={{ fontSize: '0.82rem', color: 'rgba(255, 255, 255, 0.75)', marginTop: '0.5rem', paddingTop: '0.5rem', borderTop: '1px solid rgba(255,255,255,0.2)', fontWeight: 500 }}>
-                          Compliance Target: 95.0%
+                          Compliance Target: {kpiTargets.auditCompletion.toFixed(1)}%
                         </div>
                       </div>
 
@@ -1404,7 +1454,8 @@ export const Dashboard: React.FC = () => {
                             <thead>
                               <tr>
                                 <th style={{ padding: '0.75rem 1rem', position: 'sticky', top: 0, background: theme === 'light' ? '#ffffff' : '#0a121e', zIndex: 1 }}>Incident Classification</th>
-                                <th style={{ textAlign: 'right', padding: '0.75rem 1rem', position: 'sticky', top: 0, background: theme === 'light' ? '#ffffff' : '#0a121e', zIndex: 1 }}>Count</th>
+                                <th style={{ textAlign: 'center', padding: '0.75rem 1rem', position: 'sticky', top: 0, background: theme === 'light' ? '#ffffff' : '#0a121e', zIndex: 1 }}>Actual</th>
+                                <th style={{ textAlign: 'right', padding: '0.75rem 1rem', position: 'sticky', top: 0, background: theme === 'light' ? '#ffffff' : '#0a121e', zIndex: 1 }}>Target Benchmark</th>
                               </tr>
                             </thead>
                             <tbody>
@@ -1413,13 +1464,16 @@ export const Dashboard: React.FC = () => {
                                 .map((m, index) => {
                                   const defaultColors = ['#ef4444', '#fbbf24', '#3b82f6', '#10b981', '#8b5cf6', '#ec4899', '#f97316', '#14b8a6']
                                   const color = m.color || defaultColors[index % defaultColors.length]
+                                  const targetVal = m.target ?? 0
+                                  const isAchieved = m.value <= targetVal
                                   return (
                                     <tr key={m.id}>
                                       <td style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1rem' }}>
                                         <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: color }}></span>
                                         {m.label}
                                       </td>
-                                      <td style={{ textAlign: 'right', fontWeight: 700, color: 'var(--text-primary)', padding: '0.75rem 1rem' }}>{m.value}</td>
+                                      <td style={{ textAlign: 'center', fontWeight: 700, color: isAchieved ? 'var(--color-success)' : 'var(--color-danger)', padding: '0.75rem 1rem' }}>{m.value}</td>
+                                      <td style={{ textAlign: 'right', color: 'var(--text-secondary)', fontSize: '0.8rem', padding: '0.75rem 1rem' }}>Target: &lt;= {targetVal}</td>
                                     </tr>
                                   )
                                 })}
@@ -1747,6 +1801,8 @@ export const Dashboard: React.FC = () => {
                 saveStatus={saveStatus}
                 adminPasscodeHash={adminPasscodeHash}
                 onSavePasscodeHash={handleSavePasscodeHash}
+                kpiTargets={kpiTargets}
+                onKpiTargetsChange={handleKpiTargetsChange}
               />
             </div>
           </aside>
@@ -2019,31 +2075,37 @@ export const Dashboard: React.FC = () => {
               <KPICard
                 title="Total Recordable Incident Rate"
                 value={calculated.trir.toFixed(2)}
-                subValue="TRIR Target: < 1.00"
+                subValue={`TRIR Target: < ${kpiTargets.trir.toFixed(2)}`}
                 variant="bar"
-                badgeText={calculated.trir < 1.00 ? 'On Track' : 'Warning'}
-                badgeColor={calculated.trir < 1.00 ? 'success' : calculated.trir < 2.00 ? 'warning' : 'danger'}
+                badgeText={calculated.trir < kpiTargets.trir ? 'On Track' : 'Warning'}
+                badgeColor={calculated.trir < kpiTargets.trir ? 'success' : calculated.trir < 2 * kpiTargets.trir ? 'warning' : 'danger'}
               />
               {/* LTIFR Card: Line sparkline variant */}
               <KPICard
                 title="Lost Time Frequency Rate"
                 value={calculated.ltifr.toFixed(2)}
-                subValue="LTIFR Target: < 1.00"
+                subValue={`LTIFR Target: < ${kpiTargets.ltifr.toFixed(2)}`}
                 variant="line"
+                badgeText={calculated.ltifr < kpiTargets.ltifr ? 'On Track' : 'Warning'}
+                badgeColor={calculated.ltifr < kpiTargets.ltifr ? 'success' : 'danger'}
               />
               {/* Hazard Rate: Circle indicator */}
               <KPICard
                 title="Hazard Close-Out Rate"
                 value={`${calculated.hazardCloseOutRate.toFixed(1)}%`}
-                subValue={useExcelFormula ? 'Formula: Observations/Closed' : 'Formula: Closed/Observations'}
+                subValue={`SLA Target: >= ${kpiTargets.hazardCloseOut}%`}
                 variant="circle"
+                badgeText={calculated.hazardCloseOutRate >= kpiTargets.hazardCloseOut ? 'Passed' : 'Action Req.'}
+                badgeColor={calculated.hazardCloseOutRate >= kpiTargets.hazardCloseOut ? 'success' : 'danger'}
               />
               {/* Audit Completion: Solid Sage green accent card! */}
               <KPICard
                 title="Audit Completion Rate"
                 value={`${calculated.auditCompletionRate.toFixed(1)}%`}
-                subValue="Compliance Target: 95.0%"
+                subValue={`Compliance Target: ${kpiTargets.auditCompletion.toFixed(1)}%`}
                 variant="accent"
+                badgeText={calculated.auditCompletionRate >= kpiTargets.auditCompletion ? 'Compliant' : 'Non-Compliant'}
+                badgeColor={calculated.auditCompletionRate >= kpiTargets.auditCompletion ? 'success' : 'danger'}
               />
               {/* Recordable Cases: Default style, displays dynamic risk pills */}
               <KPICard
@@ -2083,7 +2145,8 @@ export const Dashboard: React.FC = () => {
                       <thead>
                         <tr>
                           <th style={{ position: 'sticky', top: 0, background: theme === 'light' ? '#ffffff' : '#0a121e', zIndex: 1 }}>Incident Classification</th>
-                          <th style={{ textAlign: 'right', position: 'sticky', top: 0, background: theme === 'light' ? '#ffffff' : '#0a121e', zIndex: 1 }}>Count</th>
+                          <th style={{ textAlign: 'center', position: 'sticky', top: 0, background: theme === 'light' ? '#ffffff' : '#0a121e', zIndex: 1 }}>Actual</th>
+                          <th style={{ textAlign: 'right', position: 'sticky', top: 0, background: theme === 'light' ? '#ffffff' : '#0a121e', zIndex: 1 }}>Target Benchmark</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -2092,13 +2155,16 @@ export const Dashboard: React.FC = () => {
                           .map((m, index) => {
                             const defaultColors = ['#ef4444', '#fbbf24', '#3b82f6', '#10b981', '#8b5cf6', '#ec4899', '#f97316', '#14b8a6']
                             const color = m.color || defaultColors[index % defaultColors.length]
+                            const targetVal = m.target ?? 0
+                            const isAchieved = m.value <= targetVal
                             return (
                               <tr key={m.id}>
                                 <td style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                   <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: color }}></span>
                                   {m.label}
                                 </td>
-                                <td style={{ textAlign: 'right', fontWeight: 700, color: 'var(--text-primary)' }}>{m.value}</td>
+                                <td style={{ textAlign: 'center', fontWeight: 700, color: isAchieved ? 'var(--color-success)' : 'var(--color-danger)' }}>{m.value}</td>
+                                <td style={{ textAlign: 'right', color: 'var(--text-secondary)', fontSize: '0.78rem' }}>Target: &lt;= {targetVal}</td>
                               </tr>
                             )
                           })}

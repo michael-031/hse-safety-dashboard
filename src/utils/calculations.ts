@@ -1,9 +1,10 @@
-import type { SafetyData, CalculatedMetrics, MetricItem } from '../types/dashboard'
+import type { SafetyData, CalculatedMetrics, MetricItem, KPITargets } from '../types/dashboard'
 
 export function calculateSafetyMetrics(
   data: SafetyData,
   useExcelFormula: boolean = false,
-  metricsList?: MetricItem[]
+  metricsList?: MetricItem[],
+  kpiTargets?: KPITargets
 ): CalculatedMetrics {
   const {
     totalManHours,
@@ -15,6 +16,13 @@ export function calculateSafetyMetrics(
     auditsPlanned,
     auditsCompleted,
   } = data
+
+  const targets = kpiTargets || {
+    trir: 1.00,
+    ltifr: 1.00,
+    hazardCloseOut: 90,
+    auditCompletion: 95,
+  }
 
   // Helper to extract metric values dynamically
   const getMetricValue = (id: string, fallback: number) => {
@@ -75,15 +83,15 @@ export function calculateSafetyMetrics(
   let riskStatus: 'low' | 'moderate' | 'high' = 'low'
   let riskLabel = ''
 
-  if (trir < 1.00) {
+  if (trir < targets.trir) {
     riskStatus = 'low'
-    riskLabel = `STABLE / LOW RISK PERFORMANCE BOUNDS (TRIR < 1.00)`
-  } else if (trir >= 1.00 && trir < 2.00) {
+    riskLabel = `STABLE / LOW RISK PERFORMANCE BOUNDS (TRIR < ${targets.trir.toFixed(2)})`
+  } else if (trir >= targets.trir && trir < 2 * targets.trir) {
     riskStatus = 'moderate'
-    riskLabel = `MODERATE RISK PERFORMANCE BOUNDS (1.00 <= TRIR < 2.00)`
+    riskLabel = `MODERATE RISK PERFORMANCE BOUNDS (${targets.trir.toFixed(2)} <= TRIR < ${(2 * targets.trir).toFixed(2)})`
   } else {
     riskStatus = 'high'
-    riskLabel = `HIGH RISK PERFORMANCE BOUNDS (TRIR >= 2.00)`
+    riskLabel = `HIGH RISK PERFORMANCE BOUNDS (TRIR >= ${(2 * targets.trir).toFixed(2)})`
   }
 
   return {
