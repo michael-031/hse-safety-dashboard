@@ -1996,9 +1996,9 @@ export const Dashboard: React.FC = () => {
                 </div>
 
                 {/* Layout for Table & Donut */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '1.5rem', alignItems: 'center', flex: 1, width: '100%' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '1.5rem', alignItems: 'start', flex: 1, width: '100%' }}>
                   <div style={{ maxHeight: '380px', overflowY: 'auto', paddingRight: '0.25rem', width: '100%' }}>
-                    <table className="hse-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
+                    <table className="hse-table lagging-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
                       <thead>
                         <tr>
                           <th style={{ position: 'sticky', top: 0, background: theme === 'light' ? '#ffffff' : '#0a121e', zIndex: 1 }}>Incident Classification</th>
@@ -2113,6 +2113,12 @@ export const Dashboard: React.FC = () => {
 
         {/* Responsive adjustments helper styles */}
         <style>{`
+        .lagging-table th {
+          padding: 0.9rem 0.75rem !important;
+        }
+        .lagging-table td {
+          padding: 1.05rem 0.75rem !important;
+        }
         #presentation-overlay .donut-chart-container {
           height: 220px !important;
         }

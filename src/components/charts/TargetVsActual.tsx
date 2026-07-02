@@ -48,7 +48,7 @@ export const TargetVsActual: React.FC<TargetVsActualProps> = ({
     })
 
     if (hoveredCategory) {
-      const idx = leadingData.findIndex((d) => 
+      const idx = leadingData.findIndex((d) =>
         d.name.toLowerCase().includes(hoveredCategory.toLowerCase())
       )
       if (idx !== -1) {
