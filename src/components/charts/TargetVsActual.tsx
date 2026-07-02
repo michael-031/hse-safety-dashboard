@@ -195,11 +195,11 @@ export const TargetVsActual: React.FC<TargetVsActualProps> = ({
         },
       },
     ],
-    dataZoom: data.length > 4 ? [
+    dataZoom: data.length > 8 ? [
       {
         type: 'inside',
         yAxisIndex: 0,
-        startValue: Math.max(0, data.length - 4),
+        startValue: Math.max(0, data.length - 8),
         endValue: data.length - 1,
         zoomOnMouseWheel: false,
         moveOnMouseMove: true,
@@ -211,7 +211,7 @@ export const TargetVsActual: React.FC<TargetVsActualProps> = ({
         yAxisIndex: 0,
         width: 8,
         right: 4,
-        startValue: Math.max(0, data.length - 4),
+        startValue: Math.max(0, data.length - 8),
         endValue: data.length - 1,
         borderColor: 'transparent',
         fillerColor: theme === 'dark' ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.15)',
